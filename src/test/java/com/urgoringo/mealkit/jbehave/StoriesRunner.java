@@ -25,7 +25,7 @@ import static org.jbehave.core.io.CodeLocations.codeLocationFromClass;
  * JBehave story runner that executes all .md story files from src/test/resources/spec directory.
  * Integrates with Spring Boot Test and TestContainers for database testing.
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(TestContainersConfiguration.class)
 public class StoriesRunner {

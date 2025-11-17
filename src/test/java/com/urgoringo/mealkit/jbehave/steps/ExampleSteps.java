@@ -5,7 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ExampleSteps {
 
     private final ApplicationContext context;
+    private final TestRestTemplate restTemplate;
     private boolean applicationRunning = false;
     private boolean statusChecked = false;
 
@@ -30,7 +34,12 @@ public class ExampleSteps {
     @When("I check the application status")
     public void whenICheckStatus() {
         if (applicationRunning) {
-            statusChecked = true;
+            try {
+                ResponseEntity<String> response = restTemplate.getForEntity("/health", String.class);
+                statusChecked = response.getStatusCode() == HttpStatus.OK;
+            } catch (Exception e) {
+                statusChecked = false;
+            }
         }
     }
 
