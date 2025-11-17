@@ -1,0 +1,12 @@
+package com.urgoringo.mealkit;
+
+import org.springframework.boot.SpringApplication;
+
+public class TestMealkitApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.from(MealkitApplication::main).with(TestContainersConfiguration.class).run(args);
+    }
+
+}
+
