@@ -411,3 +411,4 @@ public void thenSystemReturnsStatusWithValidationError(int statusCode) {
 - Avoid using repositories or services directly in test steps
 - Clean up data in `@BeforeScenario` hooks
 - Delete in proper order to respect foreign key constraints (e.g., subscriptions before recipes)
+- Always update CLAUDE.md when new significant pattern or practices are used
