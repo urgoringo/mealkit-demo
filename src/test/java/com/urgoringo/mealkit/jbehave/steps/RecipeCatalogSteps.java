@@ -27,7 +27,9 @@ public class RecipeCatalogSteps {
 
     @BeforeScenario
     public void cleanupDatabase() {
-        // Clean up recipes before each scenario to ensure test isolation
+        // Clean up data before each scenario to ensure test isolation
+        // Must delete subscriptions first due to foreign key constraints
+        app.deleteAllSubscriptions();
         app.deleteAllRecipes();
     }
 

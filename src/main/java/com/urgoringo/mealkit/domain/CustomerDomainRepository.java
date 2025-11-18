@@ -23,4 +23,8 @@ public class CustomerDomainRepository {
         var savedEntity = customerRepository.save(entity);
         return customerMapper.toDomain(savedEntity);
     }
+
+    public boolean existsByEmail(String email) {
+        return customerRepository.existsByEmail(email);
+    }
 }
