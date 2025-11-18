@@ -31,15 +31,27 @@ public class RecipeCatalogSteps {
 
     @Given("system has following recipes available $recipeList")
     public void givenSystemHasRecipesAvailable(String recipeList) {
-        // Parse the recipe list (format: "1. Recipe One\n2. Recipe Two\n3. Recipe Three")
+        // Parse the recipe list (format: "- Recipe One\n- Recipe Two\n- Recipe Three")
         expectedRecipes = new ArrayList<>();
         String[] lines = recipeList.split("\n");
         for (String line : lines) {
-            // Remove numbering and trim
-            String recipe = line.replaceFirst("^\\d+\\.\\s*", "").trim();
+            // Remove bullet point and trim
+            String recipe = line.replaceFirst("^-\\s*", "").trim();
             if (!recipe.isEmpty()) {
                 expectedRecipes.add(recipe);
             }
+        }
+
+        // Create each recipe via REST API
+        for (String recipeName : expectedRecipes) {
+            CreateRecipeRequest request = new CreateRecipeRequest(recipeName);
+            ResponseEntity<RecipeResponse> createResponse = restTemplate.postForEntity(
+                    "/recipes",
+                    request,
+                    RecipeResponse.class
+            );
+            assertEquals(HttpStatus.CREATED, createResponse.getStatusCode(),
+                    "Failed to create recipe: " + recipeName);
         }
     }
 
@@ -68,6 +80,11 @@ public class RecipeCatalogSteps {
                     "Recipe " + (i + 1) + " title should match");
         }
     }
+
+    /**
+     * Request DTO for creating a recipe.
+     */
+    public record CreateRecipeRequest(String title) {}
 
     /**
      * Simple record to represent recipe response from API.

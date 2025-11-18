@@ -83,6 +83,65 @@ The project maintains strict separation between persistence and domain concerns:
   - Keeps mapping logic declarative and type-safe
   - Mappers are Spring beans automatically injected where needed
 
+### Id Wrapper Type Pattern
+
+The project uses a type-safe `Id<T>` wrapper for entity identifiers to handle the null safety challenge of unassigned IDs:
+
+- **Type Safety**: `Id<Recipe>` vs `Id<Customer>` prevents mixing IDs from different entities
+- **Null Safety**: Uses `@NullUnmarked` to safely handle unassigned IDs for new entities
+- **Domain Language**: Uses `unassigned()` and `isAssigned()` instead of persistence-centric terms
+
+**Creating entities with IDs:**
+```java
+@NullMarked
+public record Recipe(
+    Id<Recipe> id,
+    String title
+) {
+    public static Recipe create(String title) {
+        return new Recipe(Id.unassigned(), title);
+    }
+}
+```
+
+**Id wrapper implementation pattern:**
+```java
+@NullMarked
+public record Id<T>(Long value) {
+
+    @NullUnmarked  // Opt-out of null checking for this factory method
+    public static <T> Id<T> unassigned() {
+        return new Id<>(null);
+    }
+
+    public static <T> Id<T> of(Long value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Use unassigned() for IDs without a value");
+        }
+        return new Id<>(value);
+    }
+
+    public boolean isAssigned() {
+        return value != null;
+    }
+}
+```
+
+**Mapping IDs in MapStruct:**
+```java
+@Mapper(componentModel = "spring")
+public interface RecipeMapper {
+
+    default Id<Recipe> mapId(@Nullable Long id) {
+        return id == null ? Id.unassigned() : Id.of(id);
+    }
+
+    default Long mapId(Id<Recipe> id) {
+        return id.value();
+    }
+}
+```
+
 ### Database Layer
 - **Flyway** manages database migrations in `src/main/resources/db/migration/`
 - Migration naming: `V{version}__{description}.sql` (e.g., `V1__create_recipes_table.sql`)
@@ -263,3 +322,7 @@ Spring Framework 6+ uses JSpecify annotations internally. Spring's `@NonNullApi`
 - Integration tests require `@Import(TestContainersConfiguration.class)`
 - Tests automatically use Testcontainers PostgreSQL instance
 - No need for manual database setup during testing
+- **Self-Contained Tests**: Tests should create their own test data via the REST API rather than relying on database migrations
+  - This makes tests independent and easier to understand
+  - Example: In Given steps, use `restTemplate.postForEntity()` to create test data
+  - Avoid using repositories or services directly in test steps - use the API
