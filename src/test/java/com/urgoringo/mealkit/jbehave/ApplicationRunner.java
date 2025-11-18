@@ -76,23 +76,37 @@ public class ApplicationRunner {
     }
 
     /**
-     * Creates a new subscription via the API.
+     * Attempts to create a new subscription via the API.
      *
      * @param customerEmail the customer email
      * @param recipeIds the list of recipe IDs for the first order
-     * @return the created subscription response
+     * @return ApiResponse containing either success with subscription or error with status code
      */
-    public SubscriptionResponse createSubscription(String customerEmail, List<Long> recipeIds) {
+    public ApiResponse<SubscriptionResponse> attemptCreateSubscription(String customerEmail, List<Long> recipeIds) {
         CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds);
         ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
                 "/subscriptions",
                 request,
                 SubscriptionResponse.class
         );
-        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-                "Failed to create subscription for customer: " + customerEmail);
-        assertNotNull(response.getBody(), "Subscription response body should not be null");
-        return response.getBody();
+        return ApiResponse.from(response);
+    }
+
+    /**
+     * Creates a new subscription via the API, asserting success.
+     *
+     * @param customerEmail the customer email
+     * @param recipeIds the list of recipe IDs for the first order
+     * @return the created subscription response
+     */
+    public SubscriptionResponse createSubscription(String customerEmail, List<Long> recipeIds) {
+        ApiResponse<SubscriptionResponse> response = attemptCreateSubscription(customerEmail, recipeIds);
+        return switch (response) {
+            case ApiResponse.Success<SubscriptionResponse> success -> success.value();
+            case ApiResponse.Error<SubscriptionResponse> error ->
+                throw new AssertionError("Failed to create subscription for customer: " + customerEmail +
+                        ". Status: " + error.statusCode() + ", Body: " + error.body());
+        };
     }
 
     /**

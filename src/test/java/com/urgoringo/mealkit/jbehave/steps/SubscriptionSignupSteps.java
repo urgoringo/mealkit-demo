@@ -1,7 +1,7 @@
 package com.urgoringo.mealkit.jbehave.steps;
 
+import com.urgoringo.mealkit.jbehave.ApiResponse;
 import com.urgoringo.mealkit.jbehave.ApplicationRunner;
-import com.urgoringo.mealkit.jbehave.ApplicationRunner.CreateSubscriptionRequest;
 import com.urgoringo.mealkit.jbehave.ApplicationRunner.RecipeResponse;
 import com.urgoringo.mealkit.jbehave.ApplicationRunner.SubscriptionResponse;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +9,6 @@ import org.jbehave.core.annotations.BeforeScenario;
 import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -27,12 +25,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class SubscriptionSignupSteps {
 
     private final ApplicationRunner app;
-    private final TestRestTemplate restTemplate;
     private String customerEmail;
     private List<RecipeResponse> availableRecipes;
     private List<Long> chosenRecipeIds;
     private SubscriptionResponse subscription;
-    private ResponseEntity<String> errorResponse;
+    private ApiResponse<SubscriptionResponse> response;
 
     @BeforeScenario
     public void cleanupDatabase() {
@@ -64,7 +61,12 @@ public class SubscriptionSignupSteps {
                 .toList();
 
         // Create subscription with chosen recipes via API
-        subscription = app.createSubscription(customerEmail, chosenRecipeIds);
+        response = app.attemptCreateSubscription(customerEmail, chosenRecipeIds);
+        subscription = switch (response) {
+            case ApiResponse.Success<SubscriptionResponse> success -> success.value();
+            case ApiResponse.Error<SubscriptionResponse> error ->
+                throw new AssertionError("Unexpected error creating subscription: " + error.statusCode());
+        };
     }
 
     @Then("system creates new subscription with upcoming order that contains these $count recipes")
@@ -99,19 +101,17 @@ public class SubscriptionSignupSteps {
     @When("customer tries to signup subsciption using $email")
     public void whenCustomerTriesToSignupSubscription(String email) {
         List<Long> recipeIds = List.of();
-        // Reuse the same request type and endpoint as createSubscription method
-        CreateSubscriptionRequest request = new CreateSubscriptionRequest(email, recipeIds);
-        errorResponse = restTemplate.postForEntity(
-                "/subscriptions",
-                request,
-                String.class
-        );
+        response = app.attemptCreateSubscription(email, recipeIds);
     }
 
     @Then("system returns $statusCode with validation error")
     public void thenSystemReturnsStatusWithValidationError(int statusCode) {
-        assertNotNull(errorResponse, "Error response should not be null");
-        assertEquals(statusCode, errorResponse.getStatusCode().value(),
-            "Expected status code " + statusCode);
+        assertNotNull(response, "Response should not be null");
+        int actualStatusCode = switch (response) {
+            case ApiResponse.Success<SubscriptionResponse> success ->
+                throw new AssertionError("Expected error but got success");
+            case ApiResponse.Error<SubscriptionResponse> error -> error.statusCode();
+        };
+        assertEquals(statusCode, actualStatusCode, "Expected status code " + statusCode);
     }
 }
