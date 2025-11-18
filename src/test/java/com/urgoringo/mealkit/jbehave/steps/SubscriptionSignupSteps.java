@@ -61,7 +61,7 @@ public class SubscriptionSignupSteps {
                 .toList();
 
         // Create subscription with chosen recipes via API
-        response = app.attemptCreateSubscription(customerEmail, chosenRecipeIds);
+        response = app.createSubscription(customerEmail, chosenRecipeIds);
         subscription = response.expectSuccess();
     }
 
@@ -91,13 +91,13 @@ public class SubscriptionSignupSteps {
         customerEmail = email;
         // Create a subscription to establish the customer with this email
         List<Long> dummyRecipeIds = List.of();
-        app.createSubscription(customerEmail, dummyRecipeIds);
+        app.createSubscription(customerEmail, dummyRecipeIds).expectSuccess();
     }
 
     @When("customer tries to signup subsciption using $email")
     public void whenCustomerTriesToSignupSubscription(String email) {
         List<Long> recipeIds = List.of();
-        response = app.attemptCreateSubscription(email, recipeIds);
+        response = app.createSubscription(email, recipeIds);
     }
 
     @Then("system returns $statusCode with validation error")

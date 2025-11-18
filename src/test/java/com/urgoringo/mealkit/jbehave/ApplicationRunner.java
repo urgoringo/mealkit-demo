@@ -76,13 +76,13 @@ public class ApplicationRunner {
     }
 
     /**
-     * Attempts to create a new subscription via the API.
+     * Creates a new subscription via the API.
      *
      * @param customerEmail the customer email
      * @param recipeIds the list of recipe IDs for the first order
      * @return ApiResponse containing either success with subscription or error with status code
      */
-    public ApiResponse<SubscriptionResponse> attemptCreateSubscription(String customerEmail, List<Long> recipeIds) {
+    public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds) {
         CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds);
         ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
                 "/subscriptions",
@@ -90,17 +90,6 @@ public class ApplicationRunner {
                 SubscriptionResponse.class
         );
         return ApiResponse.from(response);
-    }
-
-    /**
-     * Creates a new subscription via the API, asserting success.
-     *
-     * @param customerEmail the customer email
-     * @param recipeIds the list of recipe IDs for the first order
-     * @return the created subscription response
-     */
-    public SubscriptionResponse createSubscription(String customerEmail, List<Long> recipeIds) {
-        return attemptCreateSubscription(customerEmail, recipeIds).expectSuccess();
     }
 
     /**
