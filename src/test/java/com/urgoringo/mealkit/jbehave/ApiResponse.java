@@ -29,6 +29,35 @@ public sealed interface ApiResponse<T> {
     record Error<T>(int statusCode, String body) implements ApiResponse<T> {}
 
     /**
+     * Returns the successful response body, or throws AssertionError if this is an error response.
+     *
+     * @return the response body
+     * @throws AssertionError if this is an error response
+     */
+    default T expectSuccess() {
+        return switch (this) {
+            case Success<T> success -> success.value();
+            case Error<T> error ->
+                throw new AssertionError("Expected success but got error. Status: " +
+                        error.statusCode() + ", Body: " + error.body());
+        };
+    }
+
+    /**
+     * Returns the error status code, or throws AssertionError if this is a success response.
+     *
+     * @return the HTTP status code
+     * @throws AssertionError if this is a success response
+     */
+    default int expectError() {
+        return switch (this) {
+            case Success<T> success ->
+                throw new AssertionError("Expected error but got success");
+            case Error<T> error -> error.statusCode();
+        };
+    }
+
+    /**
      * Factory method to create ApiResponse from a ResponseEntity.
      *
      * @param response the response entity

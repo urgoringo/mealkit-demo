@@ -100,13 +100,7 @@ public class ApplicationRunner {
      * @return the created subscription response
      */
     public SubscriptionResponse createSubscription(String customerEmail, List<Long> recipeIds) {
-        ApiResponse<SubscriptionResponse> response = attemptCreateSubscription(customerEmail, recipeIds);
-        return switch (response) {
-            case ApiResponse.Success<SubscriptionResponse> success -> success.value();
-            case ApiResponse.Error<SubscriptionResponse> error ->
-                throw new AssertionError("Failed to create subscription for customer: " + customerEmail +
-                        ". Status: " + error.statusCode() + ", Body: " + error.body());
-        };
+        return attemptCreateSubscription(customerEmail, recipeIds).expectSuccess();
     }
 
     /**

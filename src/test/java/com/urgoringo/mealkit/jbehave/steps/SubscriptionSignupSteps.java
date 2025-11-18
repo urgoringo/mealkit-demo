@@ -62,11 +62,7 @@ public class SubscriptionSignupSteps {
 
         // Create subscription with chosen recipes via API
         response = app.attemptCreateSubscription(customerEmail, chosenRecipeIds);
-        subscription = switch (response) {
-            case ApiResponse.Success<SubscriptionResponse> success -> success.value();
-            case ApiResponse.Error<SubscriptionResponse> error ->
-                throw new AssertionError("Unexpected error creating subscription: " + error.statusCode());
-        };
+        subscription = response.expectSuccess();
     }
 
     @Then("system creates new subscription with upcoming order that contains these $count recipes")
@@ -107,11 +103,7 @@ public class SubscriptionSignupSteps {
     @Then("system returns $statusCode with validation error")
     public void thenSystemReturnsStatusWithValidationError(int statusCode) {
         assertNotNull(response, "Response should not be null");
-        int actualStatusCode = switch (response) {
-            case ApiResponse.Success<SubscriptionResponse> success ->
-                throw new AssertionError("Expected error but got success");
-            case ApiResponse.Error<SubscriptionResponse> error -> error.statusCode();
-        };
+        int actualStatusCode = response.expectError();
         assertEquals(statusCode, actualStatusCode, "Expected status code " + statusCode);
     }
 }
