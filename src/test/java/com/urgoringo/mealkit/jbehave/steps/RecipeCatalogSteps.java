@@ -1,24 +1,19 @@
 package com.urgoringo.mealkit.jbehave.steps;
 
+import com.urgoringo.mealkit.jbehave.ApplicationRunner;
+import com.urgoringo.mealkit.jbehave.ApplicationRunner.RecipeResponse;
 import com.urgoringo.mealkit.persistence.RecipeRepository;
 import lombok.RequiredArgsConstructor;
 import org.jbehave.core.annotations.BeforeScenario;
 import org.jbehave.core.annotations.Given;
 import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
-import org.jbehave.core.model.ExamplesTable;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Step definitions for recipe catalog scenarios.
@@ -27,10 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @RequiredArgsConstructor
 public class RecipeCatalogSteps {
 
-    private final TestRestTemplate restTemplate;
+    private final ApplicationRunner app;
     private final RecipeRepository recipeRepository;
     private List<String> expectedRecipes;
-    private ResponseEntity<List<RecipeResponse>> response;
+    private List<RecipeResponse> recipes;
 
     @BeforeScenario
     public void cleanupDatabase() {
@@ -51,36 +46,19 @@ public class RecipeCatalogSteps {
             }
         }
 
-        // Create each recipe via REST API
+        // Create each recipe via API
         for (String recipeName : expectedRecipes) {
-            CreateRecipeRequest request = new CreateRecipeRequest(recipeName);
-            ResponseEntity<RecipeResponse> createResponse = restTemplate.postForEntity(
-                    "/recipes",
-                    request,
-                    RecipeResponse.class
-            );
-            assertEquals(HttpStatus.CREATED, createResponse.getStatusCode(),
-                    "Failed to create recipe: " + recipeName);
+            app.createRecipe(recipeName);
         }
     }
 
     @When("customer queries available recipes")
     public void whenCustomerQueriesAvailableRecipes() {
-        response = restTemplate.exchange(
-                "/recipes",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<List<RecipeResponse>>() {}
-        );
+        recipes = app.getAllRecipes();
     }
 
     @Then("system returns these $count recipes")
     public void thenSystemReturnsRecipes(int count) {
-        assertNotNull(response, "Response should not be null");
-        assertEquals(HttpStatus.OK, response.getStatusCode(), "Response status should be OK");
-
-        List<RecipeResponse> recipes = response.getBody();
-        assertNotNull(recipes, "Recipe list should not be null");
         assertEquals(count, recipes.size(), "Should return " + count + " recipes");
 
         // Verify the recipe titles match
@@ -89,14 +67,4 @@ public class RecipeCatalogSteps {
                     "Recipe " + (i + 1) + " title should match");
         }
     }
-
-    /**
-     * Request DTO for creating a recipe.
-     */
-    public record CreateRecipeRequest(String title) {}
-
-    /**
-     * Simple record to represent recipe response from API.
-     */
-    public record RecipeResponse(Long id, String title) {}
 }
