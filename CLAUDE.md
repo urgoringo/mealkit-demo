@@ -60,6 +60,41 @@ This project follows **Domain-Driven Design (DDD)** principles:
   - Avoid creating domain services unless the logic spans multiple entities
   - Most business logic should reside in domain entities themselves
 
+- **Domain Validation**: Domain models enforce their own invariants
+  - Use factory methods (e.g., `create()`) to validate business rules
+  - Throw `ValidationException` for business rule violations
+  - Domain models should make invalid states impossible to represent
+  - Example: `Order.create()` validates minimum recipe count
+
+### Validation and Error Handling
+
+The project uses a consistent approach to validation and error handling:
+
+- **ValidationException**: Custom exception for business rule violations
+  - Always includes a non-null error message (enforced via `Objects.requireNonNull`)
+  - Overrides `getMessage()` to return guaranteed non-null value
+  - Used by domain models to enforce invariants
+
+- **GlobalExceptionHandler**: Centralized exception handling with `@ControllerAdvice`
+  - Maps `ValidationException` to HTTP 422 (Unprocessable Entity)
+  - Returns consistent error response format
+  - Uses exhaustive switch expressions for type safety
+
+**Example validation in domain model:**
+```java
+@NullMarked
+public record Order(Id<Order> id, List<Id<Recipe>> recipeIds) {
+    private static final int MINIMUM_RECIPE_COUNT = 3;
+
+    public static Order create(List<Id<Recipe>> recipeIds) {
+        if (recipeIds.size() < MINIMUM_RECIPE_COUNT) {
+            throw new ValidationException("Order must contain at least " + MINIMUM_RECIPE_COUNT + " recipes");
+        }
+        return new Order(Id.unassigned(), recipeIds);
+    }
+}
+```
+
 ### Persistence and Domain Model Separation
 
 The project maintains strict separation between persistence and domain concerns:
@@ -319,10 +354,60 @@ Spring Framework 6+ uses JSpecify annotations internally. Spring's `@NonNullApi`
 4. Never modify existing migrations once committed
 
 ### Testing Guidelines
+
+#### Integration Testing
 - Integration tests require `@Import(TestContainersConfiguration.class)`
 - Tests automatically use Testcontainers PostgreSQL instance
 - No need for manual database setup during testing
-- **Self-Contained Tests**: Tests should create their own test data via the REST API rather than relying on database migrations
-  - This makes tests independent and easier to understand
-  - Example: In Given steps, use `restTemplate.postForEntity()` to create test data
-  - Avoid using repositories or services directly in test steps - use the API
+
+#### JBehave Test Architecture
+
+The project uses JBehave for behavior-driven development (BDD) testing:
+
+- **Self-Contained Tests**: Tests create their own test data via the REST API
+  - Makes tests independent and easier to understand
+  - Avoids relying on database migrations or shared test data
+  - Each scenario starts with a clean database state
+
+- **ApplicationRunner Pattern**: Encapsulates API interactions
+  - Provides high-level methods for interacting with the application API
+  - Hides low-level HTTP details from step definitions
+  - Returns `ApiResponse<T>` for uniform error handling
+
+- **ApiResponse Pattern**: Type-safe response handling using sealed interfaces
+  - `ApiResponse.Success<T>` - successful response with body
+  - `ApiResponse.Error<T>` - error response with status code and body
+  - Use `expectSuccess()` when success is expected
+  - Use `expectError()` when error is expected
+  - Exhaustive pattern matching ensures all cases are handled
+
+**Example ApplicationRunner method:**
+```java
+public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds) {
+    CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds);
+    ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
+            "/subscriptions", request, SubscriptionResponse.class);
+    return ApiResponse.from(response);
+}
+```
+
+**Example step definition usage:**
+```java
+@When("customer chooses these recipes for upcoming order")
+public void whenCustomerChoosesRecipes() {
+    response = app.createSubscription(customerEmail, chosenRecipeIds);
+    subscription = response.expectSuccess();
+}
+
+@Then("system returns $statusCode with validation error")
+public void thenSystemReturnsStatusWithValidationError(int statusCode) {
+    int actualStatusCode = response.expectError();
+    assertEquals(statusCode, actualStatusCode);
+}
+```
+
+#### Test Data Management
+- Use `ApplicationRunner` methods to create test data via API
+- Avoid using repositories or services directly in test steps
+- Clean up data in `@BeforeScenario` hooks
+- Delete in proper order to respect foreign key constraints (e.g., subscriptions before recipes)
