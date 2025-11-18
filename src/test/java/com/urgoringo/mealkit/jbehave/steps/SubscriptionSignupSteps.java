@@ -2,6 +2,7 @@ package com.urgoringo.mealkit.jbehave.steps;
 
 import com.urgoringo.mealkit.jbehave.ApplicationRunner;
 import com.urgoringo.mealkit.jbehave.ApplicationRunner.RecipeResponse;
+import com.urgoringo.mealkit.jbehave.ApplicationRunner.SubscriptionResponse;
 import lombok.RequiredArgsConstructor;
 import org.jbehave.core.annotations.BeforeScenario;
 import org.jbehave.core.annotations.Given;
@@ -23,22 +24,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class SubscriptionSignupSteps {
 
     private final ApplicationRunner app;
-    private String customerId;
+    private String customerEmail;
     private List<RecipeResponse> availableRecipes;
     private List<Long> chosenRecipeIds;
+    private SubscriptionResponse subscription;
 
     @BeforeScenario
     public void cleanupDatabase() {
         // Clean up data before each scenario to ensure test isolation
+        app.deleteAllSubscriptions();
         app.deleteAllRecipes();
-        // TODO: Delete all subscriptions and customers when implemented
     }
 
     @Given("customer has no existing subscription")
     public void givenCustomerHasNoExistingSubscription() {
-        // TODO: Create a customer without subscription
-        // For now, just set a test customer ID
-        customerId = "test-customer-" + System.currentTimeMillis();
+        // Set a test customer email (customer will be created during subscription signup)
+        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
     }
 
     @Given("$count recipes are available in the system")
@@ -57,21 +58,28 @@ public class SubscriptionSignupSteps {
                 .map(RecipeResponse::id)
                 .toList();
 
-        // TODO: Make API call to create subscription with chosen recipes
-        // POST /subscriptions { customerId, recipeIds }
+        // Create subscription with chosen recipes via API
+        subscription = app.createSubscription(customerEmail, chosenRecipeIds);
     }
 
     @Then("system creates new subscription with upcoming order that contains these $count recipes")
     public void thenSubscriptionIsCreated(int count) {
-        // TODO: Verify subscription was created
-        // GET /subscriptions/{customerId}
-        // Verify subscription exists
-        // Verify upcoming order exists
-        // Verify order contains the correct recipes
+        // Verify subscription was created
+        assertNotNull(subscription, "Subscription should not be null");
+        assertNotNull(subscription.id(), "Subscription ID should not be null");
+        assertNotNull(subscription.customerId(), "Customer ID should not be null");
 
-        // For now, just verify we have the expected number of chosen recipes
-        assertNotNull(chosenRecipeIds, "No recipes were chosen");
-        assertEquals(count, chosenRecipeIds.size(),
-            "Expected " + count + " recipes but got " + chosenRecipeIds.size());
+        // Verify upcoming order exists
+        assertNotNull(subscription.upcomingOrders(), "Upcoming orders should not be null");
+        assertEquals(1, subscription.upcomingOrders().size(),
+            "Should have exactly one upcoming order");
+
+        // Verify order contains the correct recipes
+        var firstOrder = subscription.upcomingOrders().get(0);
+        assertNotNull(firstOrder.recipeIds(), "Order recipe IDs should not be null");
+        assertEquals(count, firstOrder.recipeIds().size(),
+            "Order should contain " + count + " recipes");
+        assertEquals(chosenRecipeIds, firstOrder.recipeIds(),
+            "Order recipes should match chosen recipes");
     }
 }

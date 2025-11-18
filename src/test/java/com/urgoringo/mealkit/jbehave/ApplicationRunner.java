@@ -1,6 +1,8 @@
 package com.urgoringo.mealkit.jbehave;
 
+import com.urgoringo.mealkit.persistence.CustomerRepository;
 import com.urgoringo.mealkit.persistence.RecipeRepository;
+import com.urgoringo.mealkit.persistence.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -25,6 +27,8 @@ public class ApplicationRunner {
 
     private final TestRestTemplate restTemplate;
     private final RecipeRepository recipeRepository;
+    private final CustomerRepository customerRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     /**
      * Creates a new recipe via the API.
@@ -72,6 +76,35 @@ public class ApplicationRunner {
     }
 
     /**
+     * Creates a new subscription via the API.
+     *
+     * @param customerEmail the customer email
+     * @param recipeIds the list of recipe IDs for the first order
+     * @return the created subscription response
+     */
+    public SubscriptionResponse createSubscription(String customerEmail, List<Long> recipeIds) {
+        CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds);
+        ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
+                "/subscriptions",
+                request,
+                SubscriptionResponse.class
+        );
+        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
+                "Failed to create subscription for customer: " + customerEmail);
+        assertNotNull(response.getBody(), "Subscription response body should not be null");
+        return response.getBody();
+    }
+
+    /**
+     * Deletes all subscriptions and customers from the database.
+     * Used for test cleanup to ensure scenario isolation.
+     */
+    public void deleteAllSubscriptions() {
+        subscriptionRepository.deleteAll();
+        customerRepository.deleteAll();
+    }
+
+    /**
      * Request DTO for creating a recipe.
      */
     public record CreateRecipeRequest(String title) {}
@@ -80,4 +113,19 @@ public class ApplicationRunner {
      * Response DTO for recipe data.
      */
     public record RecipeResponse(Long id, String title) {}
+
+    /**
+     * Request DTO for creating a subscription.
+     */
+    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds) {}
+
+    /**
+     * Response DTO for subscription data.
+     */
+    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders) {}
+
+    /**
+     * Response DTO for order data.
+     */
+    public record OrderResponse(Long id, List<Long> recipeIds) {}
 }
