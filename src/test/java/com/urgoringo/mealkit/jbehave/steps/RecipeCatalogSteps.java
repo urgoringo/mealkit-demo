@@ -2,7 +2,6 @@ package com.urgoringo.mealkit.jbehave.steps;
 
 import com.urgoringo.mealkit.jbehave.ApplicationRunner;
 import com.urgoringo.mealkit.jbehave.ApplicationRunner.RecipeResponse;
-import com.urgoringo.mealkit.persistence.RecipeRepository;
 import lombok.RequiredArgsConstructor;
 import org.jbehave.core.annotations.BeforeScenario;
 import org.jbehave.core.annotations.Given;
@@ -23,14 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class RecipeCatalogSteps {
 
     private final ApplicationRunner app;
-    private final RecipeRepository recipeRepository;
     private List<String> expectedRecipes;
     private List<RecipeResponse> recipes;
 
     @BeforeScenario
     public void cleanupDatabase() {
         // Clean up recipes before each scenario to ensure test isolation
-        recipeRepository.deleteAll();
+        app.deleteAllRecipes();
     }
 
     @Given("system has following recipes available $recipeList")

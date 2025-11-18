@@ -1,5 +1,6 @@
 package com.urgoringo.mealkit.jbehave;
 
+import com.urgoringo.mealkit.persistence.RecipeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ApplicationRunner {
 
     private final TestRestTemplate restTemplate;
+    private final RecipeRepository recipeRepository;
 
     /**
      * Creates a new recipe via the API.
@@ -59,6 +61,14 @@ public class ApplicationRunner {
                 "Failed to get recipes");
         assertNotNull(response.getBody(), "Recipe list should not be null");
         return response.getBody();
+    }
+
+    /**
+     * Deletes all recipes from the database.
+     * Used for test cleanup to ensure scenario isolation.
+     */
+    public void deleteAllRecipes() {
+        recipeRepository.deleteAll();
     }
 
     /**
