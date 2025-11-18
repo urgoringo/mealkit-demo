@@ -29,6 +29,11 @@ public class CreateSubscriptionService {
             throw new ValidationException("Customer with email " + customerEmail + " already exists");
         }
 
+        // Validate minimum recipe count
+        if (recipeIds.size() < 3) {
+            throw new ValidationException("Must select at least 3 recipes for subscription");
+        }
+
         // Create the customer first
         var customer = Customer.create(customerEmail);
         var savedCustomer = customerDomainRepository.save(customer);

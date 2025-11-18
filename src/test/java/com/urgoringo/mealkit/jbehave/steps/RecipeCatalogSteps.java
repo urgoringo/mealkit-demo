@@ -48,7 +48,7 @@ public class RecipeCatalogSteps {
 
         // Create each recipe via API
         for (String recipeName : expectedRecipes) {
-            app.createRecipe(recipeName);
+            app.createRecipe(recipeName).expectSuccess();
         }
     }
 

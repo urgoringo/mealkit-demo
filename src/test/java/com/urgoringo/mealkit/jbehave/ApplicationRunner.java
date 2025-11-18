@@ -34,19 +34,16 @@ public class ApplicationRunner {
      * Creates a new recipe via the API.
      *
      * @param title the recipe title
-     * @return the created recipe response
+     * @return ApiResponse containing either success with recipe or error with status code
      */
-    public RecipeResponse createRecipe(String title) {
+    public ApiResponse<RecipeResponse> createRecipe(String title) {
         CreateRecipeRequest request = new CreateRecipeRequest(title);
         ResponseEntity<RecipeResponse> response = restTemplate.postForEntity(
                 "/recipes",
                 request,
                 RecipeResponse.class
         );
-        assertEquals(HttpStatus.CREATED, response.getStatusCode(),
-                "Failed to create recipe: " + title);
-        assertNotNull(response.getBody(), "Recipe response body should not be null");
-        return response.getBody();
+        return ApiResponse.from(response);
     }
 
     /**

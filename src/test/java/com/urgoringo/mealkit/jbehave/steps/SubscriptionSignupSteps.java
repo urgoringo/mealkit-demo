@@ -48,7 +48,7 @@ public class SubscriptionSignupSteps {
     public void givenRecipesAreAvailable(int count) {
         availableRecipes = new ArrayList<>();
         for (int i = 1; i <= count; i++) {
-            RecipeResponse recipe = app.createRecipe("Recipe " + i);
+            RecipeResponse recipe = app.createRecipe("Recipe " + i).expectSuccess();
             availableRecipes.add(recipe);
         }
     }
@@ -89,9 +89,13 @@ public class SubscriptionSignupSteps {
     @Given("customer with email: $email already exists")
     public void givenCustomerWithEmailAlreadyExists(String email) {
         customerEmail = email;
-        // Create a subscription to establish the customer with this email
-        List<Long> dummyRecipeIds = List.of();
-        app.createSubscription(customerEmail, dummyRecipeIds).expectSuccess();
+        // Create recipes and subscription to establish the customer with this email
+        List<Long> recipeIds = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+            RecipeResponse recipe = app.createRecipe("Recipe " + i).expectSuccess();
+            recipeIds.add(recipe.id());
+        }
+        app.createSubscription(customerEmail, recipeIds).expectSuccess();
     }
 
     @When("customer tries to signup subsciption using $email")
@@ -105,5 +109,28 @@ public class SubscriptionSignupSteps {
         assertNotNull(response, "Response should not be null");
         int actualStatusCode = response.expectError();
         assertEquals(statusCode, actualStatusCode, "Expected status code " + statusCode);
+    }
+
+    @Given("customer has selected only $count recipes")
+    public void givenCustomerHasSelectedOnlyRecipes(int count) {
+        // Set a test customer email
+        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+
+        // Create the specified number of recipes
+        availableRecipes = new ArrayList<>();
+        for (int i = 1; i <= count; i++) {
+            RecipeResponse recipe = app.createRecipe("Recipe " + i).expectSuccess();
+            availableRecipes.add(recipe);
+        }
+
+        // Collect recipe IDs for the subscription
+        chosenRecipeIds = availableRecipes.stream()
+                .map(RecipeResponse::id)
+                .toList();
+    }
+
+    @When("customer tries to sign up for subscription")
+    public void whenCustomerTriesToSignUpForSubscription() {
+        response = app.createSubscription(customerEmail, chosenRecipeIds);
     }
 }
