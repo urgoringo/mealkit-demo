@@ -11,6 +11,9 @@ import org.jbehave.core.annotations.Then;
 import org.jbehave.core.annotations.When;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +34,8 @@ public class SubscriptionSignupSteps {
     private SubscriptionResponse subscription;
     private ApiResponse<SubscriptionResponse> response;
     private String homeAddress;
+    private LocalDate today;
+    private DayOfWeek deliveryDay;
 
     @BeforeScenario
     public void cleanupDatabase() {
@@ -178,8 +183,8 @@ public class SubscriptionSignupSteps {
                 .map(RecipeResponse::id)
                 .toList();
 
-        // Create subscription with address
-        response = app.createSubscription(customerEmail, chosenRecipeIds, homeAddress);
+        // Create subscription with address and delivery day (if specified)
+        response = app.createSubscription(customerEmail, chosenRecipeIds, homeAddress, deliveryDay);
         subscription = response.expectSuccess();
     }
 
@@ -189,5 +194,38 @@ public class SubscriptionSignupSteps {
         assertNotNull(subscription.deliveryAddress(), "Delivery address should not be null");
         assertEquals(homeAddress, subscription.deliveryAddress(),
             "Delivery address should match customer's home address");
+    }
+
+    @Given("today is $date")
+    public void givenTodayIs(String date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        today = LocalDate.parse(date, formatter);
+    }
+
+    @Given("customer selects $dayOfWeek as the delivery day")
+    public void givenCustomerSelectsDeliveryDay(String dayOfWeek) {
+        // Set a test customer email
+        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+
+        // Parse day of week (e.g., "Monday" -> DayOfWeek.MONDAY)
+        deliveryDay = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
+    }
+
+    @Then("first order will be delivered on $date")
+    public void thenFirstOrderWillBeDeliveredOn(String date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        LocalDate expectedDeliveryDate = LocalDate.parse(date, formatter);
+
+        // Verify subscription has upcoming orders
+        assertNotNull(subscription, "Subscription should not be null");
+        assertNotNull(subscription.upcomingOrders(), "Upcoming orders should not be null");
+        assertEquals(1, subscription.upcomingOrders().size(),
+            "Should have exactly one upcoming order");
+
+        // Verify first order has the expected delivery date
+        var firstOrder = subscription.upcomingOrders().get(0);
+        assertNotNull(firstOrder.deliveryDate(), "Delivery date should not be null");
+        assertEquals(expectedDeliveryDate, firstOrder.deliveryDate(),
+            "First order delivery date should be " + expectedDeliveryDate);
     }
 }

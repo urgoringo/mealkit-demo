@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
+import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,4 +37,8 @@ public class SubscriptionEntity {
 
     @Column(name = "delivery_address", nullable = false, columnDefinition = "TEXT")
     private String deliveryAddress;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_day", length = 10)
+    private DayOfWeek deliveryDay;
 }

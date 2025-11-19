@@ -4,9 +4,12 @@ import com.urgoringo.mealkit.domain.*;
 import com.urgoringo.mealkit.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -23,7 +26,7 @@ public class CreateSubscriptionService {
     private final SubscriptionDomainRepository subscriptionDomainRepository;
 
     @Transactional
-    public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, String deliveryAddress) {
+    public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, String deliveryAddress, @Nullable DayOfWeek deliveryDay) {
         // Validate that customer email doesn't already exist
         if (customerDomainRepository.existsByEmail(customerEmail)) {
             throw new ValidationException("Customer with email " + customerEmail + " already exists");
@@ -35,10 +38,11 @@ public class CreateSubscriptionService {
 
         // Create the first order with the chosen recipes
         // Order.create() will validate minimum recipe count
-        var firstOrder = Order.create(recipeIds);
+        var firstOrder = Order.create(recipeIds, null);
 
-        // Create subscription with the customer, first order, and delivery address
-        var subscription = Subscription.create(savedCustomer.id(), firstOrder, deliveryAddress);
+        // Create subscription with the customer, first order, delivery address, and delivery day
+        // If deliveryDay is specified, Subscription.create will calculate the delivery date
+        var subscription = Subscription.create(savedCustomer.id(), firstOrder, deliveryAddress, deliveryDay, LocalDate.now());
 
         return subscriptionDomainRepository.save(subscription);
     }

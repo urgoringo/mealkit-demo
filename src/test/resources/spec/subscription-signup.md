@@ -33,3 +33,11 @@ Estonia
 When they signup for subscription 
 Then subscription has customer's home address as delivery address
 
+## Scenario: subscription has delivery day
+
+Given today is 2025.11.19
+And customer selects Monday as the delivery day 
+When they signup for subscription
+Then first order will be delivered on 2025.11.24
+
+

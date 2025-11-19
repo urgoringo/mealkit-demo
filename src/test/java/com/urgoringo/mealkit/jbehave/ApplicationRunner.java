@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,7 +94,20 @@ public class ApplicationRunner {
      * @return ApiResponse containing either success with subscription or error with status code
      */
     public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress) {
-        CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds, deliveryAddress);
+        return createSubscription(customerEmail, recipeIds, deliveryAddress, null);
+    }
+
+    /**
+     * Creates a new subscription via the API with a delivery address and delivery day.
+     *
+     * @param customerEmail the customer email
+     * @param recipeIds the list of recipe IDs for the first order
+     * @param deliveryAddress the delivery address (optional)
+     * @param deliveryDay the delivery day of the week (optional)
+     * @return ApiResponse containing either success with subscription or error with status code
+     */
+    public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
+        CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds, deliveryAddress, deliveryDay);
         ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
                 "/subscriptions",
                 request,
@@ -123,7 +138,7 @@ public class ApplicationRunner {
     /**
      * Request DTO for creating a subscription.
      */
-    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress) {}
+    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {}
 
     /**
      * Response DTO for subscription data.
@@ -133,5 +148,5 @@ public class ApplicationRunner {
     /**
      * Response DTO for order data.
      */
-    public record OrderResponse(Long id, List<Long> recipeIds) {}
+    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate) {}
 }

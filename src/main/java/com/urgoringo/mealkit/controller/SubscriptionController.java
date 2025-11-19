@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -33,7 +35,12 @@ public class SubscriptionController {
     @PostMapping
     public ResponseEntity<SubscriptionResponse> createSubscription(@Valid @RequestBody CreateSubscriptionRequest request) {
         var recipeIds = subscriptionApiMapper.mapRecipeIds(request.recipeIds());
-        Subscription subscription = createSubscriptionService.execute(request.customerEmail(), recipeIds, request.deliveryAddress());
+        Subscription subscription = createSubscriptionService.execute(
+                request.customerEmail(),
+                recipeIds,
+                request.deliveryAddress(),
+                request.deliveryDay()
+        );
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -44,16 +51,17 @@ public class SubscriptionController {
     public record CreateSubscriptionRequest(
             @NotBlank String customerEmail,
             @NotNull List<Long> recipeIds,
-            @NotBlank String deliveryAddress
+            @NotBlank String deliveryAddress,
+            @Nullable DayOfWeek deliveryDay
     ) {}
 
     /**
      * Response DTO for subscription data.
      */
-    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress) {}
+    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, @Nullable DayOfWeek deliveryDay) {}
 
     /**
      * Response DTO for order data.
      */
-    public record OrderResponse(Long id, List<Long> recipeIds) {}
+    public record OrderResponse(Long id, List<Long> recipeIds, @Nullable LocalDate deliveryDate) {}
 }
