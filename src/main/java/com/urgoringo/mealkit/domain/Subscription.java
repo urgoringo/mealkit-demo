@@ -22,7 +22,7 @@ public record Subscription(
         @Nullable DayOfWeek deliveryDay
 ) {
     /**
-     * Creates a new Subscription with the first order.
+     * Signs up a customer for a new subscription with the first order.
      *
      * @param customerId the customer ID
      * @param recipeIds the recipe IDs for the first order
@@ -31,19 +31,15 @@ public record Subscription(
      * @param today the current date (used to calculate delivery date when deliveryDay is specified)
      * @return a new Subscription instance
      */
-    public static Subscription create(
+    public static Subscription signup(
             Id<Customer> customerId,
             List<Id<Recipe>> recipeIds,
             String deliveryAddress,
             @Nullable DayOfWeek deliveryDay,
             LocalDate today
     ) {
-        // Calculate delivery date if delivery day is specified
         LocalDate deliveryDate = deliveryDay != null ? today.with(next(deliveryDay)) : null;
-
-        // Create the first order with recipe IDs and calculated delivery date
         Order firstOrder = Order.create(recipeIds, deliveryDate);
-
         return new Subscription(Id.unassigned(), customerId, List.of(firstOrder), deliveryAddress, deliveryDay);
     }
 }
