@@ -1,7 +1,6 @@
 package com.urgoringo.mealkit.domain;
 
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -14,17 +13,17 @@ public record Subscription(
         Id<Subscription> id,
         Id<Customer> customerId,
         List<Order> upcomingOrders,
-        @Nullable String deliveryAddress
+        String deliveryAddress
 ) {
     /**
      * Creates a new Subscription with the first order.
      *
      * @param customerId the customer ID
      * @param firstOrder the first upcoming order
-     * @param deliveryAddress the delivery address (optional)
+     * @param deliveryAddress the delivery address
      * @return a new Subscription instance
      */
-    public static Subscription create(Id<Customer> customerId, Order firstOrder, @Nullable String deliveryAddress) {
+    public static Subscription create(Id<Customer> customerId, Order firstOrder, String deliveryAddress) {
         return new Subscription(Id.unassigned(), customerId, List.of(firstOrder), deliveryAddress);
     }
 }

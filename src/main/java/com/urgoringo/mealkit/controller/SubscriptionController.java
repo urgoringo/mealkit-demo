@@ -3,6 +3,9 @@ package com.urgoringo.mealkit.controller;
 import com.urgoringo.mealkit.domain.Subscription;
 import com.urgoringo.mealkit.mapper.SubscriptionApiMapper;
 import com.urgoringo.mealkit.service.CreateSubscriptionService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -28,7 +31,7 @@ public class SubscriptionController {
     private final SubscriptionApiMapper subscriptionApiMapper;
 
     @PostMapping
-    public ResponseEntity<SubscriptionResponse> createSubscription(@RequestBody CreateSubscriptionRequest request) {
+    public ResponseEntity<SubscriptionResponse> createSubscription(@Valid @RequestBody CreateSubscriptionRequest request) {
         var recipeIds = subscriptionApiMapper.mapRecipeIds(request.recipeIds());
         Subscription subscription = createSubscriptionService.execute(request.customerEmail(), recipeIds, request.deliveryAddress());
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
@@ -38,12 +41,16 @@ public class SubscriptionController {
     /**
      * Request DTO for creating a subscription.
      */
-    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds, @Nullable String deliveryAddress) {}
+    public record CreateSubscriptionRequest(
+            @NotBlank String customerEmail,
+            @NotNull List<Long> recipeIds,
+            @NotBlank String deliveryAddress
+    ) {}
 
     /**
      * Response DTO for subscription data.
      */
-    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, @Nullable String deliveryAddress) {}
+    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress) {}
 
     /**
      * Response DTO for order data.

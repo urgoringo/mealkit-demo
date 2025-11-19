@@ -62,7 +62,9 @@ public class SubscriptionSignupSteps {
                 .toList();
 
         // Create subscription with chosen recipes via API
-        response = app.createSubscription(customerEmail, chosenRecipeIds);
+        // Provide a default address for scenarios that don't test address rules
+        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        response = app.createSubscription(customerEmail, chosenRecipeIds, defaultAddress);
         subscription = response.expectSuccess();
     }
 
@@ -96,13 +98,15 @@ public class SubscriptionSignupSteps {
             RecipeResponse recipe = app.createRecipe("Recipe " + i).expectSuccess();
             recipeIds.add(recipe.id());
         }
-        app.createSubscription(customerEmail, recipeIds).expectSuccess();
+        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        app.createSubscription(customerEmail, recipeIds, defaultAddress).expectSuccess();
     }
 
     @When("customer tries to signup subsciption using $email")
     public void whenCustomerTriesToSignupSubscription(String email) {
         List<Long> recipeIds = List.of();
-        response = app.createSubscription(email, recipeIds);
+        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        response = app.createSubscription(email, recipeIds, defaultAddress);
     }
 
     @Then("system returns $statusCode with validation error")
@@ -132,7 +136,23 @@ public class SubscriptionSignupSteps {
 
     @When("customer tries to sign up for subscription")
     public void whenCustomerTriesToSignUpForSubscription() {
-        response = app.createSubscription(customerEmail, chosenRecipeIds);
+        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        response = app.createSubscription(customerEmail, chosenRecipeIds, defaultAddress);
+    }
+
+    @When("customer tries to signup without delivery address")
+    public void whenCustomerTriesToSignupWithoutDeliveryAddress() {
+        // Set up test customer and recipes
+        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+
+        List<Long> recipeIds = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+            RecipeResponse recipe = app.createRecipe("Recipe " + i).expectSuccess();
+            recipeIds.add(recipe.id());
+        }
+
+        // Try to create subscription without address (null)
+        response = app.createSubscription(customerEmail, recipeIds, null);
     }
 
     @Given("customer home address is: $address")

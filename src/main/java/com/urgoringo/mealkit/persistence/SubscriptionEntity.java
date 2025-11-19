@@ -34,6 +34,6 @@ public class SubscriptionEntity {
     @JoinColumn(name = "subscription_id")
     private List<OrderEntity> upcomingOrders = new ArrayList<>();
 
-    @Column(name = "delivery_address", columnDefinition = "TEXT")
+    @Column(name = "delivery_address", nullable = false, columnDefinition = "TEXT")
     private String deliveryAddress;
 }

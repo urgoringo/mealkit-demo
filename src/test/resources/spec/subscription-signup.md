@@ -16,7 +16,12 @@ Then system returns 422 with validation error
 ## Scenario: must select at least 2 recipes
 
 Given customer has selected only 2 recipes
-When customer tries to sign up for subscription 
+When customer tries to sign up for subscription
+Then system returns 422 with validation error
+
+## Scenario: delivery address is required
+
+When customer tries to signup without delivery address
 Then system returns 422 with validation error
 
 ## Scenario: subscription has delivery address
