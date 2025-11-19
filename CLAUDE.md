@@ -66,6 +66,12 @@ This project follows **Domain-Driven Design (DDD)** principles:
   - Domain models should make invalid states impossible to represent
   - Example: `Order.create()` validates minimum recipe count
 
+- **Optional Fields in Domain Models**: Use `@Nullable` for optional fields
+  - Mark optional fields with `@Nullable` annotation (e.g., `@Nullable String deliveryAddress`)
+  - Factory method parameters that are optional should also be marked `@Nullable`
+  - Required fields are non-null by default (when using `@NullMarked` on the class)
+  - Example: `Subscription.create(customerId, firstOrder, @Nullable String deliveryAddress)`
+
 ### Validation and Error Handling
 
 The project uses a consistent approach to validation and error handling:
@@ -117,6 +123,8 @@ The project maintains strict separation between persistence and domain concerns:
   - MapStruct generates implementation at compile time
   - Keeps mapping logic declarative and type-safe
   - Mappers are Spring beans automatically injected where needed
+  - **Automatic field mapping**: Fields with matching names are automatically mapped
+  - Only create custom mapping methods for fields that need transformation (e.g., `Id<T>` wrapper)
 
 ### Id Wrapper Type Pattern
 
@@ -354,6 +362,42 @@ Spring Framework 6+ uses JSpecify annotations internally. Spring's `@NonNullApi`
 4. Never modify existing migrations once committed
 
 ### Testing Guidelines
+
+#### Test-Driven Development (TDD) Workflow
+
+**ALWAYS follow TDD when implementing new features:**
+
+1. **Write the test first**
+   - Implement step definitions for the new scenario
+   - Update `ApplicationRunner` with any needed API methods
+   - Update test DTOs to match expected API contract
+   - Run the test to ensure it compiles
+
+2. **Verify test fails for the right reason**
+   - Run `./gradlew test --tests "StoriesRunner"`
+   - Confirm test fails with expected error (e.g., field is null, method not found)
+   - Check the JBehave report: `target/jbehave/spec.*.txt`
+   - If test fails for wrong reason, fix the test before proceeding
+
+3. **Implement production code to make test pass**
+   - Start with database migration if schema changes needed
+   - Update persistence entities (add `@Column` annotations)
+   - Update domain models (add fields with `@Nullable` if optional)
+   - Update services to handle new parameters
+   - Update API controllers and DTOs
+   - MapStruct will auto-map fields with matching names
+
+4. **Verify test passes**
+   - Run tests again: `./gradlew test`
+   - Check that new scenario passes
+   - Ensure no existing tests broken
+   - Review JBehave report to confirm success
+
+**Benefits of TDD:**
+- Tests document intended behavior before implementation
+- Prevents over-engineering (only write code needed to pass tests)
+- Catches integration issues early
+- Provides immediate feedback on design decisions
 
 #### Integration Testing
 - Integration tests require `@Import(TestContainersConfiguration.class)`
