@@ -36,13 +36,10 @@ public class CreateSubscriptionService {
         var customer = Customer.create(customerEmail);
         var savedCustomer = customerDomainRepository.save(customer);
 
-        // Create the first order with the chosen recipes
-        // Order.create() will validate minimum recipe count
-        var firstOrder = Order.create(recipeIds, null);
-
-        // Create subscription with the customer, first order, delivery address, and delivery day
-        // If deliveryDay is specified, Subscription.create will calculate the delivery date
-        var subscription = Subscription.create(savedCustomer.id(), firstOrder, deliveryAddress, deliveryDay, LocalDate.now());
+        // Create subscription with recipe IDs, delivery address, and delivery day
+        // Subscription.create will create the first order and validate minimum recipe count
+        // If deliveryDay is specified, it will also calculate the delivery date
+        var subscription = Subscription.create(savedCustomer.id(), recipeIds, deliveryAddress, deliveryDay, LocalDate.now());
 
         return subscriptionDomainRepository.save(subscription);
     }
