@@ -5,6 +5,7 @@ import com.urgoringo.mealkit.mapper.SubscriptionApiMapper;
 import com.urgoringo.mealkit.service.CreateSubscriptionService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,7 +30,7 @@ public class SubscriptionController {
     @PostMapping
     public ResponseEntity<SubscriptionResponse> createSubscription(@RequestBody CreateSubscriptionRequest request) {
         var recipeIds = subscriptionApiMapper.mapRecipeIds(request.recipeIds());
-        Subscription subscription = createSubscriptionService.execute(request.customerEmail(), recipeIds);
+        Subscription subscription = createSubscriptionService.execute(request.customerEmail(), recipeIds, request.deliveryAddress());
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -37,12 +38,12 @@ public class SubscriptionController {
     /**
      * Request DTO for creating a subscription.
      */
-    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds) {}
+    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds, @Nullable String deliveryAddress) {}
 
     /**
      * Response DTO for subscription data.
      */
-    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders) {}
+    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, @Nullable String deliveryAddress) {}
 
     /**
      * Response DTO for order data.

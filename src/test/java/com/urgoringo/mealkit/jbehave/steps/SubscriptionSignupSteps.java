@@ -30,6 +30,7 @@ public class SubscriptionSignupSteps {
     private List<Long> chosenRecipeIds;
     private SubscriptionResponse subscription;
     private ApiResponse<SubscriptionResponse> response;
+    private String homeAddress;
 
     @BeforeScenario
     public void cleanupDatabase() {
@@ -132,5 +133,41 @@ public class SubscriptionSignupSteps {
     @When("customer tries to sign up for subscription")
     public void whenCustomerTriesToSignUpForSubscription() {
         response = app.createSubscription(customerEmail, chosenRecipeIds);
+    }
+
+    @Given("customer home address is: $address")
+    public void givenCustomerHomeAddressIs(String address) {
+        // Set a test customer email
+        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+
+        // Store the address (will be in multiline format from the spec)
+        homeAddress = address;
+    }
+
+    @When("they signup for subscription")
+    public void whenTheySignupForSubscription() {
+        // Create 3 recipes for the subscription (minimum required)
+        availableRecipes = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+            RecipeResponse recipe = app.createRecipe("Recipe " + i).expectSuccess();
+            availableRecipes.add(recipe);
+        }
+
+        // Collect recipe IDs
+        chosenRecipeIds = availableRecipes.stream()
+                .map(RecipeResponse::id)
+                .toList();
+
+        // Create subscription with address
+        response = app.createSubscription(customerEmail, chosenRecipeIds, homeAddress);
+        subscription = response.expectSuccess();
+    }
+
+    @Then("subscription has customer's home address as delivery address")
+    public void thenSubscriptionHasCustomerHomeAddressAsDeliveryAddress() {
+        assertNotNull(subscription, "Subscription should not be null");
+        assertNotNull(subscription.deliveryAddress(), "Delivery address should not be null");
+        assertEquals(homeAddress, subscription.deliveryAddress(),
+            "Delivery address should match customer's home address");
     }
 }

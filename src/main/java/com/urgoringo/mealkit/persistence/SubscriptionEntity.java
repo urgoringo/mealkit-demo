@@ -33,4 +33,7 @@ public class SubscriptionEntity {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "subscription_id")
     private List<OrderEntity> upcomingOrders = new ArrayList<>();
+
+    @Column(name = "delivery_address", columnDefinition = "TEXT")
+    private String deliveryAddress;
 }

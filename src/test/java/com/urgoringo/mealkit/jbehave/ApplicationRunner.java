@@ -80,7 +80,19 @@ public class ApplicationRunner {
      * @return ApiResponse containing either success with subscription or error with status code
      */
     public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds) {
-        CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds);
+        return createSubscription(customerEmail, recipeIds, null);
+    }
+
+    /**
+     * Creates a new subscription via the API with a delivery address.
+     *
+     * @param customerEmail the customer email
+     * @param recipeIds the list of recipe IDs for the first order
+     * @param deliveryAddress the delivery address (optional)
+     * @return ApiResponse containing either success with subscription or error with status code
+     */
+    public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress) {
+        CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds, deliveryAddress);
         ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
                 "/subscriptions",
                 request,
@@ -111,12 +123,12 @@ public class ApplicationRunner {
     /**
      * Request DTO for creating a subscription.
      */
-    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds) {}
+    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress) {}
 
     /**
      * Response DTO for subscription data.
      */
-    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders) {}
+    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress) {}
 
     /**
      * Response DTO for order data.

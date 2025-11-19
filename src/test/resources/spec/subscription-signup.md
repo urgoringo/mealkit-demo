@@ -18,3 +18,13 @@ Then system returns 422 with validation error
 Given customer has selected only 2 recipes
 When customer tries to sign up for subscription 
 Then system returns 422 with validation error
+
+## Scenario: subscription has delivery address
+
+Given customer home address is: 
+Pikk 15
+10123 Tallinn
+Estonia
+When they signup for subscription 
+Then subscription has customer's home address as delivery address
+

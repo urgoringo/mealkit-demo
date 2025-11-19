@@ -4,6 +4,7 @@ import com.urgoringo.mealkit.domain.*;
 import com.urgoringo.mealkit.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,7 @@ public class CreateSubscriptionService {
     private final SubscriptionDomainRepository subscriptionDomainRepository;
 
     @Transactional
-    public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds) {
+    public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, @Nullable String deliveryAddress) {
         // Validate that customer email doesn't already exist
         if (customerDomainRepository.existsByEmail(customerEmail)) {
             throw new ValidationException("Customer with email " + customerEmail + " already exists");
@@ -37,8 +38,8 @@ public class CreateSubscriptionService {
         // Order.create() will validate minimum recipe count
         var firstOrder = Order.create(recipeIds);
 
-        // Create subscription with the customer and first order
-        var subscription = Subscription.create(savedCustomer.id(), firstOrder);
+        // Create subscription with the customer, first order, and delivery address
+        var subscription = Subscription.create(savedCustomer.id(), firstOrder, deliveryAddress);
 
         return subscriptionDomainRepository.save(subscription);
     }
