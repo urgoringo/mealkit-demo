@@ -1,15 +1,14 @@
-package com.urgoringo.mealkit.jbehave.steps;
+package com.urgoringo.mealkit.cucumber.steps;
 
-import com.urgoringo.mealkit.jbehave.ApiResponse;
-import com.urgoringo.mealkit.jbehave.ApplicationRunner;
-import com.urgoringo.mealkit.jbehave.ApplicationRunner.RecipeResponse;
-import com.urgoringo.mealkit.jbehave.ApplicationRunner.SubscriptionResponse;
+import com.urgoringo.mealkit.cucumber.ApiResponse;
+import com.urgoringo.mealkit.cucumber.ApplicationRunner;
+import com.urgoringo.mealkit.cucumber.ApplicationRunner.RecipeResponse;
+import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionResponse;
 import lombok.RequiredArgsConstructor;
-import org.jbehave.core.annotations.BeforeScenario;
-import org.jbehave.core.annotations.Given;
-import org.jbehave.core.annotations.Then;
-import org.jbehave.core.annotations.When;
-import org.springframework.stereotype.Component;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -23,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Step definitions for subscription signup scenarios.
  */
-@Component
 @RequiredArgsConstructor
 public class SubscriptionSignupSteps {
 
@@ -37,7 +35,7 @@ public class SubscriptionSignupSteps {
     private LocalDate today;
     private DayOfWeek deliveryDay;
 
-    @BeforeScenario
+    @Before
     public void cleanupDatabase() {
         // Clean up data before each scenario to ensure test isolation
         app.deleteAllSubscriptions();
@@ -50,7 +48,7 @@ public class SubscriptionSignupSteps {
         customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
     }
 
-    @Given("$count recipes are available in the system")
+    @Given("{int} recipes are available in the system")
     public void givenRecipesAreAvailable(int count) {
         availableRecipes = new ArrayList<>();
         for (int i = 1; i <= count; i++) {
@@ -73,7 +71,7 @@ public class SubscriptionSignupSteps {
         subscription = response.expectSuccess();
     }
 
-    @Then("system creates new subscription with upcoming order that contains these $count recipes")
+    @Then("system creates new subscription with upcoming order that contains these {int} recipes")
     public void thenSubscriptionIsCreated(int count) {
         // Verify subscription was created
         assertNotNull(subscription, "Subscription should not be null");
@@ -94,7 +92,7 @@ public class SubscriptionSignupSteps {
             "Order recipes should match chosen recipes");
     }
 
-    @Given("customer with email: $email already exists")
+    @Given("customer with email: {word} already exists")
     public void givenCustomerWithEmailAlreadyExists(String email) {
         customerEmail = email;
         // Create recipes and subscription to establish the customer with this email
@@ -107,21 +105,21 @@ public class SubscriptionSignupSteps {
         app.createSubscription(customerEmail, recipeIds, defaultAddress).expectSuccess();
     }
 
-    @When("customer tries to signup subsciption using $email")
+    @When("customer tries to signup subsciption using {word}")
     public void whenCustomerTriesToSignupSubscription(String email) {
         List<Long> recipeIds = List.of();
         String defaultAddress = "123 Main St\n12345 New York\nUSA";
         response = app.createSubscription(email, recipeIds, defaultAddress);
     }
 
-    @Then("system returns $statusCode with validation error")
+    @Then("system returns {int} with validation error")
     public void thenSystemReturnsStatusWithValidationError(int statusCode) {
         assertNotNull(response, "Response should not be null");
         int actualStatusCode = response.expectError();
         assertEquals(statusCode, actualStatusCode, "Expected status code " + statusCode);
     }
 
-    @Given("customer has selected only $count recipes")
+    @Given("customer has selected only {int} recipes")
     public void givenCustomerHasSelectedOnlyRecipes(int count) {
         // Set a test customer email
         customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
@@ -160,7 +158,7 @@ public class SubscriptionSignupSteps {
         response = app.createSubscription(customerEmail, recipeIds, null);
     }
 
-    @Given("customer home address is: $address")
+    @Given("customer home address is:")
     public void givenCustomerHomeAddressIs(String address) {
         // Set a test customer email
         customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
@@ -184,7 +182,9 @@ public class SubscriptionSignupSteps {
                 .toList();
 
         // Create subscription with address and delivery day (if specified)
-        response = app.createSubscription(customerEmail, chosenRecipeIds, homeAddress, deliveryDay);
+        // Use a default address if one wasn't set
+        String address = homeAddress != null ? homeAddress : "123 Main St\n12345 New York\nUSA";
+        response = app.createSubscription(customerEmail, chosenRecipeIds, address, deliveryDay);
         subscription = response.expectSuccess();
     }
 
@@ -196,13 +196,13 @@ public class SubscriptionSignupSteps {
             "Delivery address should match customer's home address");
     }
 
-    @Given("today is $date")
+    @Given("today is {}")
     public void givenTodayIs(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         today = LocalDate.parse(date, formatter);
     }
 
-    @Given("customer selects $dayOfWeek as the delivery day")
+    @Given("customer selects {word} as the delivery day")
     public void givenCustomerSelectsDeliveryDay(String dayOfWeek) {
         // Set a test customer email
         customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
@@ -211,7 +211,7 @@ public class SubscriptionSignupSteps {
         deliveryDay = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
     }
 
-    @Then("first order will be delivered on $date")
+    @Then("first order will be delivered on {}")
     public void thenFirstOrderWillBeDeliveredOn(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         LocalDate expectedDeliveryDate = LocalDate.parse(date, formatter);

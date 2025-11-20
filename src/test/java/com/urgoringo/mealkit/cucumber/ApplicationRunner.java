@@ -1,4 +1,4 @@
-package com.urgoringo.mealkit.jbehave;
+package com.urgoringo.mealkit.cucumber;
 
 import com.urgoringo.mealkit.persistence.CustomerRepository;
 import com.urgoringo.mealkit.persistence.RecipeRepository;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Test helper class that encapsulates API access logic for JBehave scenarios.
+ * Test helper class that encapsulates API access logic for Cucumber scenarios.
  * Provides high-level methods for interacting with the application API,
  * hiding low-level HTTP details from step definitions.
  */

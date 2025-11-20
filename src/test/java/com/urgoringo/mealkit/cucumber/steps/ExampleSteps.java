@@ -1,23 +1,20 @@
-package com.urgoringo.mealkit.jbehave.steps;
+package com.urgoringo.mealkit.cucumber.steps;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import org.jbehave.core.annotations.Given;
-import org.jbehave.core.annotations.Then;
-import org.jbehave.core.annotations.When;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Example step definitions for JBehave stories.
- * This class demonstrates how to write steps that correspond to story scenarios.
+ * Example step definitions for Cucumber scenarios.
+ * This class demonstrates how to write steps that correspond to feature scenarios.
  */
-@Component
 @RequiredArgsConstructor
 public class ExampleSteps {
 

@@ -1,13 +1,12 @@
-package com.urgoringo.mealkit.jbehave.steps;
+package com.urgoringo.mealkit.cucumber.steps;
 
-import com.urgoringo.mealkit.jbehave.ApplicationRunner;
-import com.urgoringo.mealkit.jbehave.ApplicationRunner.RecipeResponse;
+import com.urgoringo.mealkit.cucumber.ApplicationRunner;
+import com.urgoringo.mealkit.cucumber.ApplicationRunner.RecipeResponse;
 import lombok.RequiredArgsConstructor;
-import org.jbehave.core.annotations.BeforeScenario;
-import org.jbehave.core.annotations.Given;
-import org.jbehave.core.annotations.Then;
-import org.jbehave.core.annotations.When;
-import org.springframework.stereotype.Component;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Step definitions for recipe catalog scenarios.
  */
-@Component
 @RequiredArgsConstructor
 public class RecipeCatalogSteps {
 
@@ -25,7 +23,7 @@ public class RecipeCatalogSteps {
     private List<String> expectedRecipes;
     private List<RecipeResponse> recipes;
 
-    @BeforeScenario
+    @Before
     public void cleanupDatabase() {
         // Clean up data before each scenario to ensure test isolation
         // Must delete subscriptions first due to foreign key constraints
@@ -33,7 +31,7 @@ public class RecipeCatalogSteps {
         app.deleteAllRecipes();
     }
 
-    @Given("system has following recipes available $recipeList")
+    @Given("system has following recipes available")
     public void givenSystemHasRecipesAvailable(String recipeList) {
         // Parse the recipe list (format: "- Recipe One\n- Recipe Two\n- Recipe Three")
         expectedRecipes = new ArrayList<>();
@@ -57,7 +55,7 @@ public class RecipeCatalogSteps {
         recipes = app.getAllRecipes();
     }
 
-    @Then("system returns these $count recipes")
+    @Then("system returns these {int} recipes")
     public void thenSystemReturnsRecipes(int count) {
         assertEquals(count, recipes.size(), "Should return " + count + " recipes");
 

@@ -1,4 +1,4 @@
-package com.urgoringo.mealkit.jbehave;
+package com.urgoringo.mealkit.cucumber;
 
 import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
