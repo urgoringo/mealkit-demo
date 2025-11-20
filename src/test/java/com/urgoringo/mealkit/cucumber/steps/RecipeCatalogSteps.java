@@ -55,7 +55,7 @@ public class RecipeCatalogSteps {
         recipes = app.getAllRecipes();
     }
 
-    @Then("system returns these {int} recipes")
+    @Then("system returns these {recipeCount} recipes")
     public void thenSystemReturnsRecipes(int count) {
         assertEquals(count, recipes.size(), "Should return " + count + " recipes");
 

@@ -12,7 +12,6 @@ import io.cucumber.java.en.When;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +47,7 @@ public class SubscriptionSignupSteps {
         customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
     }
 
-    @Given("{int} recipes are available in the system")
+    @Given("{recipeCount} recipes are available in the system")
     public void givenRecipesAreAvailable(int count) {
         availableRecipes = new ArrayList<>();
         for (int i = 1; i <= count; i++) {
@@ -71,7 +70,7 @@ public class SubscriptionSignupSteps {
         subscription = response.expectSuccess();
     }
 
-    @Then("system creates new subscription with upcoming order that contains these {int} recipes")
+    @Then("system creates new subscription with upcoming order that contains these {recipeCount} recipes")
     public void thenSubscriptionIsCreated(int count) {
         // Verify subscription was created
         assertNotNull(subscription, "Subscription should not be null");
@@ -92,7 +91,7 @@ public class SubscriptionSignupSteps {
             "Order recipes should match chosen recipes");
     }
 
-    @Given("customer with email: {word} already exists")
+    @Given("customer with email: {email} already exists")
     public void givenCustomerWithEmailAlreadyExists(String email) {
         customerEmail = email;
         // Create recipes and subscription to establish the customer with this email
@@ -105,21 +104,21 @@ public class SubscriptionSignupSteps {
         app.createSubscription(customerEmail, recipeIds, defaultAddress).expectSuccess();
     }
 
-    @When("customer tries to signup subsciption using {word}")
+    @When("customer tries to signup subsciption using {email}")
     public void whenCustomerTriesToSignupSubscription(String email) {
         List<Long> recipeIds = List.of();
         String defaultAddress = "123 Main St\n12345 New York\nUSA";
         response = app.createSubscription(email, recipeIds, defaultAddress);
     }
 
-    @Then("system returns {int} with validation error")
+    @Then("system returns {statusCode} with validation error")
     public void thenSystemReturnsStatusWithValidationError(int statusCode) {
         assertNotNull(response, "Response should not be null");
         int actualStatusCode = response.expectError();
         assertEquals(statusCode, actualStatusCode, "Expected status code " + statusCode);
     }
 
-    @Given("customer has selected only {int} recipes")
+    @Given("customer has selected only {recipeCount} recipes")
     public void givenCustomerHasSelectedOnlyRecipes(int count) {
         // Set a test customer email
         customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
@@ -196,26 +195,22 @@ public class SubscriptionSignupSteps {
             "Delivery address should match customer's home address");
     }
 
-    @Given("today is {}")
-    public void givenTodayIs(String date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        today = LocalDate.parse(date, formatter);
+    @Given("today is {date}")
+    public void givenTodayIs(LocalDate date) {
+        today = date;
     }
 
-    @Given("customer selects {word} as the delivery day")
-    public void givenCustomerSelectsDeliveryDay(String dayOfWeek) {
+    @Given("customer selects {dayOfWeek} as the delivery day")
+    public void givenCustomerSelectsDeliveryDay(DayOfWeek dayOfWeek) {
         // Set a test customer email
         customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
 
-        // Parse day of week (e.g., "Monday" -> DayOfWeek.MONDAY)
-        deliveryDay = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
+        // Store the selected delivery day
+        deliveryDay = dayOfWeek;
     }
 
-    @Then("first order will be delivered on {}")
-    public void thenFirstOrderWillBeDeliveredOn(String date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        LocalDate expectedDeliveryDate = LocalDate.parse(date, formatter);
-
+    @Then("first order will be delivered on {date}")
+    public void thenFirstOrderWillBeDeliveredOn(LocalDate expectedDeliveryDate) {
         // Verify subscription has upcoming orders
         assertNotNull(subscription, "Subscription should not be null");
         assertNotNull(subscription.upcomingOrders(), "Upcoming orders should not be null");
