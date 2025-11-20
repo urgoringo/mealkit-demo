@@ -82,13 +82,24 @@ public class SubscriptionSignupSteps {
         assertEquals(1, subscription.upcomingOrders().size(),
             "Should have exactly one upcoming order");
 
-        // Verify order contains the correct recipes
+        // Verify order contains the correct number of recipes
         var firstOrder = subscription.upcomingOrders().get(0);
         assertNotNull(firstOrder.recipeIds(), "Order recipe IDs should not be null");
         assertEquals(count, firstOrder.recipeIds().size(),
             "Order should contain " + count + " recipes");
+
+        // Verify order contains the exact recipes that were chosen
         assertEquals(chosenRecipeIds, firstOrder.recipeIds(),
             "Order recipes should match chosen recipes");
+
+        // Verify each chosen recipe is present in the order
+        for (int i = 0; i < chosenRecipeIds.size(); i++) {
+            Long expectedRecipeId = chosenRecipeIds.get(i);
+            Long actualRecipeId = firstOrder.recipeIds().get(i);
+            assertEquals(expectedRecipeId, actualRecipeId,
+                "Recipe at position " + i + " should match. Expected: " +
+                availableRecipes.get(i).title() + " (ID: " + expectedRecipeId + ")");
+        }
     }
 
     @Given("customer with email: {email} already exists")
