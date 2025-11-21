@@ -165,6 +165,23 @@ public class ApplicationRunner {
     }
 
     /**
+     * Signs up a new customer via the API.
+     *
+     * @param email the customer email
+     * @param password the customer password
+     * @return ApiResponse containing either success with customer or error with status code
+     */
+    public ApiResponse<CustomerResponse> signupCustomer(String email, String password) {
+        SignupCustomerRequest request = new SignupCustomerRequest(email, password);
+        ResponseEntity<CustomerResponse> response = restTemplate.postForEntity(
+                "/customers/signup",
+                request,
+                CustomerResponse.class
+        );
+        return ApiResponse.from(response);
+    }
+
+    /**
      * Deletes all subscriptions and customers from the database.
      * Used for test cleanup to ensure scenario isolation.
      */
@@ -202,4 +219,14 @@ public class ApplicationRunner {
      * Request DTO for creating a subscription with a specific delivery date.
      */
     public record CreateSubscriptionRequestWithDate(String customerEmail, List<Long> recipeIds, String deliveryAddress, LocalDate deliveryDate) {}
+
+    /**
+     * Request DTO for customer signup.
+     */
+    public record SignupCustomerRequest(String email, String password) {}
+
+    /**
+     * Response DTO for customer data.
+     */
+    public record CustomerResponse(Long id, String email) {}
 }

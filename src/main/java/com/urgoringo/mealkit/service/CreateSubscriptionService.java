@@ -12,10 +12,11 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Application service for creating a new subscription.
- * Creates the customer as part of the subscription signup process.
+ * Creates the customer as part of the subscription signup process with a temporary password.
  * Follows DDD principle: one service per use case.
  */
 @NullMarked
@@ -25,6 +26,7 @@ public class CreateSubscriptionService {
 
     private final CustomerDomainRepository customerDomainRepository;
     private final SubscriptionDomainRepository subscriptionDomainRepository;
+    private final PasswordHasher passwordHasher;
     private final Clock clock;
 
     @Transactional
@@ -33,7 +35,11 @@ public class CreateSubscriptionService {
             throw new ValidationException("Customer with email " + customerEmail + " already exists");
         }
 
-        var customer = Customer.create(customerEmail);
+        // Create customer with a temporary password
+        // In production, this would trigger a password reset email
+        String temporaryPassword = "TEMP_" + UUID.randomUUID();
+        String hashedPassword = passwordHasher.hash(temporaryPassword);
+        var customer = Customer.signup(customerEmail, hashedPassword);
         var savedCustomer = customerDomainRepository.save(customer);
 
         LocalDate today = LocalDate.now(clock);

@@ -1,0 +1,34 @@
+package com.urgoringo.mealkit.service;
+
+import com.urgoringo.mealkit.domain.Customer;
+import com.urgoringo.mealkit.domain.CustomerDomainRepository;
+import com.urgoringo.mealkit.exception.ValidationException;
+import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Application service for customer signup.
+ * Follows DDD principle: one service per use case.
+ */
+@NullMarked
+@Service
+@RequiredArgsConstructor
+public class SignupCustomerService {
+
+    private final CustomerDomainRepository customerDomainRepository;
+    private final PasswordHasher passwordHasher;
+
+    @Transactional
+    public Customer execute(String email, String plainPassword) {
+        if (customerDomainRepository.existsByEmail(email)) {
+            throw new ValidationException("Customer with email " + email + " already exists");
+        }
+
+        String hashedPassword = passwordHasher.hash(plainPassword);
+        Customer customer = Customer.signup(email, hashedPassword);
+
+        return customerDomainRepository.save(customer);
+    }
+}
