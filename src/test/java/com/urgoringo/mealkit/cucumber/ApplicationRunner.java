@@ -211,7 +211,7 @@ public class ApplicationRunner {
         org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
 
         ResponseEntity<SubscriptionResponse> response = restTemplate.exchange(
-                "/subscriptions/me",
+                "/subscriptions",
                 org.springframework.http.HttpMethod.GET,
                 entity,
                 SubscriptionResponse.class

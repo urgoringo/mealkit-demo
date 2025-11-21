@@ -49,16 +49,16 @@ public class SubscriptionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<SubscriptionResponse> getSubscription(@PathVariable Long id) {
-        Subscription subscription = getSubscriptionService.execute(Id.of(id));
+    @GetMapping
+    public ResponseEntity<SubscriptionResponse> getMySubscription(@AuthenticationPrincipal Jwt jwt) {
+        Subscription subscription = getSubscriptionService.executeForAuthenticatedCustomer(jwt);
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<SubscriptionResponse> getMySubscription(@AuthenticationPrincipal Jwt jwt) {
-        Subscription subscription = getSubscriptionService.executeForAuthenticatedCustomer(jwt);
+    @GetMapping("/{id}")
+    public ResponseEntity<SubscriptionResponse> getSubscription(@PathVariable Long id) {
+        Subscription subscription = getSubscriptionService.execute(Id.of(id));
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.ok(response);
     }

@@ -6,6 +6,7 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -40,8 +41,9 @@ public class SecurityConfig {
                 .requestMatchers("/health", "/actuator/**").permitAll()
                 .requestMatchers("/customers/signup", "/customers/login").permitAll()
                 .requestMatchers("/recipes/**").permitAll()
-                .requestMatchers("/subscriptions/me").authenticated()
-                .requestMatchers("/subscriptions", "/subscriptions/*", "/subscriptions/*/process-orders").permitAll()
+                .requestMatchers(HttpMethod.GET, "/subscriptions").authenticated()
+                .requestMatchers(HttpMethod.POST, "/subscriptions").permitAll()
+                .requestMatchers("/subscriptions/*", "/subscriptions/*/process-orders").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
