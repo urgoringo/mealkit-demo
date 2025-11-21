@@ -56,13 +56,6 @@ public class SubscriptionController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<SubscriptionResponse> getSubscription(@PathVariable Long id) {
-        Subscription subscription = getSubscriptionService.execute(Id.of(id));
-        SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
-        return ResponseEntity.ok(response);
-    }
-
     @PostMapping("/{id}/process-orders")
     public ResponseEntity<Void> processSubscriptionOrders(@PathVariable Long id) {
         processSubscriptionOrdersService.execute(Id.of(id));

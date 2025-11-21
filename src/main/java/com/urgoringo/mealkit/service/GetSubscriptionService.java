@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Application service for retrieving subscriptions.
+ * Application service for retrieving authenticated customer's subscription.
  * Follows DDD principle: one service per use case.
  */
 @NullMarked
@@ -21,12 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class GetSubscriptionService {
 
     private final SubscriptionDomainRepository subscriptionDomainRepository;
-
-    @Transactional(readOnly = true)
-    public Subscription execute(Id<Subscription> subscriptionId) {
-        return subscriptionDomainRepository.findById(subscriptionId)
-                .orElseThrow(() -> new IllegalArgumentException("Subscription not found: " + subscriptionId.value()));
-    }
 
     @Transactional(readOnly = true)
     public Subscription executeForAuthenticatedCustomer(Jwt jwt) {

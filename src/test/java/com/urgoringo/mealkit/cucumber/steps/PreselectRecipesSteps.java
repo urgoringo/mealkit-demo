@@ -29,6 +29,9 @@ public class PreselectRecipesSteps {
     private SubscriptionResponse subscription;
     private LocalDate currentDay;
     private LocalDate expectedDeliveryDate;
+    private String customerEmail;
+    private String customerPassword;
+    private String authToken;
 
     @Before
     public void cleanupDatabase() {
@@ -39,8 +42,12 @@ public class PreselectRecipesSteps {
 
     @Given("a subscription exists where upcoming order has delivery date {date}")
     public void givenSubscriptionExistsWithUpcomingOrderDeliveryDate(LocalDate deliveryDate) {
-        // Create a customer email for this test
-        String customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+        // Create a customer email and password for this test
+        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+        customerPassword = "TestPassword123!";
+
+        // Sign up the customer
+        app.signupCustomer(customerEmail, customerPassword).expectSuccess();
 
         // Create 3 recipes (minimum required)
         List<Long> recipeIds = new ArrayList<>();
@@ -58,6 +65,9 @@ public class PreselectRecipesSteps {
         // Create subscription with delivery day
         String defaultAddress = "123 Main St\n12345 New York\nUSA";
         subscription = app.createSubscription(customerEmail, recipeIds, defaultAddress, deliveryDay).expectSuccess();
+
+        // Login to get authentication token for subsequent requests
+        authToken = app.loginCustomer(customerEmail, customerPassword).expectSuccess().token();
 
         // Verify the subscription was created with the expected delivery date
         assertNotNull(subscription, "Subscription should not be null");
@@ -78,8 +88,8 @@ public class PreselectRecipesSteps {
         // Recipes will be automatically selected randomly by the system
         app.processSubscriptionOrders(subscription.id());
 
-        // Reload the subscription to get the updated state
-        subscription = app.getSubscription(subscription.id()).expectSuccess();
+        // Reload the subscription to get the updated state using authenticated request
+        subscription = app.getMySubscription(authToken).expectSuccess();
     }
 
     @Then("system adds new upcoming order with delivery date {date}")

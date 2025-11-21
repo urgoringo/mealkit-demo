@@ -136,20 +136,6 @@ public class ApplicationRunner {
     }
 
     /**
-     * Retrieves a subscription by ID via the API.
-     *
-     * @param subscriptionId the subscription ID
-     * @return ApiResponse containing either success with subscription or error with status code
-     */
-    public ApiResponse<SubscriptionResponse> getSubscription(Long subscriptionId) {
-        ResponseEntity<SubscriptionResponse> response = restTemplate.getForEntity(
-                "/subscriptions/" + subscriptionId,
-                SubscriptionResponse.class
-        );
-        return ApiResponse.from(response);
-    }
-
-    /**
      * Processes subscription orders via the API.
      * This triggers the system to check if new orders should be added to the subscription.
      * Recipes are automatically selected randomly by the system.
