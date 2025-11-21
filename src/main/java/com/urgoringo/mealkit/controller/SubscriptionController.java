@@ -1,5 +1,6 @@
 package com.urgoringo.mealkit.controller;
 
+import com.urgoringo.mealkit.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.Subscription;
 import com.urgoringo.mealkit.mapper.SubscriptionApiMapper;
@@ -15,7 +16,6 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
@@ -50,8 +50,8 @@ public class SubscriptionController {
     }
 
     @GetMapping
-    public ResponseEntity<SubscriptionResponse> getMySubscription(@AuthenticationPrincipal Jwt jwt) {
-        Subscription subscription = getSubscriptionService.executeForAuthenticatedCustomer(jwt);
+    public ResponseEntity<SubscriptionResponse> getMySubscription(@AuthenticationPrincipal Id<Customer> customerId) {
+        Subscription subscription = getSubscriptionService.executeForAuthenticatedCustomer(customerId);
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.ok(response);
     }

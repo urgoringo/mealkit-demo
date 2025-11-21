@@ -7,7 +7,6 @@ import com.urgoringo.mealkit.domain.SubscriptionDomainRepository;
 import com.urgoringo.mealkit.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +22,7 @@ public class GetSubscriptionService {
     private final SubscriptionDomainRepository subscriptionDomainRepository;
 
     @Transactional(readOnly = true)
-    public Subscription executeForAuthenticatedCustomer(Jwt jwt) {
-        Long customerIdValue = Long.parseLong(jwt.getSubject());
-        Id<Customer> customerId = Id.of(customerIdValue);
-
+    public Subscription executeForAuthenticatedCustomer(Id<Customer> customerId) {
         return subscriptionDomainRepository.findByCustomerId(customerId)
                 .orElseThrow(() -> new ValidationException("Subscription not found"));
     }
