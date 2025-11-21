@@ -11,7 +11,7 @@ Feature: Signup for subscription
     When customer tries to signup subsciption using jane.doe@example.com
     Then system returns 422 with validation error
 
-  Scenario: must select at least 2 recipes
+  Scenario: must select at least 3 recipes
     Given customer has selected only 2 recipes
     When customer tries to sign up for subscription
     Then system returns 422 with validation error
@@ -30,7 +30,7 @@ Feature: Signup for subscription
     When they signup for subscription
     Then subscription has customer's home address as delivery address
 
-  Scenario: subscription has delivery day
+  Scenario: subscription delivery day determines first order deliver date
     Given today is 2025.11.19
     And customer selects Monday as the delivery day
     When they signup for subscription

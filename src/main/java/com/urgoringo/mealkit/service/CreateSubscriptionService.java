@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +25,7 @@ public class CreateSubscriptionService {
 
     private final CustomerDomainRepository customerDomainRepository;
     private final SubscriptionDomainRepository subscriptionDomainRepository;
+    private final Clock clock;
 
     @Transactional
     public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, String deliveryAddress, @Nullable DayOfWeek deliveryDay) {
@@ -34,7 +36,8 @@ public class CreateSubscriptionService {
         var customer = Customer.create(customerEmail);
         var savedCustomer = customerDomainRepository.save(customer);
 
-        var subscription = Subscription.signup(savedCustomer.id(), recipeIds, deliveryAddress, deliveryDay, LocalDate.now());
+        LocalDate today = LocalDate.now(clock);
+        var subscription = Subscription.signup(savedCustomer.id(), recipeIds, deliveryAddress, deliveryDay, today);
 
         return subscriptionDomainRepository.save(subscription);
     }

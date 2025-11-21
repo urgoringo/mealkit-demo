@@ -1,8 +1,11 @@
 package com.urgoringo.mealkit.controller;
 
+import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.Subscription;
 import com.urgoringo.mealkit.mapper.SubscriptionApiMapper;
 import com.urgoringo.mealkit.service.CreateSubscriptionService;
+import com.urgoringo.mealkit.service.GetSubscriptionService;
+import com.urgoringo.mealkit.service.ProcessSubscriptionOrdersService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,10 +14,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -30,6 +30,8 @@ import java.util.List;
 public class SubscriptionController {
 
     private final CreateSubscriptionService createSubscriptionService;
+    private final GetSubscriptionService getSubscriptionService;
+    private final ProcessSubscriptionOrdersService processSubscriptionOrdersService;
     private final SubscriptionApiMapper subscriptionApiMapper;
 
     @PostMapping
@@ -43,6 +45,19 @@ public class SubscriptionController {
         );
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SubscriptionResponse> getSubscription(@PathVariable Long id) {
+        Subscription subscription = getSubscriptionService.execute(Id.of(id));
+        SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/process-orders")
+    public ResponseEntity<Void> processSubscriptionOrders(@PathVariable Long id) {
+        processSubscriptionOrdersService.execute(Id.of(id));
+        return ResponseEntity.ok().build();
     }
 
     /**

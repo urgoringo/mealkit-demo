@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * Domain repository for Subscription.
  * Transforms persistence entities to domain models using SubscriptionMapper.
@@ -22,5 +24,10 @@ public class SubscriptionDomainRepository {
         var entity = subscriptionMapper.toEntity(subscription);
         var savedEntity = subscriptionRepository.save(entity);
         return subscriptionMapper.toDomain(savedEntity);
+    }
+
+    public Optional<Subscription> findById(Id<Subscription> id) {
+        return subscriptionRepository.findById(id.value())
+                .map(subscriptionMapper::toDomain);
     }
 }

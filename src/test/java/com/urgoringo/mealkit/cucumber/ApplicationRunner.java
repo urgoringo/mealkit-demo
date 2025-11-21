@@ -94,7 +94,7 @@ public class ApplicationRunner {
      * @return ApiResponse containing either success with subscription or error with status code
      */
     public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress) {
-        return createSubscription(customerEmail, recipeIds, deliveryAddress, null);
+        return createSubscription(customerEmail, recipeIds, deliveryAddress, (DayOfWeek) null);
     }
 
     /**
@@ -114,6 +114,54 @@ public class ApplicationRunner {
                 SubscriptionResponse.class
         );
         return ApiResponse.from(response);
+    }
+
+    /**
+     * Creates a new subscription via the API with a specific delivery date for the first order.
+     *
+     * @param customerEmail the customer email
+     * @param recipeIds the list of recipe IDs for the first order
+     * @param deliveryAddress the delivery address
+     * @param deliveryDate the delivery date for the first order
+     * @return ApiResponse containing either success with subscription or error with status code
+     */
+    public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress, LocalDate deliveryDate) {
+        CreateSubscriptionRequestWithDate request = new CreateSubscriptionRequestWithDate(customerEmail, recipeIds, deliveryAddress, deliveryDate);
+        ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
+                "/subscriptions",
+                request,
+                SubscriptionResponse.class
+        );
+        return ApiResponse.from(response);
+    }
+
+    /**
+     * Retrieves a subscription by ID via the API.
+     *
+     * @param subscriptionId the subscription ID
+     * @return ApiResponse containing either success with subscription or error with status code
+     */
+    public ApiResponse<SubscriptionResponse> getSubscription(Long subscriptionId) {
+        ResponseEntity<SubscriptionResponse> response = restTemplate.getForEntity(
+                "/subscriptions/" + subscriptionId,
+                SubscriptionResponse.class
+        );
+        return ApiResponse.from(response);
+    }
+
+    /**
+     * Processes subscription orders via the API.
+     * This triggers the system to check if new orders should be added to the subscription.
+     * Recipes are automatically selected randomly by the system.
+     *
+     * @param subscriptionId the subscription ID
+     */
+    public void processSubscriptionOrders(Long subscriptionId) {
+        restTemplate.postForEntity(
+                "/subscriptions/" + subscriptionId + "/process-orders",
+                null,
+                Void.class
+        );
     }
 
     /**
@@ -149,4 +197,9 @@ public class ApplicationRunner {
      * Response DTO for order data.
      */
     public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate) {}
+
+    /**
+     * Request DTO for creating a subscription with a specific delivery date.
+     */
+    public record CreateSubscriptionRequestWithDate(String customerEmail, List<Long> recipeIds, String deliveryAddress, LocalDate deliveryDate) {}
 }
