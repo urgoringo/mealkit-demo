@@ -1,6 +1,7 @@
 package com.urgoringo.mealkit.controller;
 
 import com.urgoringo.mealkit.domain.Customer;
+import com.urgoringo.mealkit.service.LoginCustomerService;
 import com.urgoringo.mealkit.service.SignupCustomerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -24,12 +25,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class CustomerController {
 
     private final SignupCustomerService signupCustomerService;
+    private final LoginCustomerService loginCustomerService;
 
     @PostMapping("/signup")
     public ResponseEntity<CustomerResponse> signup(@Valid @RequestBody SignupRequest request) {
         Customer customer = signupCustomerService.execute(request.email(), request.password());
         CustomerResponse response = new CustomerResponse(customer.id().value(), customer.email());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        String token = loginCustomerService.execute(request.email(), request.password());
+        LoginResponse response = new LoginResponse(token);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -45,4 +54,17 @@ public class CustomerController {
      * Note: Password is never included in responses for security.
      */
     public record CustomerResponse(Long id, String email) {}
+
+    /**
+     * Request DTO for customer login.
+     */
+    public record LoginRequest(
+            @NotBlank @Email String email,
+            @NotBlank String password
+    ) {}
+
+    /**
+     * Response DTO for login containing authentication token.
+     */
+    public record LoginResponse(String token) {}
 }

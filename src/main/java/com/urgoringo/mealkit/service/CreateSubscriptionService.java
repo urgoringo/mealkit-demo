@@ -31,19 +31,23 @@ public class CreateSubscriptionService {
 
     @Transactional
     public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, String deliveryAddress, @Nullable DayOfWeek deliveryDay) {
-        if (customerDomainRepository.existsByEmail(customerEmail)) {
-            throw new ValidationException("Customer with email " + customerEmail + " already exists");
+        // Get existing customer or create new one
+        Customer customer;
+        var existingCustomer = customerDomainRepository.findByEmail(customerEmail);
+
+        if (existingCustomer.isPresent()) {
+            customer = existingCustomer.get();
+        } else {
+            // Create new customer with a temporary password
+            // In production, this would trigger a password reset email
+            String temporaryPassword = "TEMP_" + UUID.randomUUID();
+            String hashedPassword = passwordHasher.hash(temporaryPassword);
+            customer = Customer.signup(customerEmail, hashedPassword);
+            customer = customerDomainRepository.save(customer);
         }
 
-        // Create customer with a temporary password
-        // In production, this would trigger a password reset email
-        String temporaryPassword = "TEMP_" + UUID.randomUUID();
-        String hashedPassword = passwordHasher.hash(temporaryPassword);
-        var customer = Customer.signup(customerEmail, hashedPassword);
-        var savedCustomer = customerDomainRepository.save(customer);
-
         LocalDate today = LocalDate.now(clock);
-        var subscription = Subscription.signup(savedCustomer.id(), recipeIds, deliveryAddress, deliveryDay, today);
+        var subscription = Subscription.signup(customer.id(), recipeIds, deliveryAddress, deliveryDay, today);
 
         return subscriptionDomainRepository.save(subscription);
     }

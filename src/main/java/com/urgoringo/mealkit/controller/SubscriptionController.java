@@ -14,6 +14,8 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
@@ -50,6 +52,13 @@ public class SubscriptionController {
     @GetMapping("/{id}")
     public ResponseEntity<SubscriptionResponse> getSubscription(@PathVariable Long id) {
         Subscription subscription = getSubscriptionService.execute(Id.of(id));
+        SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<SubscriptionResponse> getMySubscription(@AuthenticationPrincipal Jwt jwt) {
+        Subscription subscription = getSubscriptionService.executeForAuthenticatedCustomer(jwt);
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.ok(response);
     }

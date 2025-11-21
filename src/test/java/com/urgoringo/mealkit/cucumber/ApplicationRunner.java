@@ -182,6 +182,44 @@ public class ApplicationRunner {
     }
 
     /**
+     * Logs in a customer via the API.
+     *
+     * @param email the customer email
+     * @param password the customer password
+     * @return ApiResponse containing either success with login result (token) or error with status code
+     */
+    public ApiResponse<LoginResponse> loginCustomer(String email, String password) {
+        LoginRequest request = new LoginRequest(email, password);
+        ResponseEntity<LoginResponse> response = restTemplate.postForEntity(
+                "/customers/login",
+                request,
+                LoginResponse.class
+        );
+        return ApiResponse.from(response);
+    }
+
+    /**
+     * Retrieves the authenticated customer's subscription via the API.
+     * Uses Bearer token authentication.
+     *
+     * @param token the authentication token
+     * @return ApiResponse containing either success with subscription or error with status code
+     */
+    public ApiResponse<SubscriptionResponse> getMySubscription(String token) {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+
+        ResponseEntity<SubscriptionResponse> response = restTemplate.exchange(
+                "/subscriptions/me",
+                org.springframework.http.HttpMethod.GET,
+                entity,
+                SubscriptionResponse.class
+        );
+        return ApiResponse.from(response);
+    }
+
+    /**
      * Deletes all subscriptions and customers from the database.
      * Used for test cleanup to ensure scenario isolation.
      */
@@ -229,4 +267,15 @@ public class ApplicationRunner {
      * Response DTO for customer data.
      */
     public record CustomerResponse(Long id, String email) {}
+
+    /**
+     * Request DTO for customer login.
+     */
+    public record LoginRequest(String email, String password) {}
+
+    /**
+     * Response DTO for login result.
+     * Contains authentication token for subsequent API requests.
+     */
+    public record LoginResponse(String token) {}
 }

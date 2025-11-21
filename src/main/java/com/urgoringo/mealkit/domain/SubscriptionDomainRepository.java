@@ -30,4 +30,9 @@ public class SubscriptionDomainRepository {
         return subscriptionRepository.findById(id.value())
                 .map(subscriptionMapper::toDomain);
     }
+
+    public Optional<Subscription> findByCustomerId(Id<Customer> customerId) {
+        return subscriptionRepository.findByCustomerId(customerId.value())
+                .map(subscriptionMapper::toDomain);
+    }
 }

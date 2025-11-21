@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * Domain repository for Customer.
  * Transforms persistence entities to domain models using CustomerMapper.
@@ -26,5 +28,10 @@ public class CustomerDomainRepository {
 
     public boolean existsByEmail(String email) {
         return customerRepository.existsByEmail(email);
+    }
+
+    public Optional<Customer> findByEmail(String email) {
+        return customerRepository.findByEmail(email)
+                .map(customerMapper::toDomain);
     }
 }
