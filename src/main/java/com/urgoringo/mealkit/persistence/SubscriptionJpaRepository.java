@@ -6,11 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-/**
- * Spring Data JPA repository for SubscriptionEntity.
- */
 @NullMarked
 @Repository
-public interface SubscriptionRepository extends JpaRepository<SubscriptionEntity, Long> {
+public interface SubscriptionJpaRepository extends JpaRepository<SubscriptionEntity, Long> {
     Optional<SubscriptionEntity> findByCustomerId(Long customerId);
 }

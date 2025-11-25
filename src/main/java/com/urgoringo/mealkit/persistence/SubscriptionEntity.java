@@ -11,10 +11,6 @@ import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Persistence entity for Subscription, mapped to the subscriptions table.
- * NullUnmarked due to JPA initialization requirements.
- */
 @NullUnmarked
 @Entity
 @Table(name = "subscriptions")

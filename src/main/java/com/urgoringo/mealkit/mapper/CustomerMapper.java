@@ -8,9 +8,6 @@ import org.mapstruct.Mapping;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/**
- * MapStruct mapper for converting between Customer domain model and CustomerEntity.
- */
 @NullMarked
 @Mapper(componentModel = "spring")
 public interface CustomerMapper {

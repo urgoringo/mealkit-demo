@@ -22,9 +22,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * REST controller for subscription endpoints.
- */
 @NullMarked
 @RestController
 @RequestMapping("/subscriptions")
@@ -62,9 +59,6 @@ public class SubscriptionController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * Request DTO for creating a subscription.
-     */
     public record CreateSubscriptionRequest(
             @NotBlank String customerEmail,
             @NotNull List<Long> recipeIds,
@@ -72,13 +66,7 @@ public class SubscriptionController {
             @Nullable DayOfWeek deliveryDay
     ) {}
 
-    /**
-     * Response DTO for subscription data.
-     */
     public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, @Nullable DayOfWeek deliveryDay) {}
 
-    /**
-     * Response DTO for order data.
-     */
     public record OrderResponse(Long id, List<Long> recipeIds, @Nullable LocalDate deliveryDate) {}
 }

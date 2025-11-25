@@ -11,10 +11,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Persistence entity for Order, mapped to the orders table.
- * NullUnmarked due to JPA initialization requirements.
- */
 @NullUnmarked
 @Entity
 @Table(name = "orders")

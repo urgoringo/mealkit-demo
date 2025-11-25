@@ -8,9 +8,6 @@ import org.mapstruct.Mapper;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/**
- * MapStruct mapper for converting between Subscription domain model and SubscriptionEntity.
- */
 @NullMarked
 @Mapper(componentModel = "spring", uses = {OrderMapper.class})
 public interface SubscriptionMapper {

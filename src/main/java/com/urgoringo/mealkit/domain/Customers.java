@@ -1,37 +1,33 @@
 package com.urgoringo.mealkit.domain;
 
 import com.urgoringo.mealkit.mapper.CustomerMapper;
-import com.urgoringo.mealkit.persistence.CustomerRepository;
+import com.urgoringo.mealkit.persistence.CustomerJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-/**
- * Domain repository for Customer.
- * Transforms persistence entities to domain models using CustomerMapper.
- */
 @NullMarked
 @Repository
 @RequiredArgsConstructor
-public class CustomerDomainRepository {
+public class Customers {
 
-    private final CustomerRepository customerRepository;
+    private final CustomerJpaRepository customerJpaRepository;
     private final CustomerMapper customerMapper;
 
     public Customer save(Customer customer) {
         var entity = customerMapper.toEntity(customer);
-        var savedEntity = customerRepository.save(entity);
+        var savedEntity = customerJpaRepository.save(entity);
         return customerMapper.toDomain(savedEntity);
     }
 
     public boolean existsByEmail(String email) {
-        return customerRepository.existsByEmail(email);
+        return customerJpaRepository.existsByEmail(email);
     }
 
     public Optional<Customer> findByEmail(String email) {
-        return customerRepository.findByEmail(email)
+        return customerJpaRepository.findByEmail(email)
                 .map(customerMapper::toDomain);
     }
 }

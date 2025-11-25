@@ -1,7 +1,6 @@
 package com.urgoringo.mealkit.service;
 
 import com.urgoringo.mealkit.domain.*;
-import com.urgoringo.mealkit.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -14,41 +13,33 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Application service for creating a new subscription.
- * Creates the customer as part of the subscription signup process with a temporary password.
- * Follows DDD principle: one service per use case.
- */
 @NullMarked
 @Service
 @RequiredArgsConstructor
 public class CreateSubscriptionService {
 
-    private final CustomerDomainRepository customerDomainRepository;
-    private final SubscriptionDomainRepository subscriptionDomainRepository;
+    private final Customers customers;
+    private final Subscriptions subscriptions;
     private final PasswordHasher passwordHasher;
     private final Clock clock;
 
     @Transactional
     public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, String deliveryAddress, @Nullable DayOfWeek deliveryDay) {
-        // Get existing customer or create new one
         Customer customer;
-        var existingCustomer = customerDomainRepository.findByEmail(customerEmail);
+        var existingCustomer = customers.findByEmail(customerEmail);
 
         if (existingCustomer.isPresent()) {
             customer = existingCustomer.get();
         } else {
-            // Create new customer with a temporary password
-            // In production, this would trigger a password reset email
             String temporaryPassword = "TEMP_" + UUID.randomUUID();
             String hashedPassword = passwordHasher.hash(temporaryPassword);
             customer = Customer.signup(customerEmail, hashedPassword);
-            customer = customerDomainRepository.save(customer);
+            customer = customers.save(customer);
         }
 
         LocalDate today = LocalDate.now(clock);
         var subscription = Subscription.signup(customer.id(), recipeIds, deliveryAddress, deliveryDay, today);
 
-        return subscriptionDomainRepository.save(subscription);
+        return subscriptions.save(subscription);
     }
 }

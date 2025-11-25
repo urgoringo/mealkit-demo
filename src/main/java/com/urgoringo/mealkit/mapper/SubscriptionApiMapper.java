@@ -11,9 +11,6 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
-/**
- * MapStruct mapper for converting between Subscription API DTOs and domain models.
- */
 @NullMarked
 @Mapper(componentModel = "spring")
 public interface SubscriptionApiMapper {
@@ -22,19 +19,7 @@ public interface SubscriptionApiMapper {
 
     OrderResponse toOrderResponse(Order order);
 
-    default Long mapSubscriptionId(Id<Subscription> id) {
-        return id.value();
-    }
-
     default Long mapCustomerId(Id<?> id) {
-        return id.value();
-    }
-
-    default Long mapOrderId(Id<Order> id) {
-        return id.value();
-    }
-
-    default Long mapRecipeId(Id<Recipe> id) {
         return id.value();
     }
 

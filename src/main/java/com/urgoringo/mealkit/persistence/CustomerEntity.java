@@ -7,10 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jspecify.annotations.NullUnmarked;
 
-/**
- * Persistence entity for Customer, mapped to the customers table.
- * NullUnmarked due to JPA initialization requirements.
- */
 @NullUnmarked
 @Entity
 @Table(name = "customers")

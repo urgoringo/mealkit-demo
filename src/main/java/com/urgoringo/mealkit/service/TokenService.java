@@ -12,9 +12,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-/**
- * JWT token service for authentication using Spring Security.
- */
 @NullMarked
 @Service
 @RequiredArgsConstructor
@@ -22,12 +19,6 @@ public class TokenService {
 
     private final JwtEncoder jwtEncoder;
 
-    /**
-     * Generates a JWT authentication token for a customer.
-     *
-     * @param customer the customer to generate a token for
-     * @return the JWT authentication token
-     */
     public String generateToken(Customer customer) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()

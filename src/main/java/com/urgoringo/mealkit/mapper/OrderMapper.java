@@ -10,9 +10,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * MapStruct mapper for converting between Order domain model and OrderEntity.
- */
 @NullMarked
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
@@ -30,14 +27,6 @@ public interface OrderMapper {
     }
 
     default Long mapOrderId(Id<Order> id) {
-        return id.value();
-    }
-
-    default Id<Recipe> mapRecipeId(@Nullable Long id) {
-        return id == null ? Id.unassigned() : Id.of(id);
-    }
-
-    default Long mapRecipeId(Id<Recipe> id) {
         return id.value();
     }
 

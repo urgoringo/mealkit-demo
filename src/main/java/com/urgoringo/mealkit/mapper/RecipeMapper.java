@@ -10,9 +10,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * MapStruct mapper for converting between Recipe domain model and RecipeEntity.
- */
 @NullMarked
 @Mapper(componentModel = "spring")
 public interface RecipeMapper {

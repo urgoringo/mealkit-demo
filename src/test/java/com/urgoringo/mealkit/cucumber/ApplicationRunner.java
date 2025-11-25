@@ -1,8 +1,8 @@
 package com.urgoringo.mealkit.cucumber;
 
-import com.urgoringo.mealkit.persistence.CustomerRepository;
-import com.urgoringo.mealkit.persistence.RecipeRepository;
-import com.urgoringo.mealkit.persistence.SubscriptionRepository;
+import com.urgoringo.mealkit.persistence.CustomerJpaRepository;
+import com.urgoringo.mealkit.persistence.RecipeJpaRepository;
+import com.urgoringo.mealkit.persistence.SubscriptionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -28,9 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ApplicationRunner {
 
     private final TestRestTemplate restTemplate;
-    private final RecipeRepository recipeRepository;
-    private final CustomerRepository customerRepository;
-    private final SubscriptionRepository subscriptionRepository;
+    private final RecipeJpaRepository recipeJpaRepository;
+    private final CustomerJpaRepository customerJpaRepository;
+    private final SubscriptionJpaRepository subscriptionJpaRepository;
 
     /**
      * Creates a new recipe via the API.
@@ -71,7 +71,7 @@ public class ApplicationRunner {
      * Used for test cleanup to ensure scenario isolation.
      */
     public void deleteAllRecipes() {
-        recipeRepository.deleteAll();
+        recipeJpaRepository.deleteAll();
     }
 
     /**
@@ -210,8 +210,8 @@ public class ApplicationRunner {
      * Used for test cleanup to ensure scenario isolation.
      */
     public void deleteAllSubscriptions() {
-        subscriptionRepository.deleteAll();
-        customerRepository.deleteAll();
+        subscriptionJpaRepository.deleteAll();
+        customerJpaRepository.deleteAll();
     }
 
     /**

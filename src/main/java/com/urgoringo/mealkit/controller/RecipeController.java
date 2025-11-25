@@ -15,9 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * REST controller for recipe endpoints.
- */
 @NullMarked
 @RestController
 @RequestMapping("/recipes")
@@ -43,13 +40,7 @@ public class RecipeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Request DTO for creating a recipe.
-     */
     public record CreateRecipeRequest(String title) {}
 
-    /**
-     * Response DTO for recipe data.
-     */
     public record RecipeResponse(Long id, String title) {}
 }

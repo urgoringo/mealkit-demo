@@ -1,7 +1,7 @@
 package com.urgoringo.mealkit.service;
 
 import com.urgoringo.mealkit.domain.Customer;
-import com.urgoringo.mealkit.domain.CustomerDomainRepository;
+import com.urgoringo.mealkit.domain.Customers;
 import com.urgoringo.mealkit.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
@@ -17,18 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SignupCustomerService {
 
-    private final CustomerDomainRepository customerDomainRepository;
+    private final Customers customers;
     private final PasswordHasher passwordHasher;
 
     @Transactional
     public Customer execute(String email, String plainPassword) {
-        if (customerDomainRepository.existsByEmail(email)) {
+        if (customers.existsByEmail(email)) {
             throw new ValidationException("Customer with email " + email + " already exists");
         }
 
         String hashedPassword = passwordHasher.hash(plainPassword);
         Customer customer = Customer.signup(email, hashedPassword);
 
-        return customerDomainRepository.save(customer);
+        return customers.save(customer);
     }
 }

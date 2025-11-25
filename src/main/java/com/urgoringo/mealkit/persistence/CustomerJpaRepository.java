@@ -6,12 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-/**
- * Spring Data JPA repository for CustomerEntity.
- */
 @NullMarked
 @Repository
-public interface CustomerRepository extends JpaRepository<CustomerEntity, Long> {
+public interface CustomerJpaRepository extends JpaRepository<CustomerEntity, Long> {
 
     boolean existsByEmail(String email);
 

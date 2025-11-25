@@ -15,9 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * REST controller for customer endpoints.
- */
 @NullMarked
 @RestController
 @RequestMapping("/customers")
@@ -41,30 +38,17 @@ public class CustomerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Request DTO for customer signup.
-     */
     public record SignupRequest(
             @NotBlank @Email String email,
             @NotBlank String password
     ) {}
 
-    /**
-     * Response DTO for customer data.
-     * Note: Password is never included in responses for security.
-     */
     public record CustomerResponse(Long id, String email) {}
 
-    /**
-     * Request DTO for customer login.
-     */
     public record LoginRequest(
             @NotBlank @Email String email,
             @NotBlank String password
     ) {}
 
-    /**
-     * Response DTO for login containing authentication token.
-     */
     public record LoginResponse(String token) {}
 }
