@@ -1,11 +1,14 @@
 package com.urgoringo.mealkit.cucumber;
 
+import com.urgoringo.mealkit.cucumber.scaffolding.TestClock;
 import com.urgoringo.mealkit.persistence.CustomerJpaRepository;
 import com.urgoringo.mealkit.persistence.RecipeJpaRepository;
 import com.urgoringo.mealkit.persistence.SubscriptionJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,34 +35,32 @@ public class ApplicationRunner {
     private final RecipeJpaRepository recipeJpaRepository;
     private final CustomerJpaRepository customerJpaRepository;
     private final SubscriptionJpaRepository subscriptionJpaRepository;
+    private final TestClock testClock;
 
-    /**
-     * Creates a new recipe via the API.
-     *
-     * @param title the recipe title
-     * @return ApiResponse containing either success with recipe or error with status code
-     */
-    public ApiResponse<RecipeResponse> createRecipe(String title) {
+    public List<Long> havingRecipes(int countOfRecipes) {
+        return IntStream.rangeClosed(1, countOfRecipes)
+                .mapToObj(i -> havingRecipe("Recipe " + i))
+                .map(RecipeResponse::id)
+                .toList();
+    }
+
+    public RecipeResponse havingRecipe(String title) {
         CreateRecipeRequest request = new CreateRecipeRequest(title);
         ResponseEntity<RecipeResponse> response = restTemplate.postForEntity(
                 "/recipes",
                 request,
                 RecipeResponse.class
         );
-        return ApiResponse.from(response);
+        return ApiResponse.from(response).expectSuccess();
     }
 
-    /**
-     * Retrieves all recipes via the API.
-     *
-     * @return list of all recipes
-     */
     public List<RecipeResponse> getAllRecipes() {
         ResponseEntity<List<RecipeResponse>> response = restTemplate.exchange(
                 "/recipes",
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<RecipeResponse>>() {}
+                new ParameterizedTypeReference<>() {
+                }
         );
         assertEquals(HttpStatus.OK, response.getStatusCode(),
                 "Failed to get recipes");
@@ -66,47 +68,15 @@ public class ApplicationRunner {
         return response.getBody();
     }
 
-    /**
-     * Deletes all recipes from the database.
-     * Used for test cleanup to ensure scenario isolation.
-     */
     public void deleteAllRecipes() {
         recipeJpaRepository.deleteAll();
     }
 
-    /**
-     * Creates a new subscription via the API.
-     *
-     * @param customerEmail the customer email
-     * @param recipeIds the list of recipe IDs for the first order
-     * @return ApiResponse containing either success with subscription or error with status code
-     */
-    public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds) {
-        return createSubscription(customerEmail, recipeIds, null);
+    public ApiResponse<@NotNull SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress) {
+        return createSubscription(customerEmail, recipeIds, deliveryAddress, null);
     }
 
-    /**
-     * Creates a new subscription via the API with a delivery address.
-     *
-     * @param customerEmail the customer email
-     * @param recipeIds the list of recipe IDs for the first order
-     * @param deliveryAddress the delivery address (optional)
-     * @return ApiResponse containing either success with subscription or error with status code
-     */
-    public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress) {
-        return createSubscription(customerEmail, recipeIds, deliveryAddress, (DayOfWeek) null);
-    }
-
-    /**
-     * Creates a new subscription via the API with a delivery address and delivery day.
-     *
-     * @param customerEmail the customer email
-     * @param recipeIds the list of recipe IDs for the first order
-     * @param deliveryAddress the delivery address (optional)
-     * @param deliveryDay the delivery day of the week (optional)
-     * @return ApiResponse containing either success with subscription or error with status code
-     */
-    public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
+    public ApiResponse<@NotNull SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
         CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds, deliveryAddress, deliveryDay);
         ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
                 "/subscriptions",
@@ -116,32 +86,6 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    /**
-     * Creates a new subscription via the API with a specific delivery date for the first order.
-     *
-     * @param customerEmail the customer email
-     * @param recipeIds the list of recipe IDs for the first order
-     * @param deliveryAddress the delivery address
-     * @param deliveryDate the delivery date for the first order
-     * @return ApiResponse containing either success with subscription or error with status code
-     */
-    public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress, LocalDate deliveryDate) {
-        CreateSubscriptionRequestWithDate request = new CreateSubscriptionRequestWithDate(customerEmail, recipeIds, deliveryAddress, deliveryDate);
-        ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
-                "/subscriptions",
-                request,
-                SubscriptionResponse.class
-        );
-        return ApiResponse.from(response);
-    }
-
-    /**
-     * Processes subscription orders via the API.
-     * This triggers the system to check if new orders should be added to the subscription.
-     * Recipes are automatically selected randomly by the system.
-     *
-     * @param subscriptionId the subscription ID
-     */
     public void processSubscriptionOrders(Long subscriptionId) {
         restTemplate.postForEntity(
                 "/subscriptions/" + subscriptionId + "/process-orders",
@@ -150,14 +94,7 @@ public class ApplicationRunner {
         );
     }
 
-    /**
-     * Signs up a new customer via the API.
-     *
-     * @param email the customer email
-     * @param password the customer password
-     * @return ApiResponse containing either success with customer or error with status code
-     */
-    public ApiResponse<CustomerResponse> signupCustomer(String email, String password) {
+    public ApiResponse<@NotNull CustomerResponse> signupCustomer(String email, String password) {
         SignupCustomerRequest request = new SignupCustomerRequest(email, password);
         ResponseEntity<CustomerResponse> response = restTemplate.postForEntity(
                 "/customers/signup",
@@ -167,14 +104,7 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    /**
-     * Logs in a customer via the API.
-     *
-     * @param email the customer email
-     * @param password the customer password
-     * @return ApiResponse containing either success with login result (token) or error with status code
-     */
-    public ApiResponse<LoginResponse> loginCustomer(String email, String password) {
+    public ApiResponse<@NotNull LoginResponse> loginCustomer(String email, String password) {
         LoginRequest request = new LoginRequest(email, password);
         ResponseEntity<LoginResponse> response = restTemplate.postForEntity(
                 "/customers/login",
@@ -184,17 +114,10 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    /**
-     * Retrieves the authenticated customer's subscription via the API.
-     * Uses Bearer token authentication.
-     *
-     * @param token the authentication token
-     * @return ApiResponse containing either success with subscription or error with status code
-     */
-    public ApiResponse<SubscriptionResponse> getMySubscription(String token) {
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+    public ApiResponse<@NotNull SubscriptionResponse> getCustomerSubscription(String token) {
+        var headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
-        org.springframework.http.HttpEntity<Void> entity = new org.springframework.http.HttpEntity<>(headers);
+        var entity = new org.springframework.http.HttpEntity<Void>(headers);
 
         ResponseEntity<SubscriptionResponse> response = restTemplate.exchange(
                 "/subscriptions",
@@ -205,63 +128,49 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    /**
-     * Deletes all subscriptions and customers from the database.
-     * Used for test cleanup to ensure scenario isolation.
-     */
     public void deleteAllSubscriptions() {
         subscriptionJpaRepository.deleteAll();
         customerJpaRepository.deleteAll();
     }
 
-    /**
-     * Request DTO for creating a recipe.
-     */
-    public record CreateRecipeRequest(String title) {}
+    public void freezeTimeOn(LocalDate date) {
+        testClock.freezeTime(date);
+    }
 
-    /**
-     * Response DTO for recipe data.
-     */
-    public record RecipeResponse(Long id, String title) {}
+    public void reset() {
+        testClock.reset();
+    }
 
-    /**
-     * Request DTO for creating a subscription.
-     */
-    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {}
+    public void havingRecipes(List<String> names) {
+        names.forEach(this::havingRecipe);
+    }
 
-    /**
-     * Response DTO for subscription data.
-     */
-    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress) {}
+    public record CreateRecipeRequest(String title) {
+    }
 
-    /**
-     * Response DTO for order data.
-     */
-    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate) {}
+    public record RecipeResponse(Long id, String title) {
+    }
 
-    /**
-     * Request DTO for creating a subscription with a specific delivery date.
-     */
-    public record CreateSubscriptionRequestWithDate(String customerEmail, List<Long> recipeIds, String deliveryAddress, LocalDate deliveryDate) {}
+    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress,
+                                            DayOfWeek deliveryDay) {
+    }
 
-    /**
-     * Request DTO for customer signup.
-     */
-    public record SignupCustomerRequest(String email, String password) {}
+    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders,
+                                       String deliveryAddress) {
+    }
 
-    /**
-     * Response DTO for customer data.
-     */
-    public record CustomerResponse(Long id, String email) {}
+    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate) {
+    }
 
-    /**
-     * Request DTO for customer login.
-     */
-    public record LoginRequest(String email, String password) {}
+    public record SignupCustomerRequest(String email, String password) {
+    }
 
-    /**
-     * Response DTO for login result.
-     * Contains authentication token for subsequent API requests.
-     */
-    public record LoginResponse(String token) {}
+    public record CustomerResponse(Long id, String email) {
+    }
+
+    public record LoginRequest(String email, String password) {
+    }
+
+    public record LoginResponse(String token) {
+    }
 }

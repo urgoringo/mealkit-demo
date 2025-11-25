@@ -1,7 +1,6 @@
 package com.urgoringo.mealkit.service;
 
 import com.urgoringo.mealkit.domain.Customer;
-import com.urgoringo.mealkit.domain.Id;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
