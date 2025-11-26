@@ -9,9 +9,6 @@ public record Customer(
         String email,
         String hashedPassword
 ) {
-    public static Customer create(String email) {
-        return new Customer(Id.unassigned(), email, "");
-    }
 
     public static Customer signup(String email, String hashedPassword) {
         return new Customer(Id.unassigned(), email, hashedPassword);
