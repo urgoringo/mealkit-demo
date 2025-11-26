@@ -1,9 +1,9 @@
 package com.urgoringo.mealkit.cucumber;
 
 import com.urgoringo.mealkit.cucumber.scaffolding.TestClock;
-import com.urgoringo.mealkit.persistence.CustomerJpaRepository;
-import com.urgoringo.mealkit.persistence.RecipeJpaRepository;
-import com.urgoringo.mealkit.persistence.SubscriptionJpaRepository;
+import com.urgoringo.mealkit.customer.persistence.CustomerJpaRepository;
+import com.urgoringo.mealkit.recipecatalog.persistence.RecipeJpaRepository;
+import com.urgoringo.mealkit.subscription.persistence.SubscriptionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.test.web.client.TestRestTemplate;
