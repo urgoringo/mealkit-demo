@@ -4,7 +4,6 @@ import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -19,22 +18,22 @@ public record Subscription(
         Id<Customer> customerId,
         List<Order> upcomingOrders,
         String deliveryAddress,
-        @Nullable DayOfWeek deliveryDay
+        DayOfWeek deliveryDay
 ) {
     public static Subscription signup(
             Id<Customer> customerId,
             List<Id<Recipe>> recipeIds,
             String deliveryAddress,
-            @Nullable DayOfWeek deliveryDay,
+            DayOfWeek deliveryDay,
             LocalDate today
     ) {
-        LocalDate deliveryDate = deliveryDay != null ? today.with(next(deliveryDay)) : null;
+        LocalDate deliveryDate = today.with(next(deliveryDay));
         Order firstOrder = Order.placed(recipeIds, deliveryDate);
         return new Subscription(Id.unassigned(), customerId, List.of(firstOrder), deliveryAddress, deliveryDay);
     }
 
-    public Subscription processOrders(LocalDate currentDate, List<Id<Recipe>> recipeIds) {
-        if (deliveryDay == null || upcomingOrders.isEmpty()) {
+    public Subscription withNewUpcomingOrder(LocalDate currentDate, List<Id<Recipe>> recipeIds) {
+        if (upcomingOrders.isEmpty()) {
             return this;
         }
 

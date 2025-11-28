@@ -1,8 +1,6 @@
 package com.urgoringo.mealkit.cucumber.steps;
 
 import com.urgoringo.mealkit.cucumber.ApplicationRunner;
-import com.urgoringo.mealkit.cucumber.ApplicationRunner.RecipeResponse;
-import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionResponse;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -13,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest.aSubscription;
 import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.*;
@@ -51,7 +48,7 @@ public class PreselectRecipesSteps {
         LocalDate signupDate = deliveryDate.minusDays(6); // 6 days before delivery
         app.freezeTimeOn(signupDate);
 
-        subscription = app.createSubscription(
+        subscription = app.signup(
                 aSubscription(recipeIds)
                         .withCustomerEmail(customerEmail)
                         .withDeliveryDay(deliveryDay)

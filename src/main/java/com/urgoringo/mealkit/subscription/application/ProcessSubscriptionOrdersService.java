@@ -41,7 +41,7 @@ public class ProcessSubscriptionOrdersService {
                 .toList();
 
         LocalDate currentDate = LocalDate.now(clock);
-        Subscription updatedSubscription = subscription.processOrders(currentDate, selectedRecipeIds);
+        Subscription updatedSubscription = subscription.withNewUpcomingOrder(currentDate, selectedRecipeIds);
 
         if (updatedSubscription != subscription) {
             subscriptions.save(updatedSubscription);

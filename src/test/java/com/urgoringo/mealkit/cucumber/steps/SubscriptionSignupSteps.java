@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.cucumber.steps;
 import com.urgoringo.mealkit.cucumber.ApiResponse;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.RecipeResponse;
-import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionResponse;
 import lombok.RequiredArgsConstructor;
 import io.cucumber.java.Before;
@@ -64,7 +63,7 @@ public class SubscriptionSignupSteps {
                 .map(RecipeResponse::id)
                 .toList();
 
-        response = app.createSubscription(
+        response = app.signup(
                 aSubscription(chosenRecipeIds).withCustomerEmail(customerEmail)
         );
         subscription = response.expectSuccess();
@@ -104,7 +103,7 @@ public class SubscriptionSignupSteps {
                 .mapToObj(i -> app.havingRecipe("Recipe " + i))
                 .map(RecipeResponse::id)
                 .toList();
-        app.createSubscription(
+        app.signup(
                 aSubscription(recipeIds).withCustomerEmail(customerEmail)
         ).expectSuccess();
     }
@@ -112,7 +111,7 @@ public class SubscriptionSignupSteps {
     @When("customer tries to signup subsciption using {email}")
     public void whenCustomerTriesToSignupSubscription(String email) {
         List<Long> recipeIds = List.of();
-        response = app.createSubscription(
+        response = app.signup(
                 aSubscription(recipeIds).withCustomerEmail(email)
         );
     }
@@ -140,7 +139,7 @@ public class SubscriptionSignupSteps {
 
     @When("customer tries to sign up for subscription")
     public void whenCustomerTriesToSignUpForSubscription() {
-        response = app.createSubscription(
+        response = app.signup(
                 aSubscription(chosenRecipeIds).withCustomerEmail(customerEmail)
         );
     }
@@ -151,7 +150,7 @@ public class SubscriptionSignupSteps {
 
         List<Long> recipeIds = app.havingRecipes(3);
 
-        response = app.createSubscription(
+        response = app.signup(
                 aSubscription(recipeIds)
                         .withCustomerEmail(customerEmail)
                         .withDeliveryAddress(null)
@@ -180,7 +179,7 @@ public class SubscriptionSignupSteps {
             request = request.withDeliveryDay(deliveryDay);
         }
 
-        response = app.createSubscription(request);
+        response = app.signup(request);
         subscription = response.expectSuccess();
     }
 

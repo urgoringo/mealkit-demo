@@ -62,10 +62,10 @@ public class SubscriptionController {
             @NotBlank String customerEmail,
             @NotNull List<Long> recipeIds,
             @NotBlank String deliveryAddress,
-            @Nullable DayOfWeek deliveryDay
+            @NotNull DayOfWeek deliveryDay
     ) {}
 
-    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, @Nullable DayOfWeek deliveryDay) {}
+    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, DayOfWeek deliveryDay) {}
 
     public record OrderResponse(Long id, List<Long> recipeIds, @Nullable LocalDate deliveryDate) {}
 }

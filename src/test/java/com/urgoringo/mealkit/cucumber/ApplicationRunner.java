@@ -88,7 +88,7 @@ public class ApplicationRunner {
         }
     }
 
-    public ApiResponse<@NotNull SubscriptionResponse> createSubscription(SubscriptionRequest request) {
+    public ApiResponse<@NotNull SubscriptionResponse> signup(SubscriptionRequest request) {
         CreateSubscriptionRequest apiRequest = new CreateSubscriptionRequest(
                 request.customerEmail(),
                 request.recipeIds(),
@@ -173,7 +173,7 @@ public class ApplicationRunner {
     }
 
     public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders,
-                                       String deliveryAddress) {
+                                       String deliveryAddress, DayOfWeek deliveryDay) {
     }
 
     public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate) {

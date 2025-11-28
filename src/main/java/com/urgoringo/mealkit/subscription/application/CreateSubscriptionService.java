@@ -30,7 +30,7 @@ public class CreateSubscriptionService {
     private final Clock clock;
 
     @Transactional
-    public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, String deliveryAddress, @Nullable DayOfWeek deliveryDay) {
+    public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
         Customer customer;
         var existingCustomer = customers.findByEmail(customerEmail);
 

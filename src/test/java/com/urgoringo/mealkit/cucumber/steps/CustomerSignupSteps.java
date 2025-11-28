@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.cucumber.steps;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.CustomerResponse;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.LoginResponse;
-import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionResponse;
 import lombok.RequiredArgsConstructor;
 import io.cucumber.java.Before;
@@ -12,7 +11,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest.aSubscription;
 import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.*;
@@ -65,9 +63,7 @@ public class CustomerSignupSteps {
 
         List<Long> recipeIds = app.havingRecipes(3);
 
-        app.createSubscription(
-                aSubscription(recipeIds).withCustomerEmail(customerEmail)
-        ).expectSuccess();
+        app.signup(aSubscription(recipeIds).withCustomerEmail(customerEmail)).expectSuccess();
     }
 
     @When("they log in using their email and password")

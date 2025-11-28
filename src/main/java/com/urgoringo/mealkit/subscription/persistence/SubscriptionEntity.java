@@ -35,6 +35,6 @@ public class SubscriptionEntity {
     private String deliveryAddress;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "delivery_day", length = 10)
+    @Column(name = "delivery_day", nullable = false, length = 10)
     private DayOfWeek deliveryDay;
 }
