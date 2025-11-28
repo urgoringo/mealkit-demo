@@ -13,8 +13,8 @@ import io.cucumber.java.en.When;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.aPassword;
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anEmail;
+import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.*;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -63,7 +63,7 @@ public class CustomerSignupSteps {
 
         List<Long> recipeIds = app.havingRecipes(3);
 
-        String address = "123 Main St\n12345 New York\nUSA";
+        String address = anAddress();
         app.createSubscription(customerEmail, recipeIds, address).expectSuccess();
     }
 

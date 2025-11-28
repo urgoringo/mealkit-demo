@@ -60,6 +60,7 @@ dependencies {
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.21.1")
     testImplementation("org.junit.platform:junit-platform-suite-api:1.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.11.4")
+    testImplementation("net.datafaker:datafaker:2.4.2")
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")

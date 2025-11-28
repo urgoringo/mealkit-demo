@@ -14,8 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.aPassword;
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anEmail;
+import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -50,7 +49,7 @@ public class PreselectRecipesSteps {
         LocalDate signupDate = deliveryDate.minusDays(6); // 6 days before delivery
         app.freezeTimeOn(signupDate);
 
-        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        String defaultAddress = anAddress();
         subscription = app.createSubscription(customerEmail, recipeIds, defaultAddress, deliveryDay).expectSuccess();
 
         authToken = app.loginCustomer(customerEmail, customerPassword).expectSuccess().token();

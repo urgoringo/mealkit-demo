@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -44,7 +45,7 @@ public class SubscriptionSignupSteps {
 
     @Given("customer has no existing subscription")
     public void givenCustomerHasNoExistingSubscription() {
-        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+        customerEmail = aCustomerEmail();
     }
 
     @Given("{recipeCount} recipes are available in the system")
@@ -61,7 +62,7 @@ public class SubscriptionSignupSteps {
                 .map(RecipeResponse::id)
                 .toList();
 
-        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        String defaultAddress = anAddress();
         response = app.createSubscription(customerEmail, chosenRecipeIds, defaultAddress);
         subscription = response.expectSuccess();
     }
@@ -100,14 +101,14 @@ public class SubscriptionSignupSteps {
                 .mapToObj(i -> app.havingRecipe("Recipe " + i))
                 .map(RecipeResponse::id)
                 .toList();
-        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        String defaultAddress = anAddress();
         app.createSubscription(customerEmail, recipeIds, defaultAddress).expectSuccess();
     }
 
     @When("customer tries to signup subsciption using {email}")
     public void whenCustomerTriesToSignupSubscription(String email) {
         List<Long> recipeIds = List.of();
-        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        String defaultAddress = anAddress();
         response = app.createSubscription(email, recipeIds, defaultAddress);
     }
 
@@ -120,7 +121,7 @@ public class SubscriptionSignupSteps {
 
     @Given("customer has selected only {recipeCount} recipes")
     public void givenCustomerHasSelectedOnlyRecipes(int count) {
-        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+        customerEmail = aCustomerEmail();
 
         availableRecipes = new ArrayList<>();
         IntStream.rangeClosed(1, count)
@@ -134,13 +135,13 @@ public class SubscriptionSignupSteps {
 
     @When("customer tries to sign up for subscription")
     public void whenCustomerTriesToSignUpForSubscription() {
-        String defaultAddress = "123 Main St\n12345 New York\nUSA";
+        String defaultAddress = anAddress();
         response = app.createSubscription(customerEmail, chosenRecipeIds, defaultAddress);
     }
 
     @When("customer tries to signup without delivery address")
     public void whenCustomerTriesToSignupWithoutDeliveryAddress() {
-        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+        customerEmail = aCustomerEmail();
 
         List<Long> recipeIds = app.havingRecipes(3);
 
@@ -149,7 +150,7 @@ public class SubscriptionSignupSteps {
 
     @Given("customer home address is:")
     public void givenCustomerHomeAddressIs(String address) {
-        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+        customerEmail = aCustomerEmail();
 
         homeAddress = address;
     }
@@ -158,7 +159,7 @@ public class SubscriptionSignupSteps {
     public void whenTheySignupForSubscription() {
         chosenRecipeIds = app.havingRecipes(3);
 
-        String address = homeAddress != null ? homeAddress : "123 Main St\n12345 New York\nUSA";
+        String address = homeAddress != null ? homeAddress : anAddress();
         response = app.createSubscription(customerEmail, chosenRecipeIds, address, deliveryDay);
         subscription = response.expectSuccess();
     }
@@ -179,7 +180,7 @@ public class SubscriptionSignupSteps {
     @Given("customer selects {dayOfWeek} as the delivery day")
     public void givenCustomerSelectsDeliveryDay(DayOfWeek dayOfWeek) {
         // Set a test customer email
-        customerEmail = "test-customer-" + System.currentTimeMillis() + "@example.com";
+        customerEmail = aCustomerEmail();
 
         // Store the selected delivery day
         deliveryDay = dayOfWeek;

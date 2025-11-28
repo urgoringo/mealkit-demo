@@ -5,6 +5,7 @@ import com.urgoringo.mealkit.customer.persistence.CustomerJpaRepository;
 import com.urgoringo.mealkit.recipecatalog.persistence.RecipeJpaRepository;
 import com.urgoringo.mealkit.subscription.persistence.SubscriptionJpaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.With;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -19,6 +20,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anAddress;
+import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anEmail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -70,6 +73,13 @@ public class ApplicationRunner {
 
     public void deleteAllRecipes() {
         recipeJpaRepository.deleteAll();
+    }
+
+    @With
+    public record SubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
+        public SubscriptionRequest(List<Long> recipeIds) {
+            this(anEmail(), recipeIds, anAddress(), null);
+        }
     }
 
     public ApiResponse<@NotNull SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress) {
