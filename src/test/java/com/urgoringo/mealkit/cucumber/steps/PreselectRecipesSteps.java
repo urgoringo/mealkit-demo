@@ -2,6 +2,7 @@ package com.urgoringo.mealkit.cucumber.steps;
 
 import com.urgoringo.mealkit.cucumber.ApplicationRunner;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.RecipeResponse;
+import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionResponse;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest.aSubscription;
 import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -49,8 +51,11 @@ public class PreselectRecipesSteps {
         LocalDate signupDate = deliveryDate.minusDays(6); // 6 days before delivery
         app.freezeTimeOn(signupDate);
 
-        String defaultAddress = anAddress();
-        subscription = app.createSubscription(customerEmail, recipeIds, defaultAddress, deliveryDay).expectSuccess();
+        subscription = app.createSubscription(
+                aSubscription(recipeIds)
+                        .withCustomerEmail(customerEmail)
+                        .withDeliveryDay(deliveryDay)
+        ).expectSuccess();
 
         authToken = app.loginCustomer(customerEmail, customerPassword).expectSuccess().token();
 

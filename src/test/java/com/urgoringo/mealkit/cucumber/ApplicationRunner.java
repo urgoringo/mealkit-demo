@@ -22,6 +22,7 @@ import java.util.stream.IntStream;
 
 import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anAddress;
 import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anEmail;
+import static java.time.DayOfWeek.WEDNESDAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -76,21 +77,27 @@ public class ApplicationRunner {
     }
 
     @With
-    public record SubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
-        public SubscriptionRequest(List<Long> recipeIds) {
-            this(anEmail(), recipeIds, anAddress(), null);
+    public record SubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress,
+                                      DayOfWeek deliveryDay) {
+        private SubscriptionRequest(List<Long> recipeIds) {
+            this(anEmail(), recipeIds, anAddress(), WEDNESDAY);
+        }
+
+        public static SubscriptionRequest aSubscription(List<Long> recipeIds) {
+            return new SubscriptionRequest(recipeIds);
         }
     }
 
-    public ApiResponse<@NotNull SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress) {
-        return createSubscription(customerEmail, recipeIds, deliveryAddress, null);
-    }
-
-    public ApiResponse<@NotNull SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
-        CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds, deliveryAddress, deliveryDay);
+    public ApiResponse<@NotNull SubscriptionResponse> createSubscription(SubscriptionRequest request) {
+        CreateSubscriptionRequest apiRequest = new CreateSubscriptionRequest(
+                request.customerEmail(),
+                request.recipeIds(),
+                request.deliveryAddress(),
+                request.deliveryDay()
+        );
         ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
                 "/subscriptions",
-                request,
+                apiRequest,
                 SubscriptionResponse.class
         );
         return ApiResponse.from(response);

@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.cucumber.steps;
 import com.urgoringo.mealkit.cucumber.ApiResponse;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.RecipeResponse;
+import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest;
 import com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionResponse;
 import lombok.RequiredArgsConstructor;
 import io.cucumber.java.Before;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest.aSubscription;
 import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -62,8 +64,9 @@ public class SubscriptionSignupSteps {
                 .map(RecipeResponse::id)
                 .toList();
 
-        String defaultAddress = anAddress();
-        response = app.createSubscription(customerEmail, chosenRecipeIds, defaultAddress);
+        response = app.createSubscription(
+                aSubscription(chosenRecipeIds).withCustomerEmail(customerEmail)
+        );
         subscription = response.expectSuccess();
     }
 
@@ -101,15 +104,17 @@ public class SubscriptionSignupSteps {
                 .mapToObj(i -> app.havingRecipe("Recipe " + i))
                 .map(RecipeResponse::id)
                 .toList();
-        String defaultAddress = anAddress();
-        app.createSubscription(customerEmail, recipeIds, defaultAddress).expectSuccess();
+        app.createSubscription(
+                aSubscription(recipeIds).withCustomerEmail(customerEmail)
+        ).expectSuccess();
     }
 
     @When("customer tries to signup subsciption using {email}")
     public void whenCustomerTriesToSignupSubscription(String email) {
         List<Long> recipeIds = List.of();
-        String defaultAddress = anAddress();
-        response = app.createSubscription(email, recipeIds, defaultAddress);
+        response = app.createSubscription(
+                aSubscription(recipeIds).withCustomerEmail(email)
+        );
     }
 
     @Then("system returns {statusCode} with validation error")
@@ -135,8 +140,9 @@ public class SubscriptionSignupSteps {
 
     @When("customer tries to sign up for subscription")
     public void whenCustomerTriesToSignUpForSubscription() {
-        String defaultAddress = anAddress();
-        response = app.createSubscription(customerEmail, chosenRecipeIds, defaultAddress);
+        response = app.createSubscription(
+                aSubscription(chosenRecipeIds).withCustomerEmail(customerEmail)
+        );
     }
 
     @When("customer tries to signup without delivery address")
@@ -145,7 +151,11 @@ public class SubscriptionSignupSteps {
 
         List<Long> recipeIds = app.havingRecipes(3);
 
-        response = app.createSubscription(customerEmail, recipeIds, null);
+        response = app.createSubscription(
+                aSubscription(recipeIds)
+                        .withCustomerEmail(customerEmail)
+                        .withDeliveryAddress(null)
+        );
     }
 
     @Given("customer home address is:")
@@ -159,8 +169,18 @@ public class SubscriptionSignupSteps {
     public void whenTheySignupForSubscription() {
         chosenRecipeIds = app.havingRecipes(3);
 
-        String address = homeAddress != null ? homeAddress : anAddress();
-        response = app.createSubscription(customerEmail, chosenRecipeIds, address, deliveryDay);
+        var request = aSubscription(chosenRecipeIds)
+                .withCustomerEmail(customerEmail);
+
+        if (homeAddress != null) {
+            request = request.withDeliveryAddress(homeAddress);
+        }
+
+        if (deliveryDay != null) {
+            request = request.withDeliveryDay(deliveryDay);
+        }
+
+        response = app.createSubscription(request);
         subscription = response.expectSuccess();
     }
 
