@@ -24,27 +24,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CreateSubscriptionService {
 
-    private final Customers customers;
     private final Subscriptions subscriptions;
-    private final PasswordHasher passwordHasher;
     private final Clock clock;
 
     @Transactional
-    public Subscription execute(String customerEmail, List<Id<Recipe>> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
-        Customer customer;
-        var existingCustomer = customers.findByEmail(customerEmail);
-
-        if (existingCustomer.isPresent()) {
-            customer = existingCustomer.get();
-        } else {
-            String temporaryPassword = "TEMP_" + UUID.randomUUID();
-            String hashedPassword = passwordHasher.hash(temporaryPassword);
-            customer = Customer.signup(customerEmail, hashedPassword);
-            customer = customers.save(customer);
-        }
-
+    public Subscription execute(Id<Customer> customerId, List<Id<Recipe>> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
         LocalDate today = LocalDate.now(clock);
-        var subscription = Subscription.signup(customer.id(), recipeIds, deliveryAddress, deliveryDay, today);
+        var subscription = Subscription.signup(customerId, recipeIds, deliveryAddress, deliveryDay, today);
 
         return subscriptions.save(subscription);
     }

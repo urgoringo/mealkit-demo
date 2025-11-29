@@ -38,8 +38,6 @@ public class PreselectRecipesSteps {
         customerEmail = anEmail();
         customerPassword = aPassword();
 
-        app.signupCustomer(customerEmail, customerPassword).expectSuccess();
-
         List<Long> recipeIds = app.havingRecipes(3);
 
         // Calculate what day to freeze time to so that next occurrence of delivery day equals deliveryDate
@@ -48,13 +46,13 @@ public class PreselectRecipesSteps {
         LocalDate signupDate = deliveryDate.minusDays(6); // 6 days before delivery
         app.freezeTimeOn(signupDate);
 
-        subscription = app.signup(
-                aSubscription(recipeIds)
-                        .withCustomerEmail(customerEmail)
-                        .withDeliveryDay(deliveryDay)
-        ).expectSuccess();
+        var signupResponse = app.signupCustomer(customerEmail, customerPassword).expectSuccess();
+        authToken = signupResponse.token();
 
-        authToken = app.loginCustomer(customerEmail, customerPassword).expectSuccess().token();
+        subscription = app.signup(
+                authToken,
+                aSubscription(recipeIds).withDeliveryDay(deliveryDay)
+        ).expectSuccess();
 
         assertNotNull(subscription, "Subscription should not be null");
         assertNotNull(subscription.upcomingOrders(), "Upcoming orders should not be null");

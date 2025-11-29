@@ -9,10 +9,7 @@ import lombok.With;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -21,10 +18,10 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anAddress;
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anEmail;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.http.HttpMethod.POST;
 
 /**
  * Test helper class that encapsulates API access logic for Cucumber scenarios.
@@ -77,10 +74,10 @@ public class ApplicationRunner {
     }
 
     @With
-    public record SubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress,
+    public record SubscriptionRequest(List<Long> recipeIds, String deliveryAddress,
                                       DayOfWeek deliveryDay) {
         private SubscriptionRequest(List<Long> recipeIds) {
-            this(anEmail(), recipeIds, anAddress(), WEDNESDAY);
+            this(recipeIds, anAddress(), WEDNESDAY);
         }
 
         public static SubscriptionRequest aSubscription(List<Long> recipeIds) {
@@ -88,16 +85,20 @@ public class ApplicationRunner {
         }
     }
 
-    public ApiResponse<@NotNull SubscriptionResponse> signup(SubscriptionRequest request) {
+    public ApiResponse<@NotNull SubscriptionResponse> signup(String token, SubscriptionRequest request) {
         CreateSubscriptionRequest apiRequest = new CreateSubscriptionRequest(
-                request.customerEmail(),
                 request.recipeIds(),
                 request.deliveryAddress(),
                 request.deliveryDay()
         );
-        ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
+
+        var headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        ResponseEntity<SubscriptionResponse> response = restTemplate.exchange(
                 "/subscriptions",
-                apiRequest,
+                POST,
+                new HttpEntity<>(apiRequest, headers),
                 SubscriptionResponse.class
         );
         return ApiResponse.from(response);
@@ -111,12 +112,12 @@ public class ApplicationRunner {
         );
     }
 
-    public ApiResponse<@NotNull CustomerResponse> signupCustomer(String email, String password) {
+    public ApiResponse<@NotNull SignupResponse> signupCustomer(String email, String password) {
         SignupCustomerRequest request = new SignupCustomerRequest(email, password);
-        ResponseEntity<CustomerResponse> response = restTemplate.postForEntity(
+        ResponseEntity<SignupResponse> response = restTemplate.postForEntity(
                 "/customers/signup",
                 request,
-                CustomerResponse.class
+                SignupResponse.class
         );
         return ApiResponse.from(response);
     }
@@ -168,7 +169,7 @@ public class ApplicationRunner {
     public record RecipeResponse(Long id, String title) {
     }
 
-    public record CreateSubscriptionRequest(String customerEmail, List<Long> recipeIds, String deliveryAddress,
+    public record CreateSubscriptionRequest(List<Long> recipeIds, String deliveryAddress,
                                             DayOfWeek deliveryDay) {
     }
 
@@ -182,7 +183,7 @@ public class ApplicationRunner {
     public record SignupCustomerRequest(String email, String password) {
     }
 
-    public record CustomerResponse(Long id, String email) {
+    public record SignupResponse(Long id, String email, String token) {
     }
 
     public record LoginRequest(String email, String password) {

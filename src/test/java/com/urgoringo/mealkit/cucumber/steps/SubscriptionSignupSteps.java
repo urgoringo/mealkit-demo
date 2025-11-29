@@ -29,11 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class SubscriptionSignupSteps {
 
     private final ApplicationRunner app;
+    private final LastResponseState responseState;
     private String customerEmail;
+    private String customerPassword;
+    private String authToken;
     private List<RecipeResponse> availableRecipes;
     private List<Long> chosenRecipeIds;
     private SubscriptionResponse subscription;
-    private ApiResponse<@NotNull SubscriptionResponse> response;
     private String homeAddress;
     private DayOfWeek deliveryDay;
 
@@ -47,6 +49,8 @@ public class SubscriptionSignupSteps {
     @Given("customer has no existing subscription")
     public void givenCustomerHasNoExistingSubscription() {
         customerEmail = aCustomerEmail();
+        customerPassword = aPassword();
+        authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token();
     }
 
     @Given("{recipeCount} recipes are available in the system")
@@ -63,9 +67,7 @@ public class SubscriptionSignupSteps {
                 .map(RecipeResponse::id)
                 .toList();
 
-        response = app.signup(
-                aSubscription(chosenRecipeIds).withCustomerEmail(customerEmail)
-        );
+        ApiResponse<@NotNull SubscriptionResponse> response = app.signup(authToken, aSubscription(chosenRecipeIds));
         subscription = response.expectSuccess();
     }
 
@@ -96,36 +98,26 @@ public class SubscriptionSignupSteps {
         });
     }
 
-    @Given("customer with email: {email} already exists")
-    public void givenCustomerWithEmailAlreadyExists(String email) {
-        customerEmail = email;
-        List<Long> recipeIds = IntStream.rangeClosed(1, 3)
-                .mapToObj(i -> app.havingRecipe("Recipe " + i))
-                .map(RecipeResponse::id)
-                .toList();
-        app.signup(
-                aSubscription(recipeIds).withCustomerEmail(customerEmail)
-        ).expectSuccess();
-    }
-
-    @When("customer tries to signup subsciption using {email}")
-    public void whenCustomerTriesToSignupSubscription(String email) {
-        List<Long> recipeIds = List.of();
-        response = app.signup(
-                aSubscription(recipeIds).withCustomerEmail(email)
-        );
-    }
+//    @When("customer tries to signup subsciption using {email}")
+//    public void whenCustomerTriesToSignupSubscription(String email) {
+//        // Customer already exists from the Given step, try to create subscription with invalid token
+//        String invalidToken = "invalid-token";
+//        List<Long> recipeIds = app.havingRecipes(3);
+//        response = app.signup(invalidToken, aSubscription(recipeIds));
+//    }
 
     @Then("system returns {statusCode} with validation error")
     public void thenSystemReturnsStatusWithValidationError(int statusCode) {
-        assertNotNull(response, "Response should not be null");
-        int actualStatusCode = response.expectError();
+        assertNotNull(responseState.getLastResponse(), "Response should not be null");
+        int actualStatusCode = responseState.getLastResponse().expectError();
         assertEquals(statusCode, actualStatusCode, "Expected status code " + statusCode);
     }
 
     @Given("customer has selected only {recipeCount} recipes")
     public void givenCustomerHasSelectedOnlyRecipes(int count) {
         customerEmail = aCustomerEmail();
+        customerPassword = aPassword();
+        authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token();
 
         availableRecipes = new ArrayList<>();
         IntStream.rangeClosed(1, count)
@@ -139,27 +131,28 @@ public class SubscriptionSignupSteps {
 
     @When("customer tries to sign up for subscription")
     public void whenCustomerTriesToSignUpForSubscription() {
-        response = app.signup(
-                aSubscription(chosenRecipeIds).withCustomerEmail(customerEmail)
-        );
+        responseState.setLastResponse(app.signup(authToken, aSubscription(chosenRecipeIds)));
     }
 
     @When("customer tries to signup without delivery address")
     public void whenCustomerTriesToSignupWithoutDeliveryAddress() {
         customerEmail = aCustomerEmail();
+        customerPassword = aPassword();
+        authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token();
 
         List<Long> recipeIds = app.havingRecipes(3);
 
-        response = app.signup(
-                aSubscription(recipeIds)
-                        .withCustomerEmail(customerEmail)
-                        .withDeliveryAddress(null)
-        );
+        responseState.setLastResponse(app.signup(
+                authToken,
+                aSubscription(recipeIds).withDeliveryAddress(null)
+        ));
     }
 
     @Given("customer home address is:")
     public void givenCustomerHomeAddressIs(String address) {
         customerEmail = aCustomerEmail();
+        customerPassword = aPassword();
+        authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token();
 
         homeAddress = address;
     }
@@ -168,8 +161,7 @@ public class SubscriptionSignupSteps {
     public void whenTheySignupForSubscription() {
         chosenRecipeIds = app.havingRecipes(3);
 
-        var request = aSubscription(chosenRecipeIds)
-                .withCustomerEmail(customerEmail);
+        var request = aSubscription(chosenRecipeIds);
 
         if (homeAddress != null) {
             request = request.withDeliveryAddress(homeAddress);
@@ -179,7 +171,7 @@ public class SubscriptionSignupSteps {
             request = request.withDeliveryDay(deliveryDay);
         }
 
-        response = app.signup(request);
+        var response = app.signup(authToken, request);
         subscription = response.expectSuccess();
     }
 
@@ -200,8 +192,9 @@ public class SubscriptionSignupSteps {
     public void givenCustomerSelectsDeliveryDay(DayOfWeek dayOfWeek) {
         // Set a test customer email
         customerEmail = aCustomerEmail();
+        customerPassword = aPassword();
+        authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token();
 
-        // Store the selected delivery day
         deliveryDay = dayOfWeek;
     }
 

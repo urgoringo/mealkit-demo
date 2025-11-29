@@ -25,9 +25,10 @@ public class CustomerController {
     private final LoginCustomerService loginCustomerService;
 
     @PostMapping("/signup")
-    public ResponseEntity<CustomerResponse> signup(@Valid @RequestBody SignupRequest request) {
+    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
         Customer customer = signupCustomerService.execute(request.email(), request.password());
-        CustomerResponse response = new CustomerResponse(customer.id().value(), customer.email());
+        String token = loginCustomerService.execute(request.email(), request.password());
+        SignupResponse response = new SignupResponse(customer.id().value(), customer.email(), token);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -43,7 +44,7 @@ public class CustomerController {
             @NotBlank String password
     ) {}
 
-    public record CustomerResponse(Long id, String email) {}
+    public record SignupResponse(Long id, String email, String token) {}
 
     public record LoginRequest(
             @NotBlank @Email String email,

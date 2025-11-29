@@ -33,10 +33,12 @@ public class SubscriptionController {
     private final SubscriptionApiMapper subscriptionApiMapper;
 
     @PostMapping
-    public ResponseEntity<SubscriptionResponse> createSubscription(@Valid @RequestBody CreateSubscriptionRequest request) {
+    public ResponseEntity<SubscriptionResponse> createSubscription(
+            @AuthenticationPrincipal Id<Customer> customerId,
+            @Valid @RequestBody CreateSubscriptionRequest request) {
         var recipeIds = subscriptionApiMapper.mapRecipeIds(request.recipeIds());
         Subscription subscription = createSubscriptionService.execute(
-                request.customerEmail(),
+                customerId,
                 recipeIds,
                 request.deliveryAddress(),
                 request.deliveryDay()
@@ -59,7 +61,6 @@ public class SubscriptionController {
     }
 
     public record CreateSubscriptionRequest(
-            @NotBlank String customerEmail,
             @NotNull List<Long> recipeIds,
             @NotBlank String deliveryAddress,
             @NotNull DayOfWeek deliveryDay
