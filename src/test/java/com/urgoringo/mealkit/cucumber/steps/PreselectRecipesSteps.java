@@ -22,9 +22,6 @@ public class PreselectRecipesSteps {
 
     private final ApplicationRunner app;
     private SubscriptionResponse subscription;
-    private LocalDate currentDay;
-    private String customerEmail;
-    private String customerPassword;
     private String authToken;
 
     @Before
@@ -35,8 +32,6 @@ public class PreselectRecipesSteps {
 
     @Given("a subscription exists where upcoming order has delivery date {date}")
     public void givenSubscriptionExistsWithUpcomingOrderDeliveryDate(LocalDate deliveryDate) {
-        customerEmail = anEmail();
-        customerPassword = aPassword();
 
         List<Long> recipeIds = app.havingRecipes(3);
 
@@ -46,10 +41,10 @@ public class PreselectRecipesSteps {
         LocalDate signupDate = deliveryDate.minusDays(6); // 6 days before delivery
         app.freezeTimeOn(signupDate);
 
-        var signupResponse = app.signupCustomer(customerEmail, customerPassword).expectSuccess();
+        var signupResponse = app.signupCustomer(anEmail(), aPassword()).expectSuccess();
         authToken = signupResponse.token();
 
-        subscription = app.signup(
+        subscription = app.create(
                 authToken,
                 aSubscription(recipeIds).withDeliveryDay(deliveryDay)
         ).expectSuccess();
@@ -62,11 +57,8 @@ public class PreselectRecipesSteps {
     }
 
     @When("current day becomes {date}")
-    public void whenCurrentDayBecomes(LocalDate date) {
-        currentDay = date;
-
-        app.freezeTimeOn(currentDay);
-
+    public void whenCurrentDayBecomes(LocalDate currentDate) {
+        app.freezeTimeOn(currentDate);
         app.processSubscriptionOrders(subscription.id());
 
         subscription = app.getCustomerSubscription(authToken).expectSuccess();

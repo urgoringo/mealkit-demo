@@ -85,7 +85,7 @@ public class ApplicationRunner {
         }
     }
 
-    public ApiResponse<@NotNull SubscriptionResponse> signup(String token, SubscriptionRequest request) {
+    public ApiResponse<@NotNull SubscriptionResponse> create(String token, SubscriptionRequest request) {
         CreateSubscriptionRequest apiRequest = new CreateSubscriptionRequest(
                 request.recipeIds(),
                 request.deliveryAddress(),

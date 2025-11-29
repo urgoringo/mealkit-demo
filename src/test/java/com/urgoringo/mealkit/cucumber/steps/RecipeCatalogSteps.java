@@ -15,9 +15,6 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * Step definitions for recipe catalog scenarios.
- */
 @RequiredArgsConstructor
 public class RecipeCatalogSteps {
 

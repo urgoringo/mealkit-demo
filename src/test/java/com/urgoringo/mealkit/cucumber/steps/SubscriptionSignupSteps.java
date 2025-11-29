@@ -22,9 +22,6 @@ import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-/**
- * Step definitions for subscription signup scenarios.
- */
 @RequiredArgsConstructor
 public class SubscriptionSignupSteps {
 
@@ -67,7 +64,7 @@ public class SubscriptionSignupSteps {
                 .map(RecipeResponse::id)
                 .toList();
 
-        ApiResponse<@NotNull SubscriptionResponse> response = app.signup(authToken, aSubscription(chosenRecipeIds));
+        ApiResponse<@NotNull SubscriptionResponse> response = app.create(authToken, aSubscription(chosenRecipeIds));
         subscription = response.expectSuccess();
     }
 
@@ -131,7 +128,7 @@ public class SubscriptionSignupSteps {
 
     @When("customer tries to sign up for subscription")
     public void whenCustomerTriesToSignUpForSubscription() {
-        responseState.setLastResponse(app.signup(authToken, aSubscription(chosenRecipeIds)));
+        responseState.setLastResponse(app.create(authToken, aSubscription(chosenRecipeIds)));
     }
 
     @When("customer tries to signup without delivery address")
@@ -142,7 +139,7 @@ public class SubscriptionSignupSteps {
 
         List<Long> recipeIds = app.havingRecipes(3);
 
-        responseState.setLastResponse(app.signup(
+        responseState.setLastResponse(app.create(
                 authToken,
                 aSubscription(recipeIds).withDeliveryAddress(null)
         ));
@@ -171,7 +168,7 @@ public class SubscriptionSignupSteps {
             request = request.withDeliveryDay(deliveryDay);
         }
 
-        var response = app.signup(authToken, request);
+        var response = app.create(authToken, request);
         subscription = response.expectSuccess();
     }
 
