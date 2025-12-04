@@ -2,7 +2,7 @@
 
 - [x] Add delivery address to subscription
 - [x] Add delivery date to orders
-- [ ] Select recipes for next order
+- [x] Select recipes for next order
 - [ ] Update recipes for an existing order
 - [ ] Lock recipes selection
 - [ ] Mark order as delivered

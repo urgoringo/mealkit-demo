@@ -1,8 +1,10 @@
 import net.ltgt.gradle.errorprone.errorprone
 import net.ltgt.gradle.nullaway.nullaway
+import org.gradle.api.tasks.compile.GroovyCompile
 
 plugins {
 	java
+	groovy
 	id("org.springframework.boot") version "3.5.7"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("net.ltgt.errorprone") version "4.3.0"
@@ -61,6 +63,9 @@ dependencies {
     testImplementation("org.junit.platform:junit-platform-suite-api:1.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.11.4")
     testImplementation("net.datafaker:datafaker:2.4.2")
+    testImplementation("org.apache.groovy:groovy:5.0.0")
+    testImplementation("org.spockframework:spock-core:2.4-M7-groovy-5.0")
+    testImplementation("org.spockframework:spock-spring:2.4-M7-groovy-5.0")
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")
@@ -69,6 +74,19 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	
+	// Show test output for Spock given/when/then blocks
+	testLogging {
+		events("passed", "skipped", "failed")
+		showStandardStreams = true
+		exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+	}
+}
+
+// Configure Groovy compilation to use Java 25 bytecode (compatible with Groovy 5.0)
+tasks.withType<GroovyCompile>().configureEach {
+	sourceCompatibility = "25"
+	targetCompatibility = "25"
 }
 
 // Configure NullAway to check the main package

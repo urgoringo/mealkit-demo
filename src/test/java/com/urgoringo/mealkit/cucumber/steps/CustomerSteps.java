@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @RequiredArgsConstructor
-public class CustomerSignupSteps {
+public class CustomerSteps {
 
     private final ApplicationRunner app;
     private final LastResponseState responseState;
@@ -37,7 +37,7 @@ public class CustomerSignupSteps {
     @When("user signs up using their email and password")
     public void whenUserSignsUpUsingEmailAndPassword() {
         givenEmail = anEmail();
-        givenPassword = aPassword();
+        var givenPassword = aPassword();
 
         signupResponse = app.signupCustomer(givenEmail, givenPassword).expectSuccess();
     }
