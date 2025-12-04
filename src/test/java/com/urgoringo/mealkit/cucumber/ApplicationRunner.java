@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.cucumber;
 import com.urgoringo.mealkit.cucumber.scaffolding.TestClock;
 import com.urgoringo.mealkit.customer.persistence.CustomerJpaRepository;
 import com.urgoringo.mealkit.recipecatalog.persistence.RecipeJpaRepository;
+import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOrdersService;
 import com.urgoringo.mealkit.subscription.persistence.SubscriptionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
@@ -37,6 +38,7 @@ public class ApplicationRunner {
     private final CustomerJpaRepository customerJpaRepository;
     private final SubscriptionJpaRepository subscriptionJpaRepository;
     private final TestClock testClock;
+    private final SelectRecipesForUpcomingOrdersService selectRecipesForUpcomingOrdersService;
 
     public List<Long> havingRecipes(int countOfRecipes) {
         return IntStream.rangeClosed(1, countOfRecipes)
@@ -105,11 +107,9 @@ public class ApplicationRunner {
     }
 
     public void processSubscriptionOrders(Long subscriptionId) {
-        restTemplate.postForEntity(
-                "/subscriptions/" + subscriptionId + "/process-orders",
-                null,
-                Void.class
-        );
+        // This method is kept for backward compatibility but now triggers processing for all subscriptions
+        // In production, this is handled by the scheduled job
+        selectRecipesForUpcomingOrdersService.execute();
     }
 
     public ApiResponse<@NotNull SignupResponse> signupCustomer(String email, String password) {

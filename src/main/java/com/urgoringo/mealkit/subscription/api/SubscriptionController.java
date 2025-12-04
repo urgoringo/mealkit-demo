@@ -5,7 +5,6 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.application.CreateSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionService;
-import com.urgoringo.mealkit.subscription.application.ProcessSubscriptionOrdersService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,7 +28,6 @@ public class SubscriptionController {
 
     private final CreateSubscriptionService createSubscriptionService;
     private final GetSubscriptionService getSubscriptionService;
-    private final ProcessSubscriptionOrdersService processSubscriptionOrdersService;
     private final SubscriptionApiMapper subscriptionApiMapper;
 
     @PostMapping
@@ -52,12 +50,6 @@ public class SubscriptionController {
         Subscription subscription = getSubscriptionService.executeForAuthenticatedCustomer(customerId);
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{id}/process-orders")
-    public ResponseEntity<Void> processSubscriptionOrders(@PathVariable Long id) {
-        processSubscriptionOrdersService.execute(Id.of(id));
-        return ResponseEntity.ok().build();
     }
 
     public record CreateSubscriptionRequest(

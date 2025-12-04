@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @NullMarked
@@ -32,5 +33,11 @@ public class Subscriptions {
     public Optional<Subscription> findByCustomerId(Id<Customer> customerId) {
         return subscriptionJpaRepository.findByCustomerId(customerId.value())
                 .map(subscriptionMapper::toDomain);
+    }
+
+    public List<Id<Subscription>> findAllIds() {
+        return subscriptionJpaRepository.findAllIds().stream()
+                .map(Id::<Subscription>of)
+                .toList();
     }
 }

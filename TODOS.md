@@ -10,5 +10,5 @@
 - [ ] Max 14 recipes per order
 - [-] JBehave report
 - [x] Try out Cucumber
-- [ ] Rename DomainRepositories - RecipesCatalog, Subscriptions, Customers etc
-- [ ] Move more logic into ApplicationRunner
+- [x] Rename DomainRepositories - RecipesCatalog, Subscriptions, Customers etc
+- [x] Move more logic into ApplicationRunner
