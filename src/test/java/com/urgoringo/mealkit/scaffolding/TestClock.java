@@ -1,4 +1,4 @@
-package com.urgoringo.mealkit.cucumber.scaffolding;
+package com.urgoringo.mealkit.scaffolding;
 
 import java.time.Clock;
 import java.time.Instant;

@@ -1,6 +1,6 @@
 package com.urgoringo.mealkit;
 
-import com.urgoringo.mealkit.cucumber.scaffolding.TestClock;
+import com.urgoringo.mealkit.scaffolding.TestClock;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
@@ -23,11 +23,6 @@ public class TestContainersConfiguration {
     public TestClock testClock() {
         return new TestClock();
     }
-
-    /**
-     * Mutable Clock implementation for testing.
-     * Allows tests to control the current time by calling freezeTime().
-     */
 
 }
 

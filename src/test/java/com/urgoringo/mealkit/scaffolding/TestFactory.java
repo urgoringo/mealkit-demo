@@ -1,4 +1,4 @@
-package com.urgoringo.mealkit.cucumber.scaffolding;
+package com.urgoringo.mealkit.scaffolding;
 
 import net.datafaker.Faker;
 

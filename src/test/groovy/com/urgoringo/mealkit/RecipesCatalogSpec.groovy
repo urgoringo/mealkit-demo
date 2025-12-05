@@ -1,6 +1,6 @@
 package com.urgoringo.mealkit
 
-import com.urgoringo.mealkit.cucumber.ApplicationRunner
+import com.urgoringo.mealkit.scaffolding.ApplicationRunner
 import org.springframework.beans.factory.annotation.Autowired
 
 class RecipesCatalogSpec extends ApplicationSpecification {

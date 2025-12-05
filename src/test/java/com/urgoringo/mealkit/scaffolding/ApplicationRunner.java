@@ -1,6 +1,5 @@
-package com.urgoringo.mealkit.cucumber;
+package com.urgoringo.mealkit.scaffolding;
 
-import com.urgoringo.mealkit.cucumber.scaffolding.TestClock;
 import com.urgoringo.mealkit.customer.persistence.CustomerJpaRepository;
 import com.urgoringo.mealkit.recipecatalog.persistence.RecipeJpaRepository;
 import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOrdersService;
@@ -18,7 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anAddress;
+import static com.urgoringo.mealkit.scaffolding.TestFactory.anAddress;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -106,7 +105,7 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    public void processSubscriptionOrders(Long subscriptionId) {
+    public void processSubscriptionOrders() {
         // This method is kept for backward compatibility but now triggers processing for all subscriptions
         // In production, this is handled by the scheduled job
         selectRecipesForUpcomingOrdersService.execute();
@@ -151,8 +150,9 @@ public class ApplicationRunner {
         customerJpaRepository.deleteAll();
     }
 
-    public void freezeTimeOn(LocalDate date) {
+    public ApplicationRunner freezeTimeOn(LocalDate date) {
         testClock.freezeTime(date);
+        return this;
     }
 
     public void reset() {

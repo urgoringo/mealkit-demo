@@ -1,15 +1,15 @@
 package com.urgoringo.mealkit
 
-import com.urgoringo.mealkit.cucumber.ApplicationRunner
+import com.urgoringo.mealkit.scaffolding.ApplicationRunner
 import org.springframework.beans.factory.annotation.Autowired
 
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.util.stream.IntStream
 
-import static com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest.aSubscription
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.aCustomerEmail
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.aPassword
+import static com.urgoringo.mealkit.scaffolding.ApplicationRunner.SubscriptionRequest.aSubscription
+import static com.urgoringo.mealkit.scaffolding.TestFactory.aCustomerEmail
+import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword
 
 class SubscriptionSignupSpec extends ApplicationSpecification {
 

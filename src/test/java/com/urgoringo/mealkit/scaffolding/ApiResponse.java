@@ -1,4 +1,4 @@
-package com.urgoringo.mealkit.cucumber;
+package com.urgoringo.mealkit.scaffolding;
 
 import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
