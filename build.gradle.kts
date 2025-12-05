@@ -66,6 +66,7 @@ dependencies {
     testImplementation("org.apache.groovy:groovy:5.0.0")
     testImplementation("org.spockframework:spock-core:2.4-M7-groovy-5.0")
     testImplementation("org.spockframework:spock-spring:2.4-M7-groovy-5.0")
+    testImplementation("com.athaydes:spock-reports:2.5.1-groovy-4.0")
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")

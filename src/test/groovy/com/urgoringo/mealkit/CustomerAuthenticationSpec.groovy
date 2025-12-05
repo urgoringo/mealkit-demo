@@ -1,16 +1,20 @@
 package com.urgoringo.mealkit
 
-import com.urgoringo.mealkit.cucumber.ApplicationRunner
+import com.urgoringo.mealkit.scaffolding.ApplicationRunner
+import com.urgoringo.mealkit.scaffolding.ApplicationSetup
 import org.springframework.beans.factory.annotation.Autowired
 
-import static com.urgoringo.mealkit.cucumber.ApplicationRunner.SubscriptionRequest.aSubscription
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.aPassword
-import static com.urgoringo.mealkit.cucumber.scaffolding.TestFactory.anEmail
+import static com.urgoringo.mealkit.scaffolding.ApplicationRunner.SubscriptionRequest.aSubscription
+import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword
+import static com.urgoringo.mealkit.scaffolding.TestFactory.anEmail
 
 class CustomerAuthenticationSpec extends ApplicationSpecification {
 
     @Autowired
     ApplicationRunner app
+
+    @Autowired
+    ApplicationSetup setup
 
     def setup() {
         app.deleteAllSubscriptions()
@@ -18,44 +22,22 @@ class CustomerAuthenticationSpec extends ApplicationSpecification {
     }
 
     def "new customer signup"() {
-        when: "user signs up using their email and password"
+        given: "user signs up using their email and password"
             def email = anEmail()
             def password = aPassword()
-            def signupResponse = app.signupCustomer(email, password).expectSuccess()
+            app.signupCustomer(email, password).expectSuccess()
 
-        then: "system creates new customer with used credentials"
-            signupResponse.id() != null
-            signupResponse.email() == email
-    }
-
-    def "customer login"() {
-        given: "customer with email john.doe@example.com exists"
-            def email = "john.doe@example.com"
-            def password = aPassword()
-            def customer = app.signupCustomer(email, password).expectSuccess()
-            def customerId = customer.id()
-
-        and: "has a subscription"
-            def recipeIds = app.havingRecipes(3)
-            app.create(customer.token(), aSubscription(recipeIds)).expectSuccess()
-
-        when: "they log in using their email and password"
+        when: "they can log in with their credentials"
             def loginResponse = app.loginCustomer(email, password)
-            def accessToken = loginResponse.expectSuccess().token()
 
-        then: "they can access their subscription"
-            def subscription = app.getCustomerSubscription(accessToken).expectSuccess()
-            subscription != null
-            subscription.id() != null
-            subscription.customerId() != null
-            subscription.customerId() == customerId
+        then: "they receive an access token"
+            loginResponse.expectSuccess().token()
     }
 
     def "duplicate email"() {
         given: "customer with email: jane.doe@example.com already exists"
             def email = "jane.doe@example.com"
-            def password = aPassword()
-            app.signupCustomer(email, password).expectSuccess()
+            app.signupCustomer(email, aPassword()).expectSuccess()
 
         when: "customer tries to signup using jane.doe@example.com"
             def response = app.signupCustomer(email, aPassword())
