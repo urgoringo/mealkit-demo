@@ -22,7 +22,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
         app.reset()
     }
 
-    def "happy path"() {
+    def "subscription with 3 recipes"() {
         given: "customer has no existing subscription"
             def customerEmail = aCustomerEmail()
             def customerPassword = aPassword()
@@ -54,7 +54,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
             firstOrder.recipeIds() == chosenRecipeIds
     }
 
-    def "must select at least 3 recipes"() {
+    def "cannot create subscription with less than 3 recipes"() {
         given: "customer has selected only 2 recipes"
             def customerEmail = aCustomerEmail()
             def customerPassword = aPassword()

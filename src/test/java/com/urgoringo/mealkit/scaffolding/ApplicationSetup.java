@@ -2,7 +2,6 @@ package com.urgoringo.mealkit.scaffolding;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;

@@ -27,10 +27,10 @@ class CustomerAuthenticationSpec extends ApplicationSpecification {
             def password = aPassword()
             app.signupCustomer(email, password).expectSuccess()
 
-        when: "they can log in with their credentials"
+        when: "customer logs in with their credentials"
             def loginResponse = app.loginCustomer(email, password)
 
-        then: "they receive an access token"
+        then: "system returns an access token"
             loginResponse.expectSuccess().token()
     }
 

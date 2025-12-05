@@ -21,7 +21,7 @@ public sealed interface ApiResponse<T> {
 
     default int expectError() {
         return switch (this) {
-            case Success<T> success ->
+            case Success<T> _ ->
                 throw new AssertionError("Expected error but got success");
             case Error<T> error -> error.statusCode();
         };
