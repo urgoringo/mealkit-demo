@@ -17,10 +17,17 @@ public record Order(
 ) {
     private static final int MINIMUM_RECIPE_COUNT = 3;
 
-    public static Order placed(List<Id<Recipe>> recipeIds, @Nullable LocalDate deliveryDate) {
+    public Order {
         if (recipeIds.size() < MINIMUM_RECIPE_COUNT) {
             throw new ValidationException("Order must contain at least " + MINIMUM_RECIPE_COUNT + " recipes");
         }
+    }
+
+    public static Order placed(List<Id<Recipe>> recipeIds, @Nullable LocalDate deliveryDate) {
         return new Order(Id.unassigned(), recipeIds, deliveryDate);
+    }
+
+    public Order withRecipes(List<Id<Recipe>> recipeIds) {
+        return new Order(id, recipeIds, deliveryDate);
     }
 }

@@ -1,24 +1,24 @@
 package com.urgoringo.mealkit
 
-
+import java.time.DayOfWeek
 import java.time.LocalDate
+
+import static java.time.DayOfWeek.*
 
 class UpdateOrderRecipesSpec extends ApplicationSpecification {
 
     def "update recipes for upcoming order"() {
         given: "a subscription exists with 3 recipes for upcoming order"
-            def signupDate = LocalDate.parse("2025-11-18")
-            def deliveryDate = LocalDate.parse("2025-11-24")
-
-            app
-                    .freezeTimeOn(signupDate)
             def authToken = app
                     .having()
-                    .subscription(deliveryDate.getDayOfWeek())
+                    .subscription(WEDNESDAY)
                     .authToken
+            def currentSubscription = app.getCustomerSubscription(authToken).expectSuccess()
+            def currentRecipeIds = currentSubscription.upcomingOrders()[0].recipeIds()
 
-        when: "customer updates recipes for upcoming order"
-            def newRecipeIds = app.getAllRecipes().collect { recipe -> recipe.id() }.take(3)
+        when: "customer selects new recipes for upcoming order"
+            def allRecipeIds = app.getAllRecipes()*.id()
+            def newRecipeIds = (allRecipeIds - currentRecipeIds).take(3)
             app.updateUpcomingOrderRecipes(authToken, newRecipeIds)
             def subscription = app.getCustomerSubscription(authToken).expectSuccess()
 

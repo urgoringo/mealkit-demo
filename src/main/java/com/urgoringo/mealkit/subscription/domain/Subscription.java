@@ -62,11 +62,8 @@ public record Subscription(
         }
 
         Order firstOrder = upcomingOrders.getFirst();
-        Order updatedOrder = Order.placed(recipeIds, firstOrder.deliveryDate());
+        Order updatedOrder = firstOrder.withRecipes(recipeIds);
 
-        List<Order> updatedOrders = new ArrayList<>(upcomingOrders);
-        updatedOrders.set(0, updatedOrder);
-
-        return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
+        return new Subscription(id, customerId, List.of(updatedOrder), deliveryAddress, deliveryDay);
     }
 }
