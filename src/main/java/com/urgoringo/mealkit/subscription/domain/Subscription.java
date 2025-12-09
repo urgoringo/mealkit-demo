@@ -55,4 +55,18 @@ public record Subscription(
 
         return this;
     }
+
+    public Subscription withUpdatedRecipesForFirstUpcomingOrder(List<Id<Recipe>> recipeIds) {
+        if (upcomingOrders.isEmpty()) {
+            return this;
+        }
+
+        Order firstOrder = upcomingOrders.getFirst();
+        Order updatedOrder = Order.placed(recipeIds, firstOrder.deliveryDate());
+
+        List<Order> updatedOrders = new ArrayList<>(upcomingOrders);
+        updatedOrders.set(0, updatedOrder);
+
+        return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
+    }
 }

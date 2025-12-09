@@ -5,6 +5,7 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.application.CreateSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionService;
+import com.urgoringo.mealkit.subscription.application.UpdateUpcomingOrderRecipesService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,7 @@ public class SubscriptionController {
 
     private final CreateSubscriptionService createSubscriptionService;
     private final GetSubscriptionService getSubscriptionService;
+    private final UpdateUpcomingOrderRecipesService updateUpcomingOrderRecipesService;
     private final SubscriptionApiMapper subscriptionApiMapper;
 
     @PostMapping
@@ -52,10 +54,24 @@ public class SubscriptionController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/upcoming-order/recipes")
+    public ResponseEntity<SubscriptionResponse> updateUpcomingOrderRecipes(
+            @AuthenticationPrincipal Id<Customer> customerId,
+            @Valid @RequestBody UpdateUpcomingOrderRecipesRequest request) {
+        var recipeIds = subscriptionApiMapper.mapRecipeIds(request.recipeIds());
+        Subscription subscription = updateUpcomingOrderRecipesService.execute(customerId, recipeIds);
+        SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
+        return ResponseEntity.ok(response);
+    }
+
     public record CreateSubscriptionRequest(
             @NotNull List<Long> recipeIds,
             @NotBlank String deliveryAddress,
             @NotNull DayOfWeek deliveryDay
+    ) {}
+
+    public record UpdateUpcomingOrderRecipesRequest(
+            @NotNull List<Long> recipeIds
     ) {}
 
     public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, DayOfWeek deliveryDay) {}

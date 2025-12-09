@@ -6,6 +6,7 @@ import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOr
 import com.urgoringo.mealkit.subscription.persistence.SubscriptionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
+import org.apache.commons.lang3.IntegerRange;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,11 +18,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static com.urgoringo.mealkit.scaffolding.TestFactory.anAddress;
+import static com.urgoringo.mealkit.scaffolding.TestFactory.*;
+import static com.urgoringo.mealkit.scaffolding.TestFactory.aRecipeName;
 import static java.time.DayOfWeek.WEDNESDAY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 
 /**
  * Test helper class that encapsulates API access logic for Cucumber scenarios.
@@ -74,6 +77,26 @@ public class ApplicationRunner {
         recipeJpaRepository.deleteAll();
     }
 
+    public void setup() {
+        reset();
+        IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipeName()));
+    }
+
+    public void updateUpcomingOrderRecipes(String authToken, List<Long> recipeIds) {
+        UpdateUpcomingOrderRecipesRequest request = new UpdateUpcomingOrderRecipesRequest(recipeIds);
+        var headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + authToken);
+        var entity = new HttpEntity<>(request, headers);
+
+        ResponseEntity<SubscriptionResponse> response = restTemplate.exchange(
+                "/subscriptions/upcoming-order/recipes",
+                PUT,
+                entity,
+                SubscriptionResponse.class
+        );
+        ApiResponse.from(response).expectSuccess();
+    }
+
     @With
     public record SubscriptionRequest(List<Long> recipeIds, String deliveryAddress,
                                       DayOfWeek deliveryDay) {
@@ -109,6 +132,10 @@ public class ApplicationRunner {
         // This method is kept for backward compatibility but now triggers processing for all subscriptions
         // In production, this is handled by the scheduled job
         selectRecipesForUpcomingOrdersService.execute();
+    }
+
+    public ApiResponse<@NotNull SignupResponse> signupCustomer() {
+        return signupCustomer(anEmail(), aPassword());
     }
 
     public ApiResponse<@NotNull SignupResponse> signupCustomer(String email, String password) {
@@ -155,8 +182,14 @@ public class ApplicationRunner {
         return this;
     }
 
-    public void reset() {
+    private void reset() {
+        deleteAllSubscriptions();
+        deleteAllRecipes();
         testClock.reset();
+    }
+
+    public SubscriptionSetup having() {
+        return new SubscriptionSetup(this);
     }
 
     public void havingRecipes(List<String> names) {
@@ -171,6 +204,9 @@ public class ApplicationRunner {
 
     public record CreateSubscriptionRequest(List<Long> recipeIds, String deliveryAddress,
                                             DayOfWeek deliveryDay) {
+    }
+
+    public record UpdateUpcomingOrderRecipesRequest(List<Long> recipeIds) {
     }
 
     public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders,

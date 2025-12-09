@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/recipes/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/subscriptions").authenticated()
                 .requestMatchers(HttpMethod.POST, "/subscriptions").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/subscriptions/upcoming-order/recipes").authenticated()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
