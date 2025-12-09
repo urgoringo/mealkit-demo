@@ -2,10 +2,8 @@ package com.urgoringo.mealkit.scaffolding;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -14,16 +12,15 @@ import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword;
 import static com.urgoringo.mealkit.scaffolding.TestFactory.anEmail;
 import static java.time.DayOfWeek.WEDNESDAY;
 
-@Component
 @RequiredArgsConstructor
-public class ApplicationSetup {
+public class SubscriptionSetup {
     private final ApplicationRunner app;
     private List<Long> recipeIds;
     @Getter
     private String authToken;
     private ApplicationRunner.SubscriptionResponse subscription;
 
-    public ApplicationSetup havingRecipes(int countOfRecipes) {
+    public SubscriptionSetup havingRecipes(int countOfRecipes) {
         recipeIds = IntStream.rangeClosed(1, countOfRecipes)
                 .mapToObj(i -> app.havingRecipe("Recipe " + i))
                 .map(ApplicationRunner.RecipeResponse::id)
@@ -31,12 +28,12 @@ public class ApplicationSetup {
         return this;
     }
 
-    public ApplicationSetup havingCustomer() {
+    public SubscriptionSetup havingCustomer() {
         authToken = app.signupCustomer(anEmail(), aPassword()).expectSuccess().token();
         return this;
     }
 
-    public ApplicationSetup havingSubscription(DayOfWeek deliveryDay) {
+    public SubscriptionSetup subscription(DayOfWeek deliveryDay) {
         if (authToken == null) {
             havingCustomer();
         }
@@ -51,20 +48,16 @@ public class ApplicationSetup {
         return this;
     }
 
-    public ApplicationSetup havingSubscription() {
-        havingSubscription(WEDNESDAY);
+    public SubscriptionSetup subscription() {
+        subscription(WEDNESDAY);
         return this;
     }
 
-    public ApplicationRunner.SubscriptionResponse getCustomerSubscription() {
+    public ApplicationRunner.SubscriptionResponse get() {
         if (subscription == null) {
-            havingSubscription();
+            subscription();
         }
         return app.getCustomerSubscription(authToken).expectSuccess();
     }
 
-    public ApplicationSetup freezeTimeOn(LocalDate localDate) {
-        app.freezeTimeOn(localDate);
-        return this;
-    }
 }

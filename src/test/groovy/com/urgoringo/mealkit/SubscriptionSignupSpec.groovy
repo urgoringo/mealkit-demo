@@ -13,52 +13,27 @@ import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword
 
 class SubscriptionSignupSpec extends ApplicationSpecification {
 
-    @Autowired
-    ApplicationRunner app
-
-    def setup() {
-        app.deleteAllSubscriptions()
-        app.deleteAllRecipes()
-        app.reset()
-    }
-
     def "subscription with 3 recipes"() {
-        given: "customer has no existing subscription"
-            def customerEmail = aCustomerEmail()
-            def customerPassword = aPassword()
-            def authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token()
+        given: "new customer with no existing subscription"
+            def authToken = app.signupCustomer().expectSuccess().token()
 
-        and: "3 recipes are available in the system"
-            def availableRecipes = []
-            IntStream.rangeClosed(1, 3)
-                    .mapToObj(i -> app.havingRecipe("Recipe " + i))
-                    .forEach(recipe -> availableRecipes.add(recipe))
-
-        when: "customer chooses these recipes for upcoming order"
-            def chosenRecipeIds = availableRecipes.stream()
-                    .map(recipe -> recipe.id())
-                    .toList()
+        when: "customer chooses 3 recipes for upcoming order"
+            def chosenRecipeIds = app.getAllRecipes().collect { recipe -> recipe.id() }.take(3)
             def response = app.create(authToken, aSubscription(chosenRecipeIds))
             def subscription = response.expectSuccess()
 
         then: "system creates new subscription with upcoming order that contains these 3 recipes"
-            subscription != null
             subscription.id() != null
             subscription.customerId() != null
-            subscription.upcomingOrders() != null
             subscription.upcomingOrders().size() == 1
 
             def firstOrder = subscription.upcomingOrders().get(0)
-            firstOrder.recipeIds() != null
-            firstOrder.recipeIds().size() == 3
             firstOrder.recipeIds() == chosenRecipeIds
     }
 
     def "cannot create subscription with less than 3 recipes"() {
-        given: "customer has selected only 2 recipes"
-            def customerEmail = aCustomerEmail()
-            def customerPassword = aPassword()
-            def authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token()
+        given: "new customer has selected only 2 recipes"
+            def authToken = app.signupCustomer().expectSuccess().token()
 
             def availableRecipes = []
             IntStream.rangeClosed(1, 2)
@@ -91,17 +66,8 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
     }
 
     def "subscription has delivery address"() {
-        given: "customer home address is:"
-            """
-        Pikk 15
-        10123 Tallinn
-        Estonia
-        """
-            def homeAddress = """
-                Pikk 15
-                10123 Tallinn
-                Estonia
-            """
+        given: "customer home address is: Pikk 15, 10123 Tallinn, Estonia"
+            def homeAddress = "Pikk 15, 10123 Tallinn, Estonia"
             def customerEmail = aCustomerEmail()
             def customerPassword = aPassword()
             def authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token()

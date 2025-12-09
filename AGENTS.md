@@ -9,6 +9,7 @@ Mealkit is a Spring Boot 3.5 application for managing meal kit recipes. It uses:
 - **Spring Boot 3.5.7** with Spring Data JPA and Spring Web
 - **PostgreSQL** database with Flyway migrations
 - **Testcontainers** for integration testing with PostgreSQL
+- **Spock Framework** for BDD-style testing
 - **Lombok** for reducing boilerplate code
 - **MapStruct** for mapping between persistence and domain models
 - **JSpecify** for null safety annotations
@@ -378,19 +379,27 @@ Spring Framework 6+ uses JSpecify annotations internally. Spring's `@NonNullApi`
 
 **ALWAYS follow TDD when implementing new features:**
 
-1. **Write the test first**
-   - Implement step definitions for the new scenario
+1. **Receive Spock test with text descriptions**
+   - Agent receives a Spock test specification with `given:`, `when:`, and `then:` blocks
+   - Each block contains only text descriptions (e.g., `given: "customer has no existing subscription"`)
+   - Test blocks may be empty or contain only descriptive text
+   - The test should compile but will fail because implementation is missing
+
+2. **Implement the failing test**
+   - Add necessary setup code in `given:` blocks (create test data, initialize variables)
+   - Add action code in `when:` blocks (call APIs, perform operations)
+   - Add assertion code in `then:` blocks (verify results, check conditions)
    - Update `ApplicationRunner` with any needed API methods
    - Update test DTOs to match expected API contract
-   - Run the test to ensure it compiles
+   - Use `and:` blocks for additional setup or assertions as needed
+   - Run the test to ensure it compiles: `./gradlew test --tests "SpecClassName"`
 
-2. **Verify test fails for the right reason**
-   - Run `./gradlew test --tests "StoriesRunner"`
-   - Confirm test fails with expected error (e.g., field is null, method not found)
-   - Check the JBehave report: `target/jbehave/spec.*.txt`
-   - If test fails for wrong reason, fix the test before proceeding
+3. **Verify test fails for the right reason**
+   - Run `./gradlew test --tests "SpecClassName"`
+   - Confirm test fails with expected error (e.g., field is null, method not found, validation error)
+   - If test fails for wrong reason, fix the test implementation before proceeding
 
-3. **Implement production code to make test pass**
+4. **Implement production code to make test pass**
    - Start with database migration if schema changes needed
    - Update persistence entities (add `@Column` annotations)
    - Update domain models (add fields with `@Nullable` if optional)
@@ -398,11 +407,10 @@ Spring Framework 6+ uses JSpecify annotations internally. Spring's `@NonNullApi`
    - Update API controllers and DTOs
    - MapStruct will auto-map fields with matching names
 
-4. **Verify test passes**
+5. **Verify test passes**
    - Run tests again: `./gradlew test`
    - Check that new scenario passes
    - Ensure no existing tests broken
-   - Review JBehave report to confirm success
 
 **Benefits of TDD:**
 - Tests document intended behavior before implementation
@@ -415,18 +423,25 @@ Spring Framework 6+ uses JSpecify annotations internally. Spring's `@NonNullApi`
 - Tests automatically use Testcontainers PostgreSQL instance
 - No need for manual database setup during testing
 
-#### JBehave Test Architecture
+#### Spock Test Architecture
 
-The project uses JBehave for behavior-driven development (BDD) testing:
+The project uses **Spock Framework** for behavior-driven development (BDD) testing:
 
 - **Self-Contained Tests**: Tests create their own test data via the REST API
   - Makes tests independent and easier to understand
   - Avoids relying on database migrations or shared test data
-  - Each scenario starts with a clean database state
+  - Each test method starts with a clean database state (via `setup()` method)
+
+- **Given-When-Then Structure**: Spock tests use BDD-style blocks
+  - `given:` - Setup and test data preparation
+  - `when:` - Action being tested
+  - `then:` - Assertions and verifications
+  - `and:` - Additional setup or assertions
+  - Text descriptions after keywords provide readable test documentation
 
 - **ApplicationRunner Pattern**: Encapsulates API interactions
   - Provides high-level methods for interacting with the application API
-  - Hides low-level HTTP details from step definitions
+  - Hides low-level HTTP details from test code
   - Returns `ApiResponse<T>` for uniform error handling
 
 - **ApiResponse Pattern**: Type-safe response handling using sealed interfaces
@@ -435,6 +450,40 @@ The project uses JBehave for behavior-driven development (BDD) testing:
   - Use `expectSuccess()` when success is expected
   - Use `expectError()` when error is expected
   - Exhaustive pattern matching ensures all cases are handled
+
+**Example Spock test structure:**
+```groovy
+def "subscription with 3 recipes"() {
+    given: "customer has no existing subscription"
+        def customerEmail = aCustomerEmail()
+        def customerPassword = aPassword()
+        def authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token()
+
+    and: "3 recipes are available in the system"
+        def availableRecipes = []
+        IntStream.rangeClosed(1, 3)
+                .mapToObj(i -> app.havingRecipe("Recipe " + i))
+                .forEach(recipe -> availableRecipes.add(recipe))
+
+    when: "customer chooses these recipes for upcoming order"
+        def chosenRecipeIds = availableRecipes.stream()
+                .map(recipe -> recipe.id())
+                .toList()
+        def response = app.create(authToken, aSubscription(chosenRecipeIds))
+        def subscription = response.expectSuccess()
+
+    then: "system creates new subscription with upcoming order that contains these 3 recipes"
+        subscription != null
+        subscription.id() != null
+        subscription.upcomingOrders() != null
+        subscription.upcomingOrders().size() == 1
+        
+        def firstOrder = subscription.upcomingOrders().get(0)
+        firstOrder.recipeIds() != null
+        firstOrder.recipeIds().size() == 3
+        firstOrder.recipeIds() == chosenRecipeIds
+}
+```
 
 **Example ApplicationRunner method:**
 ```java
@@ -446,24 +495,10 @@ public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail
 }
 ```
 
-**Example step definition usage:**
-```java
-@When("customer chooses these recipes for upcoming order")
-public void whenCustomerChoosesRecipes() {
-    response = app.createSubscription(customerEmail, chosenRecipeIds);
-    subscription = response.expectSuccess();
-}
-
-@Then("system returns $statusCode with validation error")
-public void thenSystemReturnsStatusWithValidationError(int statusCode) {
-    int actualStatusCode = response.expectError();
-    assertEquals(statusCode, actualStatusCode);
-}
-```
-
 #### Test Data Management
 - Use `ApplicationRunner` methods to create test data via API
-- Avoid using repositories or services directly in test steps
-- Clean up data in `@BeforeScenario` hooks
+- Avoid using repositories or services directly in test code
+- Clean up data in `setup()` method (runs before each test)
 - Delete in proper order to respect foreign key constraints (e.g., subscriptions before recipes)
-- Always update CLAUDE.md when new significant pattern or practices are used
+- Use `TestFactory` helper methods for creating test data (e.g., `aCustomerEmail()`, `aPassword()`)
+- Always update AGENTS.md when new significant pattern or practices are used

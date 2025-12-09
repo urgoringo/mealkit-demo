@@ -1,25 +1,10 @@
 package com.urgoringo.mealkit
 
-import com.urgoringo.mealkit.scaffolding.ApplicationRunner
-import com.urgoringo.mealkit.scaffolding.ApplicationSetup
-import org.springframework.beans.factory.annotation.Autowired
 
-import static com.urgoringo.mealkit.scaffolding.ApplicationRunner.SubscriptionRequest.aSubscription
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword
 import static com.urgoringo.mealkit.scaffolding.TestFactory.anEmail
 
 class CustomerAuthenticationSpec extends ApplicationSpecification {
-
-    @Autowired
-    ApplicationRunner app
-
-    @Autowired
-    ApplicationSetup setup
-
-    def setup() {
-        app.deleteAllSubscriptions()
-        app.deleteAllRecipes()
-    }
 
     def "new customer signup"() {
         given: "user signs up using their email and password"
