@@ -38,9 +38,17 @@ public class TestFactory {
         return new SubscriptionBuilder(List.of(), anAddress(), WEDNESDAY);
     }
 
+    public static IngredientBuilder anIngredient() {
+        return new IngredientBuilder("ingredient", "1", "piece");
+    }
+
 
    @With
-    public record RecipeBuilder(String title, List<String> ingredients, List<String> instructions) {
+    public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredientsWithDetails) {
+    }
+
+    @With
+    public record IngredientBuilder(String name, String quantity, String unit) {
     }
 
     @With

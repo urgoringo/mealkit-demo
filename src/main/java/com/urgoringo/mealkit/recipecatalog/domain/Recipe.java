@@ -9,10 +9,15 @@ import java.util.List;
 public record Recipe(
         Id<Recipe> id,
         String title,
-        List<String> ingredients,
-        List<String> instructions
+        List<String> instructions,
+        List<Ingredient> ingredientsWithDetails
 ) {
-    public static Recipe create(String title, List<String> ingredients, List<String> instructions) {
-        return new Recipe(Id.unassigned(), title, List.copyOf(ingredients), List.copyOf(instructions));
+    public static Recipe create(String title, List<String> instructions, List<Ingredient> ingredientsWithDetails) {
+        return new Recipe(
+                Id.unassigned(), 
+                title, 
+                List.copyOf(instructions),
+                List.copyOf(ingredientsWithDetails)
+        );
     }
 }

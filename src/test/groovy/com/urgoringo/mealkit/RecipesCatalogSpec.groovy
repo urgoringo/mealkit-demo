@@ -4,6 +4,7 @@ import com.urgoringo.mealkit.scaffolding.ApplicationRunner
 import org.springframework.beans.factory.annotation.Autowired
 
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aRecipe
+import static com.urgoringo.mealkit.scaffolding.TestFactory.anIngredient
 
 class RecipesCatalogSpec extends ApplicationSpecification {
 
@@ -26,16 +27,56 @@ class RecipesCatalogSpec extends ApplicationSpecification {
     def "recipe has ingredients and recipe instruction steps"() {
         given: "system has following recipe available"
             def recipeTitle = "Lemon Herb Chicken"
-            def expectedIngredients = ["chicken breast", "lemon", "fresh herbs"]
             def expectedInstructions = ["Season the chicken with herbs", "Grill for 15 minutes", "Serve with lemon"]
-            def recipeId = app.havingRecipe(aRecipe().withTitle(recipeTitle).withIngredients(expectedIngredients).withInstructions(expectedInstructions)).id()
+            def recipeId = app.havingRecipe(aRecipe()
+                    .withTitle(recipeTitle)
+                    .withInstructions(expectedInstructions)
+                    .withIngredientsWithDetails([
+                            anIngredient().withName("chicken breast").withQuantity("500").withUnit("g"),
+                            anIngredient().withName("lemon").withQuantity("1").withUnit("piece"),
+                            anIngredient().withName("fresh herbs").withQuantity("1").withUnit("cup")
+                    ])
+            ).id()
 
         when: "customer queries available recipes"
             def recipe = app.getRecipe(recipeId)
 
         then: "system returns this recipe"
             recipe.title() == recipeTitle
-            recipe.ingredients() == expectedIngredients
+            recipe.ingredientsWithDetails().size() == 3
+            recipe.ingredientsWithDetails()[0].name() == "chicken breast"
+            recipe.ingredientsWithDetails()[1].name() == "lemon"
+            recipe.ingredientsWithDetails()[2].name() == "fresh herbs"
             recipe.instructions() == expectedInstructions
+    }
+
+    def "each recipe ingredient has quantity and unit (supported units are: g, piece, cup)"() {
+        given: "system has following recipe available"
+            def recipeTitle = "Lemon Herb Chicken"
+            def recipeId = app.havingRecipe(aRecipe()
+                    .withTitle(recipeTitle)
+                    .withIngredientsWithDetails(
+                            [
+                                    anIngredient().withName("minced chicken breast").withQuantity("300").withUnit("g"),
+                                    anIngredient().withName("lemon").withQuantity("1").withUnit("piece"),
+                                    anIngredient().withName("fresh herbs").withQuantity("1/2").withUnit("cup")
+                            ]
+                    )
+            ).id()
+
+        when: "customer queries recipe ingredients"
+            def recipe = app.getRecipe(recipeId)
+
+        then: "system returns this recipe ingredients with quantities and units"
+            recipe.ingredientsWithDetails().size() == 3
+            recipe.ingredientsWithDetails()[0].name() == "minced chicken breast"
+            recipe.ingredientsWithDetails()[0].quantity() == "300"
+            recipe.ingredientsWithDetails()[0].unit() == "g"
+            recipe.ingredientsWithDetails()[1].name() == "lemon"
+            recipe.ingredientsWithDetails()[1].quantity() == "1"
+            recipe.ingredientsWithDetails()[1].unit() == "piece"
+            recipe.ingredientsWithDetails()[2].name() == "fresh herbs"
+            recipe.ingredientsWithDetails()[2].quantity() == "1/2"
+            recipe.ingredientsWithDetails()[2].unit() == "cup"
     }
 }

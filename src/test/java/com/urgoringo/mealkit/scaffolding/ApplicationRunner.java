@@ -1,6 +1,7 @@
 package com.urgoringo.mealkit.scaffolding;
 
 import com.urgoringo.mealkit.customer.domain.Customers;
+import com.urgoringo.mealkit.recipecatalog.api.RecipeController;
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.CreateRecipeRequest;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOrdersService;
@@ -59,7 +60,17 @@ public class ApplicationRunner {
     }
 
     public RecipeResponse havingRecipe(TestFactory.RecipeBuilder builder) {
-        CreateRecipeRequest request = new CreateRecipeRequest(builder.title(), builder.ingredients(), builder.instructions());
+        var ingredientRequests = builder.ingredientsWithDetails().isEmpty()
+                ? List.<RecipeController.IngredientRequest>of()
+                : builder.ingredientsWithDetails().stream()
+                        .map(ing -> new RecipeController.IngredientRequest(ing.name(), ing.quantity(), ing.unit()))
+                        .toList();
+        
+        CreateRecipeRequest request = new CreateRecipeRequest(
+                builder.title(), 
+                builder.instructions(),
+                ingredientRequests
+        );
         ResponseEntity<RecipeResponse> response = restTemplate.postForEntity(
                 "/recipes",
                 request,

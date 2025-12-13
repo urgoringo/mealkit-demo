@@ -1,6 +1,7 @@
 package com.urgoringo.mealkit.recipecatalog.api;
 
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.recipecatalog.domain.Ingredient;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService;
 import com.urgoringo.mealkit.recipecatalog.application.GetAllRecipesService;
@@ -35,8 +36,10 @@ public class RecipeController {
                 .map(recipe -> new RecipeResponse(
                         recipe.id().value(),
                         recipe.title(),
-                        recipe.ingredients(),
-                        recipe.instructions()
+                        recipe.instructions(),
+                        recipe.ingredientsWithDetails().stream()
+                                .map(ing -> new IngredientResponse(ing.name(), ing.quantity(), ing.unit()))
+                                .toList()
                 ))
                 .toList();
         return ResponseEntity.ok(response);
@@ -51,29 +54,50 @@ public class RecipeController {
         RecipeResponse response = new RecipeResponse(
                 recipe.id().value(),
                 recipe.title(),
-                recipe.ingredients(),
-                recipe.instructions()
+                recipe.instructions(),
+                recipe.ingredientsWithDetails().stream()
+                        .map(ing -> new IngredientResponse(ing.name(), ing.quantity(), ing.unit()))
+                        .toList()
         );
         return ResponseEntity.ok(response);
     }
 
     @PostMapping
     public ResponseEntity<RecipeResponse> createRecipe(@RequestBody CreateRecipeRequest request) {
+        List<Ingredient> ingredients = request.ingredientsWithDetails().stream()
+                .map(ing -> Ingredient.create(ing.name(), ing.quantity(), ing.unit()))
+                .toList();
+        
         Recipe recipe = createRecipeService.execute(
                 request.title(),
-                request.ingredients(),
-                request.instructions()
+                request.instructions(),
+                ingredients
         );
         RecipeResponse response = new RecipeResponse(
                 recipe.id().value(),
                 recipe.title(),
-                recipe.ingredients(),
-                recipe.instructions()
+                recipe.instructions(),
+                recipe.ingredientsWithDetails().stream()
+                        .map(ing -> new IngredientResponse(ing.name(), ing.quantity(), ing.unit()))
+                        .toList()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    public record CreateRecipeRequest(String title, List<String> ingredients, List<String> instructions) {}
+    public record CreateRecipeRequest(
+            String title, 
+            List<String> instructions,
+            List<IngredientRequest> ingredientsWithDetails
+    ) {}
 
-    public record RecipeResponse(Long id, String title, List<String> ingredients, List<String> instructions) {}
+    public record IngredientRequest(String name, String quantity, String unit) {}
+
+    public record RecipeResponse(
+            Long id, 
+            String title, 
+            List<String> instructions,
+            List<IngredientResponse> ingredientsWithDetails
+    ) {}
+
+    public record IngredientResponse(String name, String quantity, String unit) {}
 }
