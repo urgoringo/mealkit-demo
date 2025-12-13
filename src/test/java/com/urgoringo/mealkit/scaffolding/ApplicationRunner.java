@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.scaffolding;
 import com.urgoringo.mealkit.customer.domain.Customers;
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController;
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.CreateRecipeRequest;
+import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOrdersService;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
@@ -41,6 +42,7 @@ public class ApplicationRunner {
 
     private final TestRestTemplate restTemplate;
     private final RecipesCatalog recipesCatalog;
+    private final IngredientsCatalog ingredientsCatalog;
     private final Customers customers;
     private final Subscriptions subscriptions;
     private final TestClock testClock;
@@ -60,9 +62,9 @@ public class ApplicationRunner {
     }
 
     public RecipeResponse havingRecipe(TestFactory.RecipeBuilder builder) {
-        var ingredientRequests = builder.ingredientsWithDetails().isEmpty()
+        var ingredientRequests = builder.ingredients().isEmpty()
                 ? List.<RecipeController.IngredientRequest>of()
-                : builder.ingredientsWithDetails().stream()
+                : builder.ingredients().stream()
                         .map(ing -> new RecipeController.IngredientRequest(ing.name(), ing.quantity(), ing.unit()))
                         .toList();
         
@@ -103,6 +105,7 @@ public class ApplicationRunner {
 
     public void deleteAllRecipes() {
         recipesCatalog.deleteAll();
+        ingredientsCatalog.deleteAll();
     }
 
     public void setup() {

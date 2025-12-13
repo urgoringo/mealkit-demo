@@ -1,7 +1,5 @@
 package com.urgoringo.mealkit
 
-import com.urgoringo.mealkit.scaffolding.ApplicationRunner
-import org.springframework.beans.factory.annotation.Autowired
 
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aRecipe
 import static com.urgoringo.mealkit.scaffolding.TestFactory.anIngredient
@@ -31,7 +29,7 @@ class RecipesCatalogSpec extends ApplicationSpecification {
             def recipeId = app.havingRecipe(aRecipe()
                     .withTitle(recipeTitle)
                     .withInstructions(expectedInstructions)
-                    .withIngredientsWithDetails([
+                    .withIngredients([
                             anIngredient().withName("chicken breast").withQuantity("500").withUnit("g"),
                             anIngredient().withName("lemon").withQuantity("1").withUnit("piece"),
                             anIngredient().withName("fresh herbs").withQuantity("1").withUnit("cup")
@@ -43,10 +41,10 @@ class RecipesCatalogSpec extends ApplicationSpecification {
 
         then: "system returns this recipe"
             recipe.title() == recipeTitle
-            recipe.ingredientsWithDetails().size() == 3
-            recipe.ingredientsWithDetails()[0].name() == "chicken breast"
-            recipe.ingredientsWithDetails()[1].name() == "lemon"
-            recipe.ingredientsWithDetails()[2].name() == "fresh herbs"
+            recipe.ingredients().size() == 3
+            recipe.ingredients()[0].name() == "chicken breast"
+            recipe.ingredients()[1].name() == "lemon"
+            recipe.ingredients()[2].name() == "fresh herbs"
             recipe.instructions() == expectedInstructions
     }
 
@@ -55,7 +53,7 @@ class RecipesCatalogSpec extends ApplicationSpecification {
             def recipeTitle = "Lemon Herb Chicken"
             def recipeId = app.havingRecipe(aRecipe()
                     .withTitle(recipeTitle)
-                    .withIngredientsWithDetails(
+                    .withIngredients(
                             [
                                     anIngredient().withName("minced chicken breast").withQuantity("300").withUnit("g"),
                                     anIngredient().withName("lemon").withQuantity("1").withUnit("piece"),
@@ -68,15 +66,15 @@ class RecipesCatalogSpec extends ApplicationSpecification {
             def recipe = app.getRecipe(recipeId)
 
         then: "system returns this recipe ingredients with quantities and units"
-            recipe.ingredientsWithDetails().size() == 3
-            recipe.ingredientsWithDetails()[0].name() == "minced chicken breast"
-            recipe.ingredientsWithDetails()[0].quantity() == "300"
-            recipe.ingredientsWithDetails()[0].unit() == "g"
-            recipe.ingredientsWithDetails()[1].name() == "lemon"
-            recipe.ingredientsWithDetails()[1].quantity() == "1"
-            recipe.ingredientsWithDetails()[1].unit() == "piece"
-            recipe.ingredientsWithDetails()[2].name() == "fresh herbs"
-            recipe.ingredientsWithDetails()[2].quantity() == "1/2"
-            recipe.ingredientsWithDetails()[2].unit() == "cup"
+            recipe.ingredients().size() == 3
+            recipe.ingredients()[0].name() == "minced chicken breast"
+            recipe.ingredients()[0].quantity() == "300"
+            recipe.ingredients()[0].unit() == "g"
+            recipe.ingredients()[1].name() == "lemon"
+            recipe.ingredients()[1].quantity() == "1"
+            recipe.ingredients()[1].unit() == "piece"
+            recipe.ingredients()[2].name() == "fresh herbs"
+            recipe.ingredients()[2].quantity() == "1/2"
+            recipe.ingredients()[2].unit() == "cup"
     }
 }

@@ -10,14 +10,14 @@ public record Recipe(
         Id<Recipe> id,
         String title,
         List<String> instructions,
-        List<Ingredient> ingredientsWithDetails
+        List<RecipeIngredient> ingredients
 ) {
-    public static Recipe create(String title, List<String> instructions, List<Ingredient> ingredientsWithDetails) {
+    public static Recipe create(String title, List<String> instructions, List<RecipeIngredient> ingredients) {
         return new Recipe(
                 Id.unassigned(), 
                 title, 
                 List.copyOf(instructions),
-                List.copyOf(ingredientsWithDetails)
+                List.copyOf(ingredients)
         );
     }
 }

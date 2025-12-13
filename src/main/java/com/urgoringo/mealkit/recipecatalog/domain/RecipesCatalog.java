@@ -1,5 +1,6 @@
 package com.urgoringo.mealkit.recipecatalog.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +31,7 @@ public class RecipesCatalog {
                         Id.of(record.getId()),
                         record.getName(),
                         toList(record.getInstructions()),
-                        parseIngredients(record.getIngredientsWithDetails())
+                        parseRecipeIngredients(record.getIngredients())
                 ));
     }
 
@@ -42,7 +43,7 @@ public class RecipesCatalog {
                 Id.of(record.getId()),
                 record.getName(),
                 toList(record.getInstructions()),
-                parseIngredients(record.getIngredientsWithDetails())
+                parseRecipeIngredients(record.getIngredients())
         );
     }
 
@@ -51,7 +52,7 @@ public class RecipesCatalog {
             dsl.update(RECIPES)
                     .set(RECIPES.NAME, recipe.title())
                     .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
-                    .set(RECIPES.INGREDIENTS_WITH_DETAILS, toJson(recipe.ingredientsWithDetails()))
+                    .set(RECIPES.INGREDIENTS, toJson(recipe.ingredients()))
                     .where(RECIPES.ID.eq(recipe.id().value()))
                     .execute();
             return recipe;
@@ -59,7 +60,7 @@ public class RecipesCatalog {
             var record = dsl.insertInto(RECIPES)
                     .set(RECIPES.NAME, recipe.title())
                     .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
-                    .set(RECIPES.INGREDIENTS_WITH_DETAILS, toJson(recipe.ingredientsWithDetails()))
+                    .set(RECIPES.INGREDIENTS, toJson(recipe.ingredients()))
                     .returning(RECIPES.ID)
                     .fetchOne();
             if (record == null) {
@@ -69,7 +70,7 @@ public class RecipesCatalog {
                     Id.of(record.getId()),
                     recipe.title(),
                     recipe.instructions(),
-                    recipe.ingredientsWithDetails()
+                    recipe.ingredients()
             );
         }
     }
@@ -82,22 +83,42 @@ public class RecipesCatalog {
         return Arrays.asList(array);
     }
 
-    private List<Ingredient> parseIngredients(JSON json) {
+    private List<RecipeIngredient> parseRecipeIngredients(JSON json) {
         if (json == null) {
             return List.of();
         }
         try {
-            return objectMapper.readValue(json.data(), new TypeReference<>() {});
+            List<RecipeIngredientDto> dtos = objectMapper.readValue(json.data(), new TypeReference<>() {});
+            return dtos.stream()
+                    .map(dto -> new RecipeIngredient(
+                            Id.of(dto.ingredientId()),
+                            dto.quantity(),
+                            dto.unit()
+                    ))
+                    .toList();
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse ingredients JSON", e);
+            throw new RuntimeException("Failed to parse recipe ingredients JSON", e);
         }
     }
 
-    private JSON toJson(List<Ingredient> ingredients) {
+    private JSON toJson(List<RecipeIngredient> recipeIngredients) {
         try {
-            return JSON.json(objectMapper.writeValueAsString(ingredients));
+            List<RecipeIngredientDto> dtos = recipeIngredients.stream()
+                    .map(ri -> new RecipeIngredientDto(
+                            ri.ingredientId().value(),
+                            ri.quantity(),
+                            ri.unit()
+                    ))
+                    .toList();
+            return JSON.json(objectMapper.writeValueAsString(dtos));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize ingredients to JSON", e);
+            throw new RuntimeException("Failed to serialize recipe ingredients to JSON", e);
         }
     }
+
+    private record RecipeIngredientDto(
+            @JsonProperty("ingredient_id") Long ingredientId,
+            String quantity,
+            String unit
+    ) {}
 }

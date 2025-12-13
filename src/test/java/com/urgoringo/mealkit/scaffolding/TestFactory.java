@@ -44,7 +44,7 @@ public class TestFactory {
 
 
    @With
-    public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredientsWithDetails) {
+    public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredients) {
     }
 
     @With

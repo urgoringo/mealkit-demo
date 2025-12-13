@@ -1,10 +1,8 @@
 package com.urgoringo.mealkit.recipecatalog.api;
 
 import com.urgoringo.mealkit.domain.Id;
-import com.urgoringo.mealkit.recipecatalog.domain.Ingredient;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService;
-import com.urgoringo.mealkit.recipecatalog.application.GetAllRecipesService;
 import com.urgoringo.mealkit.recipecatalog.application.GetRecipeService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
@@ -25,20 +23,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecipeController {
 
-    private final GetAllRecipesService getAllRecipesService;
     private final GetRecipeService getRecipeService;
     private final CreateRecipeService createRecipeService;
 
     @GetMapping
     public ResponseEntity<List<RecipeResponse>> getAllRecipes() {
-        List<Recipe> recipes = getAllRecipesService.execute();
+        List<GetRecipeService.RecipeWithIngredients> recipes =
+                getRecipeService.executeAll();
+        
         List<RecipeResponse> response = recipes.stream()
-                .map(recipe -> new RecipeResponse(
-                        recipe.id().value(),
-                        recipe.title(),
-                        recipe.instructions(),
-                        recipe.ingredientsWithDetails().stream()
-                                .map(ing -> new IngredientResponse(ing.name(), ing.quantity(), ing.unit()))
+                .map(recipeWithIngredients -> new RecipeResponse(
+                        recipeWithIngredients.recipe().id().value(),
+                        recipeWithIngredients.recipe().title(),
+                        recipeWithIngredients.recipe().instructions(),
+                        recipeWithIngredients.ingredientDetails().stream()
+                                .map(detail -> new IngredientResponse(
+                                        detail.ingredient().name(),
+                                        detail.quantity(),
+                                        detail.unit()
+                                ))
                                 .toList()
                 ))
                 .toList();
@@ -47,16 +50,19 @@ public class RecipeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<RecipeResponse> getRecipe(@PathVariable Long id) {
-        Recipe recipe = getRecipeService.execute(Id.of(id));
-        if (recipe == null) {
-            return ResponseEntity.notFound().build();
-        }
+        GetRecipeService.RecipeWithIngredients recipeWithIngredients =
+                getRecipeService.execute(Id.of(id));
+        
         RecipeResponse response = new RecipeResponse(
-                recipe.id().value(),
-                recipe.title(),
-                recipe.instructions(),
-                recipe.ingredientsWithDetails().stream()
-                        .map(ing -> new IngredientResponse(ing.name(), ing.quantity(), ing.unit()))
+                recipeWithIngredients.recipe().id().value(),
+                recipeWithIngredients.recipe().title(),
+                recipeWithIngredients.recipe().instructions(),
+                recipeWithIngredients.ingredientDetails().stream()
+                        .map(detail -> new IngredientResponse(
+                                detail.ingredient().name(),
+                                detail.quantity(),
+                                detail.unit()
+                        ))
                         .toList()
         );
         return ResponseEntity.ok(response);
@@ -64,21 +70,31 @@ public class RecipeController {
 
     @PostMapping
     public ResponseEntity<RecipeResponse> createRecipe(@RequestBody CreateRecipeRequest request) {
-        List<Ingredient> ingredients = request.ingredientsWithDetails().stream()
-                .map(ing -> Ingredient.create(ing.name(), ing.quantity(), ing.unit()))
+        List<CreateRecipeService.IngredientInput> ingredientInputs = request.ingredients().stream()
+                .map(ing -> new CreateRecipeService.IngredientInput(ing.name(), ing.quantity(), ing.unit()))
                 .toList();
         
-        Recipe recipe = createRecipeService.execute(
+        CreateRecipeService.CreateRecipeCommand command = new CreateRecipeService.CreateRecipeCommand(
                 request.title(),
                 request.instructions(),
-                ingredients
+                ingredientInputs
         );
+        
+        Recipe recipe = createRecipeService.execute(command);
+        
+        GetRecipeService.RecipeWithIngredients recipeWithIngredients =
+                getRecipeService.execute(recipe.id());
+        
         RecipeResponse response = new RecipeResponse(
-                recipe.id().value(),
-                recipe.title(),
-                recipe.instructions(),
-                recipe.ingredientsWithDetails().stream()
-                        .map(ing -> new IngredientResponse(ing.name(), ing.quantity(), ing.unit()))
+                recipeWithIngredients.recipe().id().value(),
+                recipeWithIngredients.recipe().title(),
+                recipeWithIngredients.recipe().instructions(),
+                recipeWithIngredients.ingredientDetails().stream()
+                        .map(detail -> new IngredientResponse(
+                                detail.ingredient().name(),
+                                detail.quantity(),
+                                detail.unit()
+                        ))
                         .toList()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -87,7 +103,7 @@ public class RecipeController {
     public record CreateRecipeRequest(
             String title, 
             List<String> instructions,
-            List<IngredientRequest> ingredientsWithDetails
+            List<IngredientRequest> ingredients
     ) {}
 
     public record IngredientRequest(String name, String quantity, String unit) {}
@@ -96,7 +112,7 @@ public class RecipeController {
             Long id, 
             String title, 
             List<String> instructions,
-            List<IngredientResponse> ingredientsWithDetails
+            List<IngredientResponse> ingredients
     ) {}
 
     public record IngredientResponse(String name, String quantity, String unit) {}

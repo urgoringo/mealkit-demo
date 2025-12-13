@@ -1,14 +1,14 @@
 package com.urgoringo.mealkit.recipecatalog.domain;
 
+import com.urgoringo.mealkit.domain.Id;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public record Ingredient(
-        String name,
-        String quantity,
-        String unit
+        Id<Ingredient> id,
+        String name
 ) {
-    public static Ingredient create(String name, String quantity, String unit) {
-        return new Ingredient(name, quantity, unit);
+    public static Ingredient create(String name) {
+        return new Ingredient(Id.unassigned(), name);
     }
 }
