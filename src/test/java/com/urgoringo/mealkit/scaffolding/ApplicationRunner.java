@@ -224,4 +224,26 @@ public class ApplicationRunner {
         currentAuthToken = customer.getAuthToken();
         return customer;
     }
+
+    public IngredientResponse havingIngredient(String name) {
+        CreateIngredientRequest request = new CreateIngredientRequest(name);
+        ResponseEntity<IngredientResponse> response = restTemplate.postForEntity(
+                "/ingredients",
+                request,
+                IngredientResponse.class
+        );
+        return ApiResponse.from(response).expectSuccess();
+    }
+
+    public IngredientResponse findIngredient(String name) {
+        ResponseEntity<IngredientResponse> response = restTemplate.getForEntity(
+                "/ingredients?name=" + name,
+                IngredientResponse.class
+        );
+        return ApiResponse.from(response).expectSuccess();
+    }
+
+    public record CreateIngredientRequest(String name) {}
+    
+    public record IngredientResponse(Long id, String name) {}
 }

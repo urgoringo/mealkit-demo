@@ -2,6 +2,7 @@ package com.urgoringo.mealkit
 
 import com.urgoringo.mealkit.recipecatalog.domain.Unit
 
+import static com.urgoringo.mealkit.recipecatalog.domain.Unit.*
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aRecipe
 import static com.urgoringo.mealkit.scaffolding.TestFactory.anIngredient
 
@@ -31,9 +32,9 @@ class RecipesCatalogSpec extends ApplicationSpecification {
                     .withTitle(recipeTitle)
                     .withInstructions(expectedInstructions)
                     .withIngredients([
-                            anIngredient().withName("chicken breast").withQuantity("500").withUnit(Unit.GRAM),
-                            anIngredient().withName("lemon").withQuantity("1").withUnit(Unit.PIECE),
-                            anIngredient().withName("fresh herbs").withQuantity("1").withUnit(Unit.CUP)
+                            anIngredient().withName("chicken breast").withQuantity("500").withUnit(GRAM),
+                            anIngredient().withName("lemon").withQuantity("1").withUnit(PIECE),
+                            anIngredient().withName("fresh herbs").withQuantity("1").withUnit(CUP)
                     ])
             ).id()
 
@@ -56,9 +57,9 @@ class RecipesCatalogSpec extends ApplicationSpecification {
                     .withTitle(recipeTitle)
                     .withIngredients(
                             [
-                                    anIngredient().withName("minced chicken breast").withQuantity("300").withUnit(Unit.GRAM),
-                                    anIngredient().withName("lemon").withQuantity("1").withUnit(Unit.PIECE),
-                                    anIngredient().withName("fresh herbs").withQuantity("1/2").withUnit(Unit.CUP)
+                                    anIngredient().withName("minced chicken breast").withQuantity("300").withUnit(GRAM),
+                                    anIngredient().withName("lemon").withQuantity("1").withUnit(PIECE),
+                                    anIngredient().withName("fresh herbs").withQuantity("1/2").withUnit(CUP)
                             ]
                     )
             ).id()
@@ -70,12 +71,12 @@ class RecipesCatalogSpec extends ApplicationSpecification {
             recipe.ingredients().size() == 3
             recipe.ingredients()[0].name() == "minced chicken breast"
             recipe.ingredients()[0].quantity() == "300"
-            recipe.ingredients()[0].unit() == Unit.GRAM
+            recipe.ingredients()[0].unit() == GRAM
             recipe.ingredients()[1].name() == "lemon"
             recipe.ingredients()[1].quantity() == "1"
-            recipe.ingredients()[1].unit() == Unit.PIECE
+            recipe.ingredients()[1].unit() == PIECE
             recipe.ingredients()[2].name() == "fresh herbs"
             recipe.ingredients()[2].quantity() == "1/2"
-            recipe.ingredients()[2].unit() == Unit.CUP
+            recipe.ingredients()[2].unit() == CUP
     }
 }
