@@ -1,12 +1,6 @@
 package com.urgoringo.mealkit.recipecatalog.application;
 
-import com.urgoringo.mealkit.recipecatalog.domain.Ingredient;
-import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
-import com.urgoringo.mealkit.recipecatalog.domain.Quantity;
-import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
-import com.urgoringo.mealkit.recipecatalog.domain.RecipeIngredient;
-import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
-import com.urgoringo.mealkit.recipecatalog.domain.Unit;
+import com.urgoringo.mealkit.recipecatalog.domain.*;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
@@ -28,15 +22,14 @@ public class CreateRecipeService {
             List<IngredientInput> ingredients
     ) {}
 
-    public record IngredientInput(String name, String quantity, Unit unit) {}
+    public record IngredientInput(String name, Quantity quantity) {}
 
     @Transactional
     public Recipe execute(CreateRecipeCommand command) {
         List<RecipeIngredient> recipeIngredients = command.ingredients().stream()
                 .map(input -> {
                     Ingredient ingredient = ingredientsCatalog.findOrCreate(input.name());
-                    Quantity quantity = Quantity.of(input.quantity(), input.unit());
-                    return RecipeIngredient.create(ingredient.id(), quantity);
+                    return RecipeIngredient.create(ingredient.id(), input.quantity());
                 })
                 .toList();
 
