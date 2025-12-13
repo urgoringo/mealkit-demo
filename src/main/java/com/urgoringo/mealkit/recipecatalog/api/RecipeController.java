@@ -40,7 +40,7 @@ public class RecipeController {
                                 .map(detail -> new IngredientResponse(
                                         detail.ingredient().name(),
                                         detail.quantity().amount(),
-                                        detail.quantity().unit()
+                                        detail.quantity().unit().getDisplayName()
                                 ))
                                 .toList()
                 ))
@@ -61,7 +61,7 @@ public class RecipeController {
                         .map(detail -> new IngredientResponse(
                                 detail.ingredient().name(),
                                 detail.quantity().amount(),
-                                detail.quantity().unit()
+                                detail.quantity().unit().getDisplayName()
                         ))
                         .toList()
         );
@@ -93,7 +93,7 @@ public class RecipeController {
                         .map(detail -> new IngredientResponse(
                                 detail.ingredient().name(),
                                 detail.quantity().amount(),
-                                detail.quantity().unit()
+                                detail.quantity().unit().getDisplayName()
                         ))
                         .toList()
         );

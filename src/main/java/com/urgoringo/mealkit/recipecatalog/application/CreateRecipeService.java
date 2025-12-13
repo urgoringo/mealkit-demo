@@ -6,6 +6,7 @@ import com.urgoringo.mealkit.recipecatalog.domain.Quantity;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipeIngredient;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
+import com.urgoringo.mealkit.recipecatalog.domain.Unit;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class CreateRecipeService {
         List<RecipeIngredient> recipeIngredients = command.ingredients().stream()
                 .map(input -> {
                     Ingredient ingredient = ingredientsCatalog.findOrCreate(input.name());
-                    Quantity quantity = Quantity.of(input.quantity(), input.unit());
+                    Quantity quantity = Quantity.of(input.quantity(), Unit.fromString(input.unit()));
                     return RecipeIngredient.create(ingredient.id(), quantity);
                 })
                 .toList();
