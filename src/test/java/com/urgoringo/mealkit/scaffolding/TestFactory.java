@@ -1,5 +1,6 @@
 package com.urgoringo.mealkit.scaffolding;
 
+import com.urgoringo.mealkit.recipecatalog.domain.Unit;
 import lombok.With;
 import net.datafaker.Faker;
 
@@ -39,7 +40,7 @@ public class TestFactory {
     }
 
     public static IngredientBuilder anIngredient() {
-        return new IngredientBuilder("ingredient", "1", "piece");
+        return new IngredientBuilder("ingredient", "1", Unit.PIECE);
     }
 
 
@@ -48,7 +49,7 @@ public class TestFactory {
     }
 
     @With
-    public record IngredientBuilder(String name, String quantity, String unit) {
+    public record IngredientBuilder(String name, String quantity, Unit unit) {
     }
 
     @With

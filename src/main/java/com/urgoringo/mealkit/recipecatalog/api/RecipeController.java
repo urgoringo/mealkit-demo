@@ -2,6 +2,7 @@ package com.urgoringo.mealkit.recipecatalog.api;
 
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
+import com.urgoringo.mealkit.recipecatalog.domain.Unit;
 import com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService;
 import com.urgoringo.mealkit.recipecatalog.application.GetRecipeService;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,7 @@ public class RecipeController {
                                 .map(detail -> new IngredientResponse(
                                         detail.ingredient().name(),
                                         detail.quantity().amount(),
-                                        detail.quantity().unit().getDisplayName()
+                                        detail.quantity().unit()
                                 ))
                                 .toList()
                 ))
@@ -61,7 +62,7 @@ public class RecipeController {
                         .map(detail -> new IngredientResponse(
                                 detail.ingredient().name(),
                                 detail.quantity().amount(),
-                                detail.quantity().unit().getDisplayName()
+                                detail.quantity().unit()
                         ))
                         .toList()
         );
@@ -93,7 +94,7 @@ public class RecipeController {
                         .map(detail -> new IngredientResponse(
                                 detail.ingredient().name(),
                                 detail.quantity().amount(),
-                                detail.quantity().unit().getDisplayName()
+                                detail.quantity().unit()
                         ))
                         .toList()
         );
@@ -106,7 +107,7 @@ public class RecipeController {
             List<IngredientRequest> ingredients
     ) {}
 
-    public record IngredientRequest(String name, String quantity, String unit) {}
+    public record IngredientRequest(String name, String quantity, Unit unit) {}
 
     public record RecipeResponse(
             Long id, 
@@ -115,5 +116,5 @@ public class RecipeController {
             List<IngredientResponse> ingredients
     ) {}
 
-    public record IngredientResponse(String name, String quantity, String unit) {}
+    public record IngredientResponse(String name, String quantity, Unit unit) {}
 }

@@ -92,7 +92,7 @@ public class RecipesCatalog {
             return dtos.stream()
                     .map(dto -> new RecipeIngredient(
                             Id.of(dto.ingredientId()),
-                            Quantity.of(dto.quantity(), Unit.fromString(dto.unit()))
+                            Quantity.of(dto.quantity(), Unit.valueOf(dto.unit()))
                     ))
                     .toList();
         } catch (JsonProcessingException e) {
@@ -106,7 +106,7 @@ public class RecipesCatalog {
                     .map(ri -> new RecipeIngredientDto(
                             ri.ingredientId().value(),
                             ri.quantity().amount(),
-                            ri.quantity().unit().getDisplayName()
+                            ri.quantity().unit().name()
                     ))
                     .toList();
             return JSON.json(objectMapper.writeValueAsString(dtos));

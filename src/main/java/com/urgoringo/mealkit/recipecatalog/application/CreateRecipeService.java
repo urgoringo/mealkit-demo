@@ -28,14 +28,14 @@ public class CreateRecipeService {
             List<IngredientInput> ingredients
     ) {}
 
-    public record IngredientInput(String name, String quantity, String unit) {}
+    public record IngredientInput(String name, String quantity, Unit unit) {}
 
     @Transactional
     public Recipe execute(CreateRecipeCommand command) {
         List<RecipeIngredient> recipeIngredients = command.ingredients().stream()
                 .map(input -> {
                     Ingredient ingredient = ingredientsCatalog.findOrCreate(input.name());
-                    Quantity quantity = Quantity.of(input.quantity(), Unit.fromString(input.unit()));
+                    Quantity quantity = Quantity.of(input.quantity(), input.unit());
                     return RecipeIngredient.create(ingredient.id(), quantity);
                 })
                 .toList();
