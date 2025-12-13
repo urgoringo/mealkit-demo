@@ -53,10 +53,8 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
     }
 
     def "delivery address is required"() {
-        when: "customer tries to signup without delivery address"
-            def customerEmail = aCustomerEmail()
-            def customerPassword = aPassword()
-            def authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token()
+        when: "customer tries to create subscription without delivery address"
+            def authToken = app.signupCustomer().expectSuccess().token()
             def recipeIds = app.havingRecipes(3)
             def response = app.create(authToken, aSubscription(recipeIds).withDeliveryAddress(null))
 
@@ -68,9 +66,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
     def "subscription has delivery address"() {
         given: "customer home address is: Pikk 15, 10123 Tallinn, Estonia"
             def homeAddress = "Pikk 15, 10123 Tallinn, Estonia"
-            def customerEmail = aCustomerEmail()
-            def customerPassword = aPassword()
-            def authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token()
+            def authToken = app.signupCustomer().expectSuccess().token()
 
         when: "they signup for subscription"
             def chosenRecipeIds = app.havingRecipes(3)
@@ -91,9 +87,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
 
         and: "customer selects Monday as the delivery day"
             def deliveryDay = DayOfWeek.MONDAY
-            def customerEmail = aCustomerEmail()
-            def customerPassword = aPassword()
-            def authToken = app.signupCustomer(customerEmail, customerPassword).expectSuccess().token()
+            def authToken = app.signupCustomer().expectSuccess().token()
 
         when: "they signup for subscription"
             def chosenRecipeIds = app.havingRecipes(3)
@@ -107,7 +101,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
             subscription.upcomingOrders() != null
             subscription.upcomingOrders().size() == 1
 
-            def firstOrder = subscription.upcomingOrders().get(0)
+            def firstOrder = subscription.upcomingOrders().first
             firstOrder.deliveryDate() != null
             firstOrder.deliveryDate() == expectedDeliveryDate
     }

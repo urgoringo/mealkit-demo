@@ -25,7 +25,7 @@ class UpdateOrderRecipesSpec extends ApplicationSpecification {
         then: "system updates recipes for upcoming order"
             subscription.upcomingOrders().size() == 1
 
-            def firstOrder = subscription.upcomingOrders()[0]
+            def firstOrder = subscription.upcomingOrders().first
             firstOrder.recipeIds() == newRecipeIds
     }
 }

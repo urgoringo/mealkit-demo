@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.DayOfWeek;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static com.urgoringo.mealkit.scaffolding.ApplicationRunner.SubscriptionRequest.aSubscription;
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword;
@@ -15,18 +14,9 @@ import static java.time.DayOfWeek.WEDNESDAY;
 @RequiredArgsConstructor
 public class SubscriptionSetup {
     private final ApplicationRunner app;
-    private List<Long> recipeIds;
     @Getter
     private String authToken;
     private ApplicationRunner.SubscriptionResponse subscription;
-
-    public SubscriptionSetup havingRecipes(int countOfRecipes) {
-        recipeIds = IntStream.rangeClosed(1, countOfRecipes)
-                .mapToObj(i -> app.havingRecipe("Recipe " + i))
-                .map(ApplicationRunner.RecipeResponse::id)
-                .toList();
-        return this;
-    }
 
     public SubscriptionSetup havingCustomer() {
         authToken = app.signupCustomer(anEmail(), aPassword()).expectSuccess().token();
@@ -37,9 +27,9 @@ public class SubscriptionSetup {
         if (authToken == null) {
             havingCustomer();
         }
-        if (recipeIds == null) {
-            havingRecipes(3);
-        }
+        List<Long> recipeIds = app.getAllRecipes().subList(0, 3).stream()
+                .map(ApplicationRunner.RecipeResponse::id)
+                .toList();
 
         subscription = app.create(
                 authToken,
