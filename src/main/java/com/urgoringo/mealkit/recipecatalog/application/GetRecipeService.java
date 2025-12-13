@@ -37,18 +37,10 @@ public class GetRecipeService {
     @Transactional(readOnly = true)
     public RecipeWithIngredients execute(Id<Recipe> recipeId) {
         Recipe recipe = recipesCatalog.findById(recipeId);
-        
-        List<Id<Ingredient>> ingredientIds = recipe.ingredients().stream()
-                .map(RecipeIngredient::ingredientId)
-                .toList();
-
-        Map<Id<Ingredient>, Ingredient> ingredientMap = ingredientsCatalog.findAll().stream()
-                .filter(ing -> ingredientIds.contains(ing.id()))
-                .collect(Collectors.toMap(Ingredient::id, ing -> ing));
 
         List<IngredientDetail> ingredientDetails = recipe.ingredients().stream()
                 .map(ri -> {
-                    Ingredient ingredient = ingredientMap.get(ri.ingredientId());
+                    Ingredient ingredient = ingredientsCatalog.getById(ri.ingredientId());
                     if (ingredient == null) {
                         throw new IllegalStateException("Ingredient not found: " + ri.ingredientId());
                     }

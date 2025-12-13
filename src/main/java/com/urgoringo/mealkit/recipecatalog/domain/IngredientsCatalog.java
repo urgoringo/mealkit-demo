@@ -1,71 +1,83 @@
 package com.urgoringo.mealkit.recipecatalog.domain;
 
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.urgoringo.mealkit.domain.Id;
 import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
 import java.util.List;
-
-import static com.urgoringo.mealkit.jooq.tables.Ingredients.INGREDIENTS;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @NullMarked
-@Repository
+@Component
 @RequiredArgsConstructor
 public class IngredientsCatalog {
 
-    private final DSLContext dsl;
+    private final IngredientsCatalogRepository repository;
+    @Nullable
+    private LoadingCache<String, Map<Id<Ingredient>, Ingredient>> cache;
 
-    public List<Ingredient> findAll() {
-        return dsl.selectFrom(INGREDIENTS)
-                .fetch()
-                .map(record -> new Ingredient(
-                        Id.of(record.getId()),
-                        record.getName()
-                ));
+    @PostConstruct
+    public void initializeCache() {
+        this.cache = Caffeine.newBuilder()
+                .refreshAfterWrite(1, TimeUnit.MINUTES)
+                .build(new CacheLoader<>() {
+                    @Override
+                    public Map<Id<Ingredient>, Ingredient> load(String key) {
+                        return loadAllIngredients();
+                    }
+
+                    @Override
+                    public Map<Id<Ingredient>, Ingredient> reload(String key, Map<Id<Ingredient>, Ingredient> oldValue) {
+                        return loadAllIngredients();
+                    }
+                });
     }
 
-    //TODO should not be needed
+    private Map<Id<Ingredient>, Ingredient> loadAllIngredients() {
+        List<Ingredient> ingredients = repository.findAll();
+        return ingredients.stream()
+                .collect(Collectors.toMap(Ingredient::id, ingredient -> ingredient));
+    }
+
+    private LoadingCache<String, Map<Id<Ingredient>, Ingredient>> getCache() {
+        if (cache == null) {
+            throw new IllegalStateException("Cache not initialized");
+        }
+        return cache;
+    }
+
+    public List<Ingredient> findAll() {
+        Map<Id<Ingredient>, Ingredient> ingredients = getCache().get("all");
+        return List.copyOf(ingredients.values());
+    }
+
+    @Nullable
+    public Ingredient getById(Id<Ingredient> id) {
+        Map<Id<Ingredient>, Ingredient> ingredients = getCache().get("all");
+        return ingredients.get(id);
+    }
+
     @Nullable
     public Ingredient findByName(String name) {
-        var record = dsl.selectFrom(INGREDIENTS)
-                .where(INGREDIENTS.NAME.eq(name))
-                .fetchOne();
-        if (record == null) {
-            return null;
-        }
-        return new Ingredient(
-                Id.of(record.getId()),
-                record.getName()
-        );
+        return repository.findByName(name);
     }
 
     public Ingredient save(Ingredient ingredient) {
-        if (ingredient.id().isAssigned()) {
-            dsl.update(INGREDIENTS)
-                    .set(INGREDIENTS.NAME, ingredient.name())
-                    .where(INGREDIENTS.ID.eq(ingredient.id().value()))
-                    .execute();
-            return ingredient;
-        } else {
-            var record = dsl.insertInto(INGREDIENTS)
-                    .set(INGREDIENTS.NAME, ingredient.name())
-                    .returning(INGREDIENTS.ID)
-                    .fetchOne();
-            if (record == null) {
-                throw new IllegalStateException("Failed to insert ingredient");
-            }
-            return new Ingredient(
-                    Id.of(record.getId()),
-                    ingredient.name()
-            );
-        }
+        Ingredient saved = repository.save(ingredient);
+        getCache().invalidateAll();
+        return saved;
     }
 
     public Ingredient findOrCreate(String name) {
-        var existing = findByName(name);
+        Ingredient existing = findByName(name);
         if (existing != null) {
             return existing;
         }
@@ -73,6 +85,7 @@ public class IngredientsCatalog {
     }
 
     public void deleteAll() {
-        dsl.deleteFrom(INGREDIENTS).execute();
+        repository.deleteAll();
+        getCache().invalidateAll();
     }
 }

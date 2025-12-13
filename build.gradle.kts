@@ -46,6 +46,7 @@ dependencies {
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("org.jspecify:jspecify:1.0.0")
+	implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 	errorprone("com.google.errorprone:error_prone_core:2.44.0")
