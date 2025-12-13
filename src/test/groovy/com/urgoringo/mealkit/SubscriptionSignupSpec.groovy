@@ -1,14 +1,21 @@
 package com.urgoringo.mealkit
 
 
-import java.time.DayOfWeek
+import spock.lang.Narrative
+
 import java.time.LocalDate
 
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aSubscription
+import static java.time.DayOfWeek.MONDAY
 
+@Narrative("""
+Each customer can sign up for a subscription. 
+When they have an active subscription, they will get a meal kit order delivered to them each week.
+One meal kit order contains 3 recipes selected by the customer and ingredients needed for those recipes.
+""")
 class SubscriptionSignupSpec extends ApplicationSpecification {
 
-    def "subscription with 3 recipes"() {
+    def "customer can choose 3 recipes for upcoming order"() {
         given: "new customer with no existing subscription"
             def authToken = app.signupCustomer().expectSuccess().token()
 
@@ -30,11 +37,6 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
         given: "new customer has selected only 2 recipes"
             def authToken = app.signupCustomer().expectSuccess().token()
 
-//            def availableRecipes = []
-//            IntStream.rangeClosed(1, 2)
-//                    .mapToObj(i -> app.havingRecipe("Recipe " + i))
-//                    .forEach(recipe -> availableRecipes.add(recipe))
-//
             def chosenRecipeIds = app.getRecipes(2)
 
         when: "customer tries to sign up for subscription"
@@ -56,7 +58,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
             statusCode == 422
     }
 
-    def "subscription has delivery address"() {
+    def "can see subscription delivery address"() {
         given: "customer home address is: Pikk 15, 10123 Tallinn, Estonia"
             def homeAddress = "Pikk 15, 10123 Tallinn, Estonia"
             def authToken = app.signupCustomer().expectSuccess().token()
@@ -74,21 +76,17 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
     }
 
     def "subscription delivery day determines first order deliver date"() {
-        given: "today is 2025.11.19"
+        given: "today is 2025.11.19 (Wednesday)"
             def today = LocalDate.of(2025, 11, 19)
             app.freezeTimeOn(today)
+            def customer = app.havingCustomer()
 
-        and: "customer selects Monday as the delivery day"
-            def deliveryDay = DayOfWeek.MONDAY
-            def authToken = app.signupCustomer().expectSuccess().token()
+        when: "customer creates subscription they select Monday as the delivery day"
+            def deliveryDay = MONDAY
+            customer.havingSubscription(deliveryDay)
 
-        when: "they signup for subscription"
-            def chosenRecipeIds = app.getRecipes(3)
-            def request = aSubscription().withRecipeIds(chosenRecipeIds).withDeliveryDay(deliveryDay)
-            def response = app.create(authToken, request)
-            def subscription = response.expectSuccess()
-
-        then: "first order will be delivered on 2025.11.24"
+        then: "first order will be delivered on 2025.11.24 (next Monday)"
+            def subscription = app.getCustomerSubscription(customer.authToken).expectSuccess()
             def expectedDeliveryDate = LocalDate.of(2025, 11, 24)
             subscription != null
             subscription.upcomingOrders() != null

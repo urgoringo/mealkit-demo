@@ -1,5 +1,6 @@
 package com.urgoringo.mealkit.scaffolding;
 
+import com.urgoringo.mealkit.subscription.api.SubscriptionController;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
