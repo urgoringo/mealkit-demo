@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.*;
@@ -44,8 +45,7 @@ public class IngredientsCatalog {
         return cache.get(id);
     }
 
-    @Nullable
-    public Ingredient findByName(String name) {
+    public Optional<Ingredient> findByName(String name) {
         return repository.findByName(name);
     }
 
@@ -58,11 +58,7 @@ public class IngredientsCatalog {
     }
 
     public Ingredient findOrCreate(String name) {
-        Ingredient existing = findByName(name);
-        if (existing != null) {
-            return existing;
-        }
-        return save(Ingredient.create(name));
+        return repository.findByName(name).orElseGet(() -> save(Ingredient.create(name)));
     }
 
     public void deleteAll() {

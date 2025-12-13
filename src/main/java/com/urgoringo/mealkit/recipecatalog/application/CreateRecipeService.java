@@ -1,5 +1,6 @@
 package com.urgoringo.mealkit.recipecatalog.application;
 
+import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.*;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
@@ -17,21 +18,20 @@ public class CreateRecipeService {
     private final IngredientsCatalog ingredientsCatalog;
 
     public record CreateRecipeCommand(
-            String title,
-            List<String> instructions,
-            List<IngredientInput> ingredients
-    ) {}
+        String title,
+        List<String> instructions,
+        List<IngredientInput> ingredients
+    ) {
+    }
 
-    public record IngredientInput(String name, Quantity quantity) {}
+    public record IngredientInput(Id<Ingredient> ingredientId, Quantity quantity) {
+    }
 
     @Transactional
     public Recipe execute(CreateRecipeCommand command) {
         List<RecipeIngredient> recipeIngredients = command.ingredients().stream()
-                .map(input -> {
-                    Ingredient ingredient = ingredientsCatalog.findOrCreate(input.name());
-                    return RecipeIngredient.create(ingredient.id(), input.quantity());
-                })
-                .toList();
+            .map(input -> RecipeIngredient.create(input.ingredientId(), input.quantity()))
+            .toList();
 
         var recipe = Recipe.create(command.title(), command.instructions(), recipeIngredients);
         return recipesCatalog.save(recipe);

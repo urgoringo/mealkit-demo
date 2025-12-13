@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.urgoringo.mealkit.jooq.tables.Ingredients.INGREDIENTS;
 
@@ -41,18 +42,14 @@ public class IngredientsCatalogRepository {
         );
     }
 
-    @Nullable
-    public Ingredient findByName(String name) {
+    public Optional<Ingredient> findByName(String name) {
         var record = dsl.selectFrom(INGREDIENTS)
                 .where(INGREDIENTS.NAME.eq(name))
-                .fetchOne();
-        if (record == null) {
-            return null;
-        }
-        return new Ingredient(
-                Id.of(record.getId()),
-                record.getName()
-        );
+                .fetchOptional();
+        return record.map(r -> new Ingredient(
+                Id.of(r.getId()),
+                r.getName()
+        ));
     }
 
     public Ingredient save(Ingredient ingredient) {

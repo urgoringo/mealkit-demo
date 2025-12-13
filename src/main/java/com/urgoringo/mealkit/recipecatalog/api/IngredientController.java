@@ -8,6 +8,8 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static org.springframework.http.ResponseEntity.*;
+
 @NullMarked
 @RestController
 @RequestMapping("/ingredients")
@@ -21,19 +23,19 @@ public class IngredientController {
     public ResponseEntity<IngredientResponse> createIngredient(@RequestBody CreateIngredientRequest request) {
         Ingredient ingredient = Ingredient.create(request.name);
         Ingredient saved = ingredientsCatalog.save(ingredient);
-        return ResponseEntity.ok(new IngredientResponse(saved.id().value(), saved.name()));
+        return ok(new IngredientResponse(saved.id().value(), saved.name()));
     }
 
     @GetMapping
     public ResponseEntity<IngredientResponse> getIngredientByName(@RequestParam String name) {
-        Ingredient ingredient = getIngredientService.execute(name);
-        if (ingredient == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(new IngredientResponse(ingredient.id().value(), ingredient.name()));
+        return getIngredientService.execute(name)
+            .map(ing -> ok(new IngredientResponse(ing.id().value(), ing.name())))
+            .orElseGet(() -> notFound().build());
     }
 
-    public record CreateIngredientRequest(String name) {}
-    
-    public record IngredientResponse(Long id, String name) {}
+    public record CreateIngredientRequest(String name) {
+    }
+
+    public record IngredientResponse(Long id, String name) {
+    }
 }

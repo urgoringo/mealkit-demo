@@ -42,7 +42,8 @@ public class RecipeController {
                 recipeWithDetails.recipe().title(),
                 recipeWithDetails.recipe().instructions(),
                 recipeWithDetails.ingredientDetails().stream()
-                    .map(detail -> new IngredientResponse(
+                    .map(detail -> new RecipeIngredientResponse(
+                        detail.ingredient().id().value(),
                         detail.ingredient().name(),
                         detail.quantity().amount(),
                         detail.quantity().unit()
@@ -63,7 +64,8 @@ public class RecipeController {
             recipeWithDetails.recipe().title(),
             recipeWithDetails.recipe().instructions(),
             recipeWithDetails.ingredientDetails().stream()
-                .map(detail -> new IngredientResponse(
+                .map(detail -> new RecipeIngredientResponse(
+                    detail.ingredient().id().value(),
                     detail.ingredient().name(),
                     detail.quantity().amount(),
                     detail.quantity().unit()
@@ -76,7 +78,7 @@ public class RecipeController {
     @PostMapping
     public ResponseEntity<RecipeResponse> createRecipe(@RequestBody CreateRecipeRequest request) {
         List<IngredientInput> ingredientInputs = request.ingredients().stream()
-            .map(ing -> new IngredientInput(ing.name(), new Quantity(ing.amount(), ing.unit())))
+            .map(ing -> new IngredientInput(Id.of(ing.ingredientId()), new Quantity(ing.amount(), ing.unit())))
             .toList();
 
         CreateRecipeCommand command = new CreateRecipeCommand(
@@ -95,7 +97,8 @@ public class RecipeController {
             recipeWithDetails.recipe().title(),
             recipeWithDetails.recipe().instructions(),
             recipeWithDetails.ingredientDetails().stream()
-                .map(detail -> new IngredientResponse(
+                .map(detail -> new RecipeIngredientResponse(
+                    detail.ingredient().id().value(),
                     detail.ingredient().name(),
                     detail.quantity().amount(),
                     detail.quantity().unit()
@@ -108,21 +111,21 @@ public class RecipeController {
     public record CreateRecipeRequest(
         String title,
         List<String> instructions,
-        List<IngredientRequest> ingredients
+        List<RecipeIngredientRequest> ingredients
     ) {
     }
 
-    public record IngredientRequest(String name, String amount, Unit unit) {
+    public record RecipeIngredientRequest(long ingredientId, String amount, Unit unit) {
     }
 
     public record RecipeResponse(
         Long id,
         String title,
         List<String> instructions,
-        List<IngredientResponse> ingredients
+        List<RecipeIngredientResponse> ingredients
     ) {
     }
 
-    public record IngredientResponse(String name, String quantity, Unit unit) {
+    public record RecipeIngredientResponse(long ingredientId, String name, String quantity, Unit unit) {
     }
 }

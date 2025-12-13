@@ -7,6 +7,8 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @NullMarked
 @Service
 @RequiredArgsConstructor
@@ -14,8 +16,7 @@ public class GetIngredientService {
 
     private final IngredientsCatalog ingredientsCatalog;
 
-    @Nullable
-    public Ingredient execute(String name) {
+    public Optional<Ingredient> execute(String name) {
         return ingredientsCatalog.findByName(name);
     }
 }
