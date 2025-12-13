@@ -91,7 +91,7 @@ public class ApplicationRunner {
 
     public void setup() {
         reset();
-        IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipeName()));
+        IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
     }
 
     public void updateUpcomingOrderRecipes(String authToken, List<Long> recipeIds) {
