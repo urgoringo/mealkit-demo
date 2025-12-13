@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.recipecatalog.domain;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.urgoringo.mealkit.domain.Id;
+import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -30,8 +31,11 @@ public class IngredientsCatalog {
             });
     }
 
-    public List<Ingredient> findAll() {
-        return repository.findAll();
+    @PostConstruct
+    public void warmUpCache() {
+        List<Ingredient> allIngredients = repository.findAll();
+        cache.putAll(allIngredients.stream()
+            .collect(java.util.stream.Collectors.toMap(Ingredient::id, ingredient -> ingredient)));
     }
 
     public Ingredient getById(Id<Ingredient> id) {
