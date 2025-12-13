@@ -1,6 +1,9 @@
 package com.urgoringo.mealkit.scaffolding;
 
+import lombok.With;
 import net.datafaker.Faker;
+
+import java.util.List;
 
 public class TestFactory {
 
@@ -26,5 +29,13 @@ public class TestFactory {
 
     public static String aRecipeName() {
         return faker.food().dish();
+    }
+
+    public static RecipeBuilder aRecipe() {
+        return new RecipeBuilder(aRecipeName(), List.of(), List.of());
+    }
+
+    @With
+    public record RecipeBuilder(String title, List<String> ingredients, List<String> instructions) {
     }
 }

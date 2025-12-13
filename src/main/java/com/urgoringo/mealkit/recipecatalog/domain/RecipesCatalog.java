@@ -1,28 +1,83 @@
 package com.urgoringo.mealkit.recipecatalog.domain;
 
-import com.urgoringo.mealkit.recipecatalog.persistence.RecipeMapper;
-import com.urgoringo.mealkit.recipecatalog.persistence.RecipeJpaRepository;
+import com.urgoringo.mealkit.domain.Id;
 import lombok.RequiredArgsConstructor;
+import org.jooq.DSLContext;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
 import java.util.List;
+
+import static com.urgoringo.mealkit.jooq.tables.Recipes.RECIPES;
 
 @NullMarked
 @Repository
 @RequiredArgsConstructor
 public class RecipesCatalog {
 
-    private final RecipeJpaRepository recipeJpaRepository;
-    private final RecipeMapper recipeMapper;
+    private final DSLContext dsl;
 
     public List<Recipe> findAll() {
-        return recipeMapper.toDomain(recipeJpaRepository.findAll());
+        return dsl.selectFrom(RECIPES)
+                .fetch()
+                .map(record -> new Recipe(
+                        Id.of(record.getId()),
+                        record.getName(),
+                        toList(record.getIngredients()),
+                        toList(record.getInstructions())
+                ));
+    }
+
+    public @Nullable Recipe findById(Id<Recipe> id) {
+        var record = dsl.selectFrom(RECIPES)
+                .where(RECIPES.ID.eq(id.value()))
+                .fetchOne();
+        if (record == null) {
+            return null;
+        }
+        return new Recipe(
+                Id.of(record.getId()),
+                record.getName(),
+                toList(record.getIngredients()),
+                toList(record.getInstructions())
+        );
     }
 
     public Recipe save(Recipe recipe) {
-        var entity = recipeMapper.toEntity(recipe);
-        var savedEntity = recipeJpaRepository.save(entity);
-        return recipeMapper.toDomain(savedEntity);
+        if (recipe.id().isAssigned()) {
+            dsl.update(RECIPES)
+                    .set(RECIPES.NAME, recipe.title())
+                    .set(RECIPES.INGREDIENTS, recipe.ingredients().toArray(new String[0]))
+                    .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
+                    .where(RECIPES.ID.eq(recipe.id().value()))
+                    .execute();
+            return recipe;
+        } else {
+            var record = dsl.insertInto(RECIPES)
+                    .set(RECIPES.NAME, recipe.title())
+                    .set(RECIPES.INGREDIENTS, recipe.ingredients().toArray(new String[0]))
+                    .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
+                    .returning(RECIPES.ID)
+                    .fetchOne();
+            if (record == null) {
+                throw new IllegalStateException("Failed to insert recipe");
+            }
+            return new Recipe(
+                    Id.of(record.getId()),
+                    recipe.title(),
+                    recipe.ingredients(),
+                    recipe.instructions()
+            );
+        }
+    }
+
+    public void deleteAll() {
+        dsl.deleteFrom(RECIPES).execute();
+    }
+
+    private List<String> toList(String[] array) {
+        return array == null ? List.of() : Arrays.asList(array);
     }
 }

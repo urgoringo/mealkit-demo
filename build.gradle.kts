@@ -1,6 +1,7 @@
 import net.ltgt.gradle.errorprone.errorprone
 import net.ltgt.gradle.nullaway.nullaway
 import org.gradle.api.tasks.compile.GroovyCompile
+import org.jooq.meta.jaxb.Logging
 
 plugins {
 	java
@@ -9,6 +10,7 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.7"
 	id("net.ltgt.errorprone") version "4.3.0"
 	id("net.ltgt.nullaway") version "2.3.0"
+	id("org.jooq.jooq-codegen-gradle") version "3.19.27"
 }
 
 group = "com.urgoringo"
@@ -35,7 +37,7 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-jooq")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -43,14 +45,13 @@ dependencies {
 	implementation("org.springframework.security:spring-security-oauth2-jose")
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
-	implementation("org.mapstruct:mapstruct:1.6.3")
 	implementation("org.jspecify:jspecify:1.0.0")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
-	annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
-	annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 	errorprone("com.google.errorprone:error_prone_core:2.44.0")
 	errorprone("com.uber.nullaway:nullaway:0.12.12")
+	jooqCodegen("org.postgresql:postgresql")
+	jooqCodegen("org.jooq:jooq-meta-extensions:3.19.27")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
@@ -108,7 +109,7 @@ tasks.withType<JavaCompile>().configureEach {
 		// Configure NullAway options
 		option("NullAway:JSpecifyMode", "true")
 
-		// Exclude generated code from analysis (for Lombok and MapStruct)
+		// Exclude generated code from analysis (for Lombok and jOOQ)
 		excludedPaths.set(".*/build/generated/.*")
 
 		// Disable warnings in generated code
@@ -120,5 +121,60 @@ tasks.withType<JavaCompile>().configureEach {
 tasks.named<JavaCompile>("compileTestJava") {
 	options.errorprone {
 		isEnabled.set(false)
+	}
+}
+
+// jOOQ code generation configuration
+jooq {
+	configuration {
+		logging = Logging.WARN
+		generator {
+			name = "org.jooq.codegen.JavaGenerator"
+			database {
+				name = "org.jooq.meta.extensions.ddl.DDLDatabase"
+				properties {
+					property {
+						key = "scripts"
+						value = "src/main/resources/db/migration/*.sql"
+					}
+					property {
+						key = "sort"
+						value = "flyway"
+					}
+					property {
+						key = "defaultNameCase"
+						value = "lower"
+					}
+				}
+			}
+			generate {
+				isDeprecated = false
+				isRecords = true
+				isImmutablePojos = false
+				isFluentSetters = true
+				isPojos = true
+				isPojosEqualsAndHashCode = true
+				isPojosToString = true
+				isJavaTimeTypes = true
+			}
+			target {
+				packageName = "com.urgoringo.mealkit.jooq"
+				directory = "build/generated/sources/jooq"
+			}
+		}
+	}
+}
+
+// Make sure jOOQ code generation runs before compilation
+tasks.named("compileJava") {
+	dependsOn(tasks.named("jooqCodegen"))
+}
+
+// Add generated sources to the main source set
+sourceSets {
+	main {
+		java {
+			srcDir("build/generated/sources/jooq")
+		}
 	}
 }

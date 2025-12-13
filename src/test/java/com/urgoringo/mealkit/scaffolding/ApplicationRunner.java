@@ -1,12 +1,11 @@
 package com.urgoringo.mealkit.scaffolding;
 
-import com.urgoringo.mealkit.customer.persistence.CustomerJpaRepository;
-import com.urgoringo.mealkit.recipecatalog.persistence.RecipeJpaRepository;
+import com.urgoringo.mealkit.customer.domain.Customers;
+import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOrdersService;
-import com.urgoringo.mealkit.subscription.persistence.SubscriptionJpaRepository;
+import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
-import org.apache.commons.lang3.IntegerRange;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -36,9 +35,9 @@ import static org.springframework.http.HttpMethod.PUT;
 public class ApplicationRunner {
 
     private final TestRestTemplate restTemplate;
-    private final RecipeJpaRepository recipeJpaRepository;
-    private final CustomerJpaRepository customerJpaRepository;
-    private final SubscriptionJpaRepository subscriptionJpaRepository;
+    private final RecipesCatalog recipesCatalog;
+    private final Customers customers;
+    private final Subscriptions subscriptions;
     private final TestClock testClock;
     private final SelectRecipesForUpcomingOrdersService selectRecipesForUpcomingOrdersService;
 
@@ -50,10 +49,28 @@ public class ApplicationRunner {
     }
 
     public RecipeResponse havingRecipe(String title) {
-        CreateRecipeRequest request = new CreateRecipeRequest(title);
+        CreateRecipeRequest request = new CreateRecipeRequest(title, List.of(), List.of());
         ResponseEntity<RecipeResponse> response = restTemplate.postForEntity(
                 "/recipes",
                 request,
+                RecipeResponse.class
+        );
+        return ApiResponse.from(response).expectSuccess();
+    }
+
+    public RecipeResponse havingRecipe(TestFactory.RecipeBuilder builder) {
+        CreateRecipeRequest request = new CreateRecipeRequest(builder.title(), builder.ingredients(), builder.instructions());
+        ResponseEntity<RecipeResponse> response = restTemplate.postForEntity(
+                "/recipes",
+                request,
+                RecipeResponse.class
+        );
+        return ApiResponse.from(response).expectSuccess();
+    }
+
+    public RecipeResponse getRecipe(Long id) {
+        ResponseEntity<RecipeResponse> response = restTemplate.getForEntity(
+                "/recipes/" + id,
                 RecipeResponse.class
         );
         return ApiResponse.from(response).expectSuccess();
@@ -74,7 +91,7 @@ public class ApplicationRunner {
     }
 
     public void deleteAllRecipes() {
-        recipeJpaRepository.deleteAll();
+        recipesCatalog.deleteAll();
     }
 
     public void setup() {
@@ -173,8 +190,8 @@ public class ApplicationRunner {
     }
 
     public void deleteAllSubscriptions() {
-        subscriptionJpaRepository.deleteAll();
-        customerJpaRepository.deleteAll();
+        subscriptions.deleteAll();
+        customers.deleteAll();
     }
 
     public ApplicationRunner freezeTimeOn(LocalDate date) {
@@ -196,10 +213,10 @@ public class ApplicationRunner {
         names.forEach(this::havingRecipe);
     }
 
-    public record CreateRecipeRequest(String title) {
+    public record CreateRecipeRequest(String title, List<String> ingredients, List<String> instructions) {
     }
 
-    public record RecipeResponse(Long id, String title) {
+    public record RecipeResponse(Long id, String title, List<String> ingredients, List<String> instructions) {
     }
 
     public record CreateSubscriptionRequest(List<Long> recipeIds, String deliveryAddress,

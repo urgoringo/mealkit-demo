@@ -6,30 +6,42 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.Order;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
-import org.mapstruct.Mapper;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @NullMarked
-@Mapper(componentModel = "spring")
-public interface SubscriptionApiMapper {
+@Component
+public class SubscriptionApiMapper {
 
-    SubscriptionResponse toResponse(Subscription subscription);
-
-    OrderResponse toOrderResponse(Order order);
-
-    default Long mapCustomerId(Id<?> id) {
-        return id.value();
+    public SubscriptionResponse toResponse(Subscription subscription) {
+        return new SubscriptionResponse(
+                subscription.id().value(),
+                subscription.customerId().value(),
+                subscription.upcomingOrders().stream()
+                        .map(this::toOrderResponse)
+                        .toList(),
+                subscription.deliveryAddress(),
+                subscription.deliveryDay()
+        );
     }
 
-    default List<Id<Recipe>> mapRecipeIds(List<Long> ids) {
+    public OrderResponse toOrderResponse(Order order) {
+        return new OrderResponse(
+                order.id().value(),
+                mapRecipeIdsToLong(order.recipeIds()),
+                order.deliveryDate()
+        );
+    }
+
+    public List<Id<Recipe>> mapRecipeIds(List<Long> ids) {
         return ids.stream()
                 .map(Id::<Recipe>of)
                 .toList();
     }
 
-    default List<Long> mapRecipeIdsToLong(List<Id<Recipe>> ids) {
+    public List<Long> mapRecipeIdsToLong(List<Id<Recipe>> ids) {
         return ids.stream()
                 .map(Id::value)
                 .toList();
