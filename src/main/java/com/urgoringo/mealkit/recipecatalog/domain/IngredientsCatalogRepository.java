@@ -27,7 +27,20 @@ public class IngredientsCatalogRepository {
                 ));
     }
 
-    //TODO should not be needed
+    @Nullable
+    public Ingredient findById(Id<Ingredient> id) {
+        var record = dsl.selectFrom(INGREDIENTS)
+                .where(INGREDIENTS.ID.eq(id.value()))
+                .fetchOne();
+        if (record == null) {
+            return null;
+        }
+        return new Ingredient(
+                Id.of(record.getId()),
+                record.getName()
+        );
+    }
+
     @Nullable
     public Ingredient findByName(String name) {
         var record = dsl.selectFrom(INGREDIENTS)
@@ -62,14 +75,6 @@ public class IngredientsCatalogRepository {
                     ingredient.name()
             );
         }
-    }
-
-    public Ingredient findOrCreate(String name) {
-        var existing = findByName(name);
-        if (existing != null) {
-            return existing;
-        }
-        return save(Ingredient.create(name));
     }
 
     public void deleteAll() {

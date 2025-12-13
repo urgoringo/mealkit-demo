@@ -28,15 +28,15 @@ public class RecipeController {
 
     @GetMapping
     public ResponseEntity<List<RecipeResponse>> getAllRecipes() {
-        List<GetRecipeService.RecipeWithIngredients> recipes =
+        List<GetRecipeService.RecipeWithDetails> recipes =
                 getRecipeService.executeAll();
         
         List<RecipeResponse> response = recipes.stream()
-                .map(recipeWithIngredients -> new RecipeResponse(
-                        recipeWithIngredients.recipe().id().value(),
-                        recipeWithIngredients.recipe().title(),
-                        recipeWithIngredients.recipe().instructions(),
-                        recipeWithIngredients.ingredientDetails().stream()
+                .map(recipeWithDetails -> new RecipeResponse(
+                        recipeWithDetails.recipe().id().value(),
+                        recipeWithDetails.recipe().title(),
+                        recipeWithDetails.recipe().instructions(),
+                        recipeWithDetails.ingredientDetails().stream()
                                 .map(detail -> new IngredientResponse(
                                         detail.ingredient().name(),
                                         detail.quantity(),
@@ -50,14 +50,14 @@ public class RecipeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<RecipeResponse> getRecipe(@PathVariable Long id) {
-        GetRecipeService.RecipeWithIngredients recipeWithIngredients =
+        GetRecipeService.RecipeWithDetails recipeWithDetails =
                 getRecipeService.execute(Id.of(id));
         
         RecipeResponse response = new RecipeResponse(
-                recipeWithIngredients.recipe().id().value(),
-                recipeWithIngredients.recipe().title(),
-                recipeWithIngredients.recipe().instructions(),
-                recipeWithIngredients.ingredientDetails().stream()
+                recipeWithDetails.recipe().id().value(),
+                recipeWithDetails.recipe().title(),
+                recipeWithDetails.recipe().instructions(),
+                recipeWithDetails.ingredientDetails().stream()
                         .map(detail -> new IngredientResponse(
                                 detail.ingredient().name(),
                                 detail.quantity(),
@@ -82,14 +82,14 @@ public class RecipeController {
         
         Recipe recipe = createRecipeService.execute(command);
         
-        GetRecipeService.RecipeWithIngredients recipeWithIngredients =
+        GetRecipeService.RecipeWithDetails recipeWithDetails =
                 getRecipeService.execute(recipe.id());
         
         RecipeResponse response = new RecipeResponse(
-                recipeWithIngredients.recipe().id().value(),
-                recipeWithIngredients.recipe().title(),
-                recipeWithIngredients.recipe().instructions(),
-                recipeWithIngredients.ingredientDetails().stream()
+                recipeWithDetails.recipe().id().value(),
+                recipeWithDetails.recipe().title(),
+                recipeWithDetails.recipe().instructions(),
+                recipeWithDetails.ingredientDetails().stream()
                         .map(detail -> new IngredientResponse(
                                 detail.ingredient().name(),
                                 detail.quantity(),

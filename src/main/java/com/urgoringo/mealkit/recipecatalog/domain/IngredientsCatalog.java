@@ -1,68 +1,41 @@
 package com.urgoringo.mealkit.recipecatalog.domain;
 
-import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.urgoringo.mealkit.domain.Id;
-import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @NullMarked
 @Component
-@RequiredArgsConstructor
 public class IngredientsCatalog {
 
     private final IngredientsCatalogRepository repository;
-    @Nullable
-    private LoadingCache<String, Map<Id<Ingredient>, Ingredient>> cache;
+    private final LoadingCache<Id<Ingredient>, Ingredient> cache;
 
-    @PostConstruct
-    public void initializeCache() {
+    public IngredientsCatalog(IngredientsCatalogRepository repository) {
+        this.repository = repository;
         this.cache = Caffeine.newBuilder()
-                .refreshAfterWrite(1, TimeUnit.MINUTES)
-                .build(new CacheLoader<>() {
-                    @Override
-                    public Map<Id<Ingredient>, Ingredient> load(String key) {
-                        return loadAllIngredients();
-                    }
-
-                    @Override
-                    public Map<Id<Ingredient>, Ingredient> reload(String key, Map<Id<Ingredient>, Ingredient> oldValue) {
-                        return loadAllIngredients();
-                    }
-                });
-    }
-
-    private Map<Id<Ingredient>, Ingredient> loadAllIngredients() {
-        List<Ingredient> ingredients = repository.findAll();
-        return ingredients.stream()
-                .collect(Collectors.toMap(Ingredient::id, ingredient -> ingredient));
-    }
-
-    private LoadingCache<String, Map<Id<Ingredient>, Ingredient>> getCache() {
-        if (cache == null) {
-            throw new IllegalStateException("Cache not initialized");
-        }
-        return cache;
+            .refreshAfterWrite(1, TimeUnit.MINUTES)
+            .build(id -> {
+                Ingredient ingredient = repository.findById(id);
+                if (ingredient == null) {
+                    throw new IllegalStateException("Ingredient not found: " + id);
+                }
+                return ingredient;
+            });
     }
 
     public List<Ingredient> findAll() {
-        Map<Id<Ingredient>, Ingredient> ingredients = getCache().get("all");
-        return List.copyOf(ingredients.values());
+        return repository.findAll();
     }
 
-    @Nullable
     public Ingredient getById(Id<Ingredient> id) {
-        Map<Id<Ingredient>, Ingredient> ingredients = getCache().get("all");
-        return ingredients.get(id);
+        return cache.get(id);
     }
 
     @Nullable
@@ -72,7 +45,9 @@ public class IngredientsCatalog {
 
     public Ingredient save(Ingredient ingredient) {
         Ingredient saved = repository.save(ingredient);
-        getCache().invalidateAll();
+        if (saved.id().isAssigned()) {
+            cache.invalidate(saved.id());
+        }
         return saved;
     }
 
@@ -86,6 +61,6 @@ public class IngredientsCatalog {
 
     public void deleteAll() {
         repository.deleteAll();
-        getCache().invalidateAll();
+        cache.invalidateAll();
     }
 }
