@@ -6,10 +6,9 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public record RecipeIngredient(
         Id<Ingredient> ingredientId,
-        String quantity,
-        String unit
+        Quantity quantity
 ) {
-    public static RecipeIngredient create(Id<Ingredient> ingredientId, String quantity, String unit) {
-        return new RecipeIngredient(ingredientId, quantity, unit);
+    public static RecipeIngredient create(Id<Ingredient> ingredientId, Quantity quantity) {
+        return new RecipeIngredient(ingredientId, quantity);
     }
 }

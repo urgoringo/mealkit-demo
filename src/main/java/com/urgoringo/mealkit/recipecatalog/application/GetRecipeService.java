@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.recipecatalog.application;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Ingredient;
 import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
+import com.urgoringo.mealkit.recipecatalog.domain.Quantity;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,7 @@ public class GetRecipeService {
 
     public record IngredientDetail(
         Ingredient ingredient,
-        String quantity,
-        String unit
+        Quantity quantity
     ) {
     }
 
@@ -43,7 +43,7 @@ public class GetRecipeService {
         List<IngredientDetail> ingredientDetails = recipe.ingredients().stream()
             .map(ri -> {
                 Ingredient ingredient = ingredientsCatalog.getById(ri.ingredientId());
-                return new IngredientDetail(ingredient, ri.quantity(), ri.unit());
+                return new IngredientDetail(ingredient, ri.quantity());
             })
             .toList();
 

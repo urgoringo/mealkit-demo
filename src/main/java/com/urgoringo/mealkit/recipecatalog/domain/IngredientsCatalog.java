@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.stream.Collectors.*;
+
 @NullMarked
 @Component
 public class IngredientsCatalog {
@@ -29,13 +31,13 @@ public class IngredientsCatalog {
                 }
                 return ingredient;
             });
+        warmupCache();
     }
 
-    @PostConstruct
-    public void warmUpCache() {
+    private void warmupCache() {
         List<Ingredient> allIngredients = repository.findAll();
         cache.putAll(allIngredients.stream()
-            .collect(java.util.stream.Collectors.toMap(Ingredient::id, ingredient -> ingredient)));
+            .collect(toMap(Ingredient::id, ingredient -> ingredient)));
     }
 
     public Ingredient getById(Id<Ingredient> id) {

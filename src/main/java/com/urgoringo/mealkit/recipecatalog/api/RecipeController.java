@@ -39,8 +39,8 @@ public class RecipeController {
                         recipeWithDetails.ingredientDetails().stream()
                                 .map(detail -> new IngredientResponse(
                                         detail.ingredient().name(),
-                                        detail.quantity(),
-                                        detail.unit()
+                                        detail.quantity().amount(),
+                                        detail.quantity().unit()
                                 ))
                                 .toList()
                 ))
@@ -60,8 +60,8 @@ public class RecipeController {
                 recipeWithDetails.ingredientDetails().stream()
                         .map(detail -> new IngredientResponse(
                                 detail.ingredient().name(),
-                                detail.quantity(),
-                                detail.unit()
+                                detail.quantity().amount(),
+                                detail.quantity().unit()
                         ))
                         .toList()
         );
@@ -92,8 +92,8 @@ public class RecipeController {
                 recipeWithDetails.ingredientDetails().stream()
                         .map(detail -> new IngredientResponse(
                                 detail.ingredient().name(),
-                                detail.quantity(),
-                                detail.unit()
+                                detail.quantity().amount(),
+                                detail.quantity().unit()
                         ))
                         .toList()
         );
