@@ -10,17 +10,15 @@ class PreselectRecipesSpec extends ApplicationSpecification {
             def signupDate = LocalDate.parse("2025-11-18")
             def deliveryDate = LocalDate.parse("2025-11-24")
 
+            app.freezeTimeOn(signupDate)
             app
-                    .freezeTimeOn(signupDate)
-            def authToken = app
-                    .having()
-                    .subscription(deliveryDate.getDayOfWeek())
-                    .authToken
+                    .havingCustomer()
+                    .havingSubscription(deliveryDate.getDayOfWeek())
+            def authToken = app.currentAuthToken
 
         when: "current day becomes 2025.11.21"
             def currentDate = LocalDate.parse("2025-11-21")
-            app
-                    .freezeTimeOn(currentDate)
+            app.freezeTimeOn(currentDate)
                     .processSubscriptionOrders()
             def subscription = app.getCustomerSubscription(authToken).expectSuccess()
 

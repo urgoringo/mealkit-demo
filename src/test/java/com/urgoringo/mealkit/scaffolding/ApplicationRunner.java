@@ -5,8 +5,10 @@ import com.urgoringo.mealkit.recipecatalog.api.RecipeController.CreateRecipeRequ
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOrdersService;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -42,6 +44,9 @@ public class ApplicationRunner {
     private final Subscriptions subscriptions;
     private final TestClock testClock;
     private final SelectRecipesForUpcomingOrdersService selectRecipesForUpcomingOrdersService;
+    @Nullable
+    @Getter
+    private String currentAuthToken;
 
     public RecipeResponse havingRecipe(String title) {
         CreateRecipeRequest request = new CreateRecipeRequest(title, List.of(), List.of());
@@ -189,10 +194,6 @@ public class ApplicationRunner {
         testClock.reset();
     }
 
-    public SubscriptionSetup having() {
-        return new SubscriptionSetup(this);
-    }
-
     public void havingRecipes(List<String> names) {
         names.forEach(this::havingRecipe);
     }
@@ -202,5 +203,11 @@ public class ApplicationRunner {
         return recipes.subList(0, count).stream()
                 .map(RecipeResponse::id)
                 .toList();
+    }
+
+    public CustomerSetup havingCustomer() {
+        CustomerSetup customer = new CustomerSetup(this);
+        currentAuthToken = customer.getAuthToken();
+        return customer;
     }
 }
