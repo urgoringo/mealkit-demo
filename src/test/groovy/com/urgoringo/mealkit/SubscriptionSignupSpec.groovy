@@ -1,15 +1,10 @@
 package com.urgoringo.mealkit
 
-import com.urgoringo.mealkit.scaffolding.ApplicationRunner
-import org.springframework.beans.factory.annotation.Autowired
 
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.util.stream.IntStream
 
-import static com.urgoringo.mealkit.scaffolding.ApplicationRunner.SubscriptionRequest.aSubscription
-import static com.urgoringo.mealkit.scaffolding.TestFactory.aCustomerEmail
-import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword
+import static com.urgoringo.mealkit.scaffolding.TestFactory.aSubscription
 
 class SubscriptionSignupSpec extends ApplicationSpecification {
 
@@ -18,8 +13,8 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
             def authToken = app.signupCustomer().expectSuccess().token()
 
         when: "customer chooses 3 recipes for upcoming order"
-            def chosenRecipeIds = app.getAllRecipes().collect { recipe -> recipe.id() }.take(3)
-            def response = app.create(authToken, aSubscription(chosenRecipeIds))
+            def chosenRecipeIds = app.getRecipes(3)
+            def response = app.create(authToken, aSubscription().withRecipeIds(chosenRecipeIds))
             def subscription = response.expectSuccess()
 
         then: "system creates new subscription with upcoming order that contains these 3 recipes"
@@ -35,17 +30,15 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
         given: "new customer has selected only 2 recipes"
             def authToken = app.signupCustomer().expectSuccess().token()
 
-            def availableRecipes = []
-            IntStream.rangeClosed(1, 2)
-                    .mapToObj(i -> app.havingRecipe("Recipe " + i))
-                    .forEach(recipe -> availableRecipes.add(recipe))
-
-            def chosenRecipeIds = availableRecipes.stream()
-                    .map(recipe -> recipe.id())
-                    .toList()
+//            def availableRecipes = []
+//            IntStream.rangeClosed(1, 2)
+//                    .mapToObj(i -> app.havingRecipe("Recipe " + i))
+//                    .forEach(recipe -> availableRecipes.add(recipe))
+//
+            def chosenRecipeIds = app.getRecipes(2)
 
         when: "customer tries to sign up for subscription"
-            def response = app.create(authToken, aSubscription(chosenRecipeIds))
+            def response = app.create(authToken, aSubscription().withRecipeIds(chosenRecipeIds))
 
         then: "system returns 422 with validation error"
             def statusCode = response.expectError()
@@ -55,8 +48,8 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
     def "delivery address is required"() {
         when: "customer tries to create subscription without delivery address"
             def authToken = app.signupCustomer().expectSuccess().token()
-            def recipeIds = app.havingRecipes(3)
-            def response = app.create(authToken, aSubscription(recipeIds).withDeliveryAddress(null))
+            def recipeIds = app.getRecipes(3)
+            def response = app.create(authToken, aSubscription().withRecipeIds(recipeIds).withDeliveryAddress(null))
 
         then: "system returns 422 with validation error"
             def statusCode = response.expectError()
@@ -69,8 +62,8 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
             def authToken = app.signupCustomer().expectSuccess().token()
 
         when: "they signup for subscription"
-            def chosenRecipeIds = app.havingRecipes(3)
-            def request = aSubscription(chosenRecipeIds).withDeliveryAddress(homeAddress)
+            def chosenRecipeIds = app.getRecipes(3)
+            def request = aSubscription().withRecipeIds(chosenRecipeIds).withDeliveryAddress(homeAddress)
             def response = app.create(authToken, request)
             def subscription = response.expectSuccess()
 
@@ -90,8 +83,8 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
             def authToken = app.signupCustomer().expectSuccess().token()
 
         when: "they signup for subscription"
-            def chosenRecipeIds = app.havingRecipes(3)
-            def request = aSubscription(chosenRecipeIds).withDeliveryDay(deliveryDay)
+            def chosenRecipeIds = app.getRecipes(3)
+            def request = aSubscription().withRecipeIds(chosenRecipeIds).withDeliveryDay(deliveryDay)
             def response = app.create(authToken, request)
             def subscription = response.expectSuccess()
 

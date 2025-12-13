@@ -1,25 +1,27 @@
 package com.urgoringo.mealkit.scaffolding;
 
 import com.urgoringo.mealkit.customer.domain.Customers;
+import com.urgoringo.mealkit.recipecatalog.api.RecipeController.CreateRecipeRequest;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOrdersService;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.RequiredArgsConstructor;
-import lombok.With;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static com.urgoringo.mealkit.customer.api.CustomerController.*;
+import static com.urgoringo.mealkit.recipecatalog.api.RecipeController.*;
 import static com.urgoringo.mealkit.scaffolding.TestFactory.*;
-import static com.urgoringo.mealkit.scaffolding.TestFactory.aRecipeName;
-import static java.time.DayOfWeek.WEDNESDAY;
+import static com.urgoringo.mealkit.subscription.api.SubscriptionController.*;
+import static com.urgoringo.mealkit.subscription.api.SubscriptionController.CreateSubscriptionRequest;
+import static com.urgoringo.mealkit.subscription.api.SubscriptionController.SubscriptionResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.http.HttpMethod.POST;
@@ -40,13 +42,6 @@ public class ApplicationRunner {
     private final Subscriptions subscriptions;
     private final TestClock testClock;
     private final SelectRecipesForUpcomingOrdersService selectRecipesForUpcomingOrdersService;
-
-    public List<Long> havingRecipes(int countOfRecipes) {
-        return IntStream.rangeClosed(1, countOfRecipes)
-                .mapToObj(i -> havingRecipe("Recipe " + i))
-                .map(RecipeResponse::id)
-                .toList();
-    }
 
     public RecipeResponse havingRecipe(String title) {
         CreateRecipeRequest request = new CreateRecipeRequest(title, List.of(), List.of());
@@ -114,19 +109,8 @@ public class ApplicationRunner {
         ApiResponse.from(response).expectSuccess();
     }
 
-    @With
-    public record SubscriptionRequest(List<Long> recipeIds, String deliveryAddress,
-                                      DayOfWeek deliveryDay) {
-        private SubscriptionRequest(List<Long> recipeIds) {
-            this(recipeIds, anAddress(), WEDNESDAY);
-        }
 
-        public static SubscriptionRequest aSubscription(List<Long> recipeIds) {
-            return new SubscriptionRequest(recipeIds);
-        }
-    }
-
-    public ApiResponse<@NotNull SubscriptionResponse> create(String token, SubscriptionRequest request) {
+    public ApiResponse<@NotNull SubscriptionResponse> create(String token, SubscriptionBuilder request) {
         CreateSubscriptionRequest apiRequest = new CreateSubscriptionRequest(
                 request.recipeIds(),
                 request.deliveryAddress(),
@@ -156,7 +140,7 @@ public class ApplicationRunner {
     }
 
     public ApiResponse<@NotNull SignupResponse> signupCustomer(String email, String password) {
-        SignupCustomerRequest request = new SignupCustomerRequest(email, password);
+        SignupRequest request = new SignupRequest(email, password);
         ResponseEntity<SignupResponse> response = restTemplate.postForEntity(
                 "/customers/signup",
                 request,
@@ -213,35 +197,10 @@ public class ApplicationRunner {
         names.forEach(this::havingRecipe);
     }
 
-    public record CreateRecipeRequest(String title, List<String> ingredients, List<String> instructions) {
-    }
-
-    public record RecipeResponse(Long id, String title, List<String> ingredients, List<String> instructions) {
-    }
-
-    public record CreateSubscriptionRequest(List<Long> recipeIds, String deliveryAddress,
-                                            DayOfWeek deliveryDay) {
-    }
-
-    public record UpdateUpcomingOrderRecipesRequest(List<Long> recipeIds) {
-    }
-
-    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders,
-                                       String deliveryAddress, DayOfWeek deliveryDay) {
-    }
-
-    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate) {
-    }
-
-    public record SignupCustomerRequest(String email, String password) {
-    }
-
-    public record SignupResponse(Long id, String email, String token) {
-    }
-
-    public record LoginRequest(String email, String password) {
-    }
-
-    public record LoginResponse(String token) {
+    public List<Long> getRecipes(int count) {
+        List<RecipeResponse> recipes = getAllRecipes();
+        return recipes.subList(0, count).stream()
+                .map(RecipeResponse::id)
+                .toList();
     }
 }

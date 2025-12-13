@@ -30,13 +30,10 @@ public class RecipesCatalog {
                 ));
     }
 
-    public @Nullable Recipe findById(Id<Recipe> id) {
+    public Recipe findById(Id<Recipe> id) {
         var record = dsl.selectFrom(RECIPES)
                 .where(RECIPES.ID.eq(id.value()))
-                .fetchOne();
-        if (record == null) {
-            return null;
-        }
+                .fetchSingle();
         return new Recipe(
                 Id.of(record.getId()),
                 record.getName(),
@@ -78,6 +75,6 @@ public class RecipesCatalog {
     }
 
     private List<String> toList(String[] array) {
-        return array == null ? List.of() : Arrays.asList(array);
+        return Arrays.asList(array);
     }
 }

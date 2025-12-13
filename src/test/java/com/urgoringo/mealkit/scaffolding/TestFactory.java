@@ -3,7 +3,10 @@ package com.urgoringo.mealkit.scaffolding;
 import lombok.With;
 import net.datafaker.Faker;
 
+import java.time.DayOfWeek;
 import java.util.List;
+
+import static java.time.DayOfWeek.WEDNESDAY;
 
 public class TestFactory {
 
@@ -35,7 +38,18 @@ public class TestFactory {
         return new RecipeBuilder(aRecipeName(), List.of(), List.of());
     }
 
-    @With
+    public static SubscriptionBuilder aSubscription() {
+        return new SubscriptionBuilder(List.of(), anAddress(), WEDNESDAY);
+    }
+
+
+   @With
     public record RecipeBuilder(String title, List<String> ingredients, List<String> instructions) {
     }
+
+    @With
+    public record SubscriptionBuilder(List<Long> recipeIds, String deliveryAddress,
+                                      DayOfWeek deliveryDay) {
+    }
+
 }
