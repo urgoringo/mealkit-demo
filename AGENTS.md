@@ -367,6 +367,43 @@ Spring Framework 6+ uses JSpecify annotations internally. Spring's `@NonNullApi`
 
 ## Development Workflow
 
+### Commit Messages
+
+**Keep commit messages concise and focused on the "why", not the "what":**
+
+- **First line**: Short summary (50-70 chars max) describing what changed at a high level
+- **Body (optional)**: 1-3 sentences explaining the reasoning or context
+- **Avoid**: Repeating implementation details that are visible in the diff
+- **Focus**: Business value, architectural decisions, or trade-offs made
+
+**Good examples:**
+```
+Refactor ingredients to use entity-value object pattern
+
+Enables ingredient reuse across recipes and prevents inconsistent names.
+```
+
+```
+Add structured ingredients with quantity and unit
+
+Supports recipe instructions with precise measurements.
+```
+
+**Bad examples:**
+```
+Add structured ingredients with quantity and unit
+
+Replaced simple ingredient strings with structured Ingredient type
+containing name, quantity, and unit (supports: g, piece, cup).
+
+- Added Ingredient value object and domain model changes
+- Added JSONB column ingredients_with_details with GIN index (V8)
+- Removed old ingredients TEXT[] column (V9)
+- Updated API, services, and repository layers
+- Implemented test for ingredient quantities and units
+```
+*Too verbose - repeats what's in the diff*
+
 ### Adding Database Changes
 1. Create new Flyway migration in `src/main/resources/db/migration/`
 2. Use sequential versioning: V1, V2, V3, etc.
