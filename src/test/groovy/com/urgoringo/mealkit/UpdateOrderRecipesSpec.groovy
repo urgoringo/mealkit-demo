@@ -18,7 +18,7 @@ class UpdateOrderRecipesSpec extends ApplicationSpecification {
         when: "customer selects new recipes for upcoming order"
             def allRecipeIds = app.getAllRecipes()*.id()
             def newRecipeIds = (allRecipeIds - currentRecipeIds).take(3)
-            app.updateUpcomingOrderRecipes(authToken, newRecipeIds)
+            app.updateUpcomingOrderRecipes(newRecipeIds, authToken)
             def subscription = app.getCustomerSubscription(authToken).expectSuccess()
 
         then: "system updates recipes for upcoming order"

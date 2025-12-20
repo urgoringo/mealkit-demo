@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -117,7 +116,7 @@ public class ApplicationRunner {
         IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
     }
 
-    public void updateUpcomingOrderRecipes(String authToken, List<Long> recipeIds) {
+    public void updateUpcomingOrderRecipes(List<Long> recipeIds, String authToken) {
         UpdateUpcomingOrderRecipesRequest request = new UpdateUpcomingOrderRecipesRequest(recipeIds);
         ResponseEntity<SubscriptionResponse> response = restClient.put()
             .uri("/subscriptions/upcoming-order/recipes")
@@ -129,7 +128,7 @@ public class ApplicationRunner {
     }
 
 
-    public ApiResponse<@NotNull SubscriptionResponse> create(String token, SubscriptionBuilder request) {
+    public ApiResponse<SubscriptionResponse> create(SubscriptionBuilder request, String token) {
         CreateSubscriptionRequest apiRequest = new CreateSubscriptionRequest(
             request.recipeIds(),
             request.deliveryAddress(),

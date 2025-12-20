@@ -21,7 +21,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
 
         when: "customer chooses 3 recipes for upcoming order"
             def chosenRecipeIds = app.getRecipes(3)
-            def response = app.create(authToken, aSubscription().withRecipeIds(chosenRecipeIds))
+            def response = app.create(aSubscription().withRecipeIds(chosenRecipeIds), authToken)
             def subscription = response.expectSuccess()
 
         then: "system creates new subscription with upcoming order that contains these 3 recipes"
@@ -40,7 +40,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
             def chosenRecipeIds = app.getRecipes(2)
 
         when: "customer tries to sign up for subscription"
-            def response = app.create(authToken, aSubscription().withRecipeIds(chosenRecipeIds))
+            def response = app.create(aSubscription().withRecipeIds(chosenRecipeIds), authToken)
 
         then: "system returns 422 with validation error"
             def statusCode = response.expectError()
@@ -51,7 +51,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
         when: "customer tries to create subscription without delivery address"
             def authToken = app.signupCustomer().expectSuccess().token()
             def recipeIds = app.getRecipes(3)
-            def response = app.create(authToken, aSubscription().withRecipeIds(recipeIds).withDeliveryAddress(null))
+            def response = app.create(aSubscription().withRecipeIds(recipeIds).withDeliveryAddress(null), authToken)
 
         then: "system returns 422 with validation error"
             def statusCode = response.expectError()
@@ -66,7 +66,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
         when: "they signup for subscription"
             def chosenRecipeIds = app.getRecipes(3)
             def request = aSubscription().withRecipeIds(chosenRecipeIds).withDeliveryAddress(homeAddress)
-            def response = app.create(authToken, request)
+            def response = app.create(request, authToken)
             def subscription = response.expectSuccess()
 
         then: "subscription has customer's home address as delivery address"

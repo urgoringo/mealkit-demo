@@ -11,10 +11,9 @@ public class SubscriptionSetup {
 
     public SubscriptionSetup(ApplicationRunner app, String authToken, DayOfWeek deliveryDay) {
         app.create(
-                authToken,
-                aSubscription()
-                        .withRecipeIds(app.getRecipes(3))
-                        .withDeliveryDay(deliveryDay)
+            aSubscription()
+                    .withRecipeIds(app.getRecipes(3))
+                    .withDeliveryDay(deliveryDay), authToken
         ).expectSuccess();
     }
 
