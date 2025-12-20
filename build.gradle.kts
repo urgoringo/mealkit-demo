@@ -6,7 +6,7 @@ import org.jooq.meta.jaxb.Logging
 plugins {
 	java
 	groovy
-	id("org.springframework.boot") version "3.5.7"
+	id("org.springframework.boot") version "4.0.0"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("net.ltgt.errorprone") version "4.3.0"
 	id("net.ltgt.nullaway") version "2.3.0"
@@ -43,7 +43,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.security:spring-security-oauth2-resource-server")
 	implementation("org.springframework.security:spring-security-oauth2-jose")
-	implementation("org.flywaydb:flyway-core")
+	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("org.jspecify:jspecify:1.0.0")
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
@@ -57,8 +57,8 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers:2.0.2")
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:postgresql")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+    testImplementation("org.testcontainers:testcontainers-postgresql")
     testImplementation("io.cucumber:cucumber-java:7.21.1")
     testImplementation("io.cucumber:cucumber-spring:7.21.1")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.21.1")

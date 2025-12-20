@@ -1,6 +1,7 @@
 package com.urgoringo.mealkit.scaffolding;
 
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.ResponseEntity;
 
 @NullMarked

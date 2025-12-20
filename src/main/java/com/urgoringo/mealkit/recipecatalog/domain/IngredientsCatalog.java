@@ -3,9 +3,10 @@ package com.urgoringo.mealkit.recipecatalog.domain;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.urgoringo.mealkit.domain.Id;
-import jakarta.annotation.PostConstruct;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -32,6 +33,10 @@ public class IngredientsCatalog {
                 }
                 return ingredient;
             });
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
         warmupCache();
     }
 

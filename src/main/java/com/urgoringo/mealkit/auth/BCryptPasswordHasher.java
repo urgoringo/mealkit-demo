@@ -16,7 +16,11 @@ public class BCryptPasswordHasher implements PasswordHasher {
 
     @Override
     public String hash(String plainPassword) {
-        return encoder.encode(plainPassword);
+        String encoded = encoder.encode(plainPassword);
+        if (encoded == null) {
+            throw new IllegalStateException("BCrypt encoder returned null for non-null input");
+        }
+        return encoded;
     }
 
     @Override

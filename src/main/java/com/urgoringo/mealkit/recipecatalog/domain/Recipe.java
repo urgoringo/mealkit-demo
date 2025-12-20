@@ -12,6 +12,12 @@ public record Recipe(
         List<String> instructions,
         List<RecipeIngredient> ingredients
 ) {
+    public Recipe {
+        if (ingredients.isEmpty()) {
+            throw new IllegalArgumentException("Recipe must have at least one ingredient");
+        }
+    }
+
     public static Recipe create(String title, List<String> instructions, List<RecipeIngredient> ingredients) {
         return new Recipe(
                 Id.unassigned(), 

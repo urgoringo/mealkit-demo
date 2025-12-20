@@ -32,7 +32,7 @@ public class TestFactory {
     }
 
     public static RecipeBuilder aRecipe() {
-        return new RecipeBuilder(aRecipeName(), List.of(), List.of());
+        return new RecipeBuilder(aRecipeName(), List.of(), List.of(anIngredient()));
     }
 
     public static SubscriptionBuilder aSubscription() {
