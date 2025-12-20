@@ -13,10 +13,12 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,8 +30,6 @@ import static com.urgoringo.mealkit.scaffolding.TestFactory.*;
 import static com.urgoringo.mealkit.subscription.api.SubscriptionController.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpMethod.PUT;
 
 /**
  * Test helper class that encapsulates API access logic for Cucumber scenarios.
@@ -40,7 +40,7 @@ import static org.springframework.http.HttpMethod.PUT;
 @RequiredArgsConstructor
 public class ApplicationRunner {
 
-    private final TestRestTemplate restTemplate;
+    private final RestClient.Builder restClientBuilder;
     private final RecipesCatalog recipesCatalog;
     private final IngredientsCatalog ingredientsCatalog;
     private final Customers customers;
@@ -50,6 +50,7 @@ public class ApplicationRunner {
     @Nullable
     @Getter
     private String currentAuthToken;
+    private RestClient restClient;
 
     public RecipeResponse havingRecipe(String title) {
         return havingRecipe(aRecipe().withTitle(title));
@@ -67,11 +68,11 @@ public class ApplicationRunner {
             builder.instructions(),
             ingredientRequests
         );
-        ResponseEntity<RecipeResponse> response = restTemplate.postForEntity(
-            "/recipes",
-            request,
-            RecipeResponse.class
-        );
+        ResponseEntity<RecipeResponse> response = restClient.post()
+            .uri("/recipes")
+            .body(request)
+            .retrieve()
+            .toEntity(RecipeResponse.class);
         return ApiResponse.from(response).expectSuccess();
     }
 
@@ -85,21 +86,18 @@ public class ApplicationRunner {
     }
 
     public RecipeResponse getRecipe(Long id) {
-        ResponseEntity<RecipeResponse> response = restTemplate.getForEntity(
-            "/recipes/" + id,
-            RecipeResponse.class
-        );
+        ResponseEntity<RecipeResponse> response = restClient.get()
+            .uri("/recipes/" + id)
+            .retrieve()
+            .toEntity(RecipeResponse.class);
         return ApiResponse.from(response).expectSuccess();
     }
 
     public List<RecipeResponse> getAllRecipes() {
-        ResponseEntity<List<RecipeResponse>> response = restTemplate.exchange(
-            "/recipes",
-            HttpMethod.GET,
-            null,
-            new ParameterizedTypeReference<>() {
-            }
-        );
+        ResponseEntity<List<RecipeResponse>> response = restClient.get()
+            .uri("/recipes")
+            .retrieve()
+            .toEntity(new ParameterizedTypeReference<>() {});
         assertEquals(HttpStatus.OK, response.getStatusCode(),
             "Failed to get recipes");
         assertNotNull(response.getBody(), "Recipe list should not be null");
@@ -111,23 +109,22 @@ public class ApplicationRunner {
         ingredientsCatalog.deleteAll();
     }
 
-    public void setup() {
+    public void start(int port) {
+        this.restClient = restClientBuilder
+            .baseUrl("http://localhost:" + port)
+            .build();
         reset();
         IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
     }
 
     public void updateUpcomingOrderRecipes(String authToken, List<Long> recipeIds) {
         UpdateUpcomingOrderRecipesRequest request = new UpdateUpcomingOrderRecipesRequest(recipeIds);
-        var headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + authToken);
-        var entity = new HttpEntity<>(request, headers);
-
-        ResponseEntity<SubscriptionResponse> response = restTemplate.exchange(
-            "/subscriptions/upcoming-order/recipes",
-            PUT,
-            entity,
-            SubscriptionResponse.class
-        );
+        ResponseEntity<SubscriptionResponse> response = restClient.put()
+            .uri("/subscriptions/upcoming-order/recipes")
+            .header("Authorization", "Bearer " + authToken)
+            .body(request)
+            .retrieve()
+            .toEntity(SubscriptionResponse.class);
         ApiResponse.from(response).expectSuccess();
     }
 
@@ -139,21 +136,16 @@ public class ApplicationRunner {
             request.deliveryDay()
         );
 
-        var headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-
-        ResponseEntity<SubscriptionResponse> response = restTemplate.exchange(
-            "/subscriptions",
-            POST,
-            new HttpEntity<>(apiRequest, headers),
-            SubscriptionResponse.class
-        );
+        ResponseEntity<SubscriptionResponse> response = restClient.post()
+            .uri("/subscriptions")
+            .header("Authorization", "Bearer " + token)
+            .body(apiRequest)
+            .retrieve()
+            .toEntity(SubscriptionResponse.class);
         return ApiResponse.from(response);
     }
 
     public void processSubscriptionOrders() {
-        // This method is kept for backward compatibility but now triggers processing for all subscriptions
-        // In production, this is handled by the scheduled job
         selectRecipesForUpcomingOrdersService.execute();
     }
 
@@ -163,35 +155,30 @@ public class ApplicationRunner {
 
     public ApiResponse<@NotNull SignupResponse> signupCustomer(String email, String password) {
         SignupRequest request = new SignupRequest(email, password);
-        ResponseEntity<SignupResponse> response = restTemplate.postForEntity(
-            "/customers/signup",
-            request,
-            SignupResponse.class
-        );
+        ResponseEntity<SignupResponse> response = restClient.post()
+            .uri("/customers/signup")
+            .body(request)
+            .retrieve()
+            .toEntity(SignupResponse.class);
         return ApiResponse.from(response);
     }
 
     public ApiResponse<@NotNull LoginResponse> loginCustomer(String email, String password) {
         LoginRequest request = new LoginRequest(email, password);
-        ResponseEntity<LoginResponse> response = restTemplate.postForEntity(
-            "/customers/login",
-            request,
-            LoginResponse.class
-        );
+        ResponseEntity<LoginResponse> response = restClient.post()
+            .uri("/customers/login")
+            .body(request)
+            .retrieve()
+            .toEntity(LoginResponse.class);
         return ApiResponse.from(response);
     }
 
     public ApiResponse<@NotNull SubscriptionResponse> getCustomerSubscription(String token) {
-        var headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-        var entity = new org.springframework.http.HttpEntity<Void>(headers);
-
-        ResponseEntity<SubscriptionResponse> response = restTemplate.exchange(
-            "/subscriptions",
-            org.springframework.http.HttpMethod.GET,
-            entity,
-            SubscriptionResponse.class
-        );
+        ResponseEntity<SubscriptionResponse> response = restClient.get()
+            .uri("/subscriptions")
+            .header("Authorization", "Bearer " + token)
+            .retrieve()
+            .toEntity(SubscriptionResponse.class);
         return ApiResponse.from(response);
     }
 
@@ -230,19 +217,19 @@ public class ApplicationRunner {
 
     public IngredientResponse havingIngredient(String name) {
         CreateIngredientRequest request = new CreateIngredientRequest(name);
-        ResponseEntity<IngredientResponse> response = restTemplate.postForEntity(
-            "/ingredients",
-            request,
-            IngredientResponse.class
-        );
+        ResponseEntity<IngredientResponse> response = restClient.post()
+            .uri("/ingredients")
+            .body(request)
+            .retrieve()
+            .toEntity(IngredientResponse.class);
         return ApiResponse.from(response).expectSuccess();
     }
 
     public ApiResponse<IngredientResponse> findIngredient(String name) {
-        ResponseEntity<IngredientResponse> response = restTemplate.getForEntity(
-            "/ingredients?name=" + name,
-            IngredientResponse.class
-        );
+        ResponseEntity<IngredientResponse> response = restClient.get()
+            .uri("/ingredients?name=" + name)
+            .retrieve()
+            .toEntity(IngredientResponse.class);
         return ApiResponse.from(response);
     }
 

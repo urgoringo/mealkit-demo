@@ -31,7 +31,14 @@ Mealkit is a Spring Boot 3.5 application for managing meal kit recipes. It uses:
 ./gradlew test --tests ClassName.methodName       # Run specific test method
 ```
 
-**Note**: Tests use Testcontainers with PostgreSQL 17-alpine. Container reuse is enabled in `TestContainersConfiguration` to speed up test execution.
+**Note**: Tests use Testcontainers with PostgreSQL 17-alpine. Container reuse is enabled to speed up test execution.
+
+**Container Reuse Configuration:**
+- Testcontainers reuse is enabled via `~/.testcontainers.properties` with `testcontainers.reuse.enable=true`
+- Containers use `.withReuse(true)` in `TestContainersConfiguration`
+- Same container persists across test runs until explicitly stopped
+- Get connection details: `./db-info.sh`
+- Connect via psql: `psql -h localhost -p <port> -U test -d test` (password: `test`)
 
 **Gradle Daemon**: Always use the Gradle daemon (default behavior). Do not use `--no-daemon` flag unless there's a specific reason (e.g., CI/CD environments requiring clean JVM per build). The daemon provides faster builds by reusing JVM processes and keeping compiled classes in memory.
 
@@ -199,6 +206,8 @@ public interface RecipeMapper {
 - Use `@ActiveProfiles("test")` for test-specific configuration
 - PostgreSQL container uses `withReuse(true)` to persist between test runs for faster execution
 - Container image: `postgres:17-alpine`
+- `RestClient.Builder` bean is configured with `defaultStatusHandler` to prevent exceptions on HTTP errors
+- This allows tests to inspect error responses using the `ApiResponse` pattern
 
 ### Application Structure
 - Main package: `com.urgoringo.mealkit`
@@ -465,28 +474,30 @@ containing name, quantity, and unit (supports: g, piece, cup).
 The project uses **Spock Framework** for behavior-driven development (BDD) testing:
 
 - **Self-Contained Tests**: Tests create their own test data via the REST API
-  - Makes tests independent and easier to understand
-  - Avoids relying on database migrations or shared test data
-  - Each test method starts with a clean database state (via `setup()` method)
+ - Makes tests independent and easier to understand
+ - Avoids relying on database migrations or shared test data
+ - Each test method starts with a clean database state (via `setup()` method)
 
 - **Given-When-Then Structure**: Spock tests use BDD-style blocks
-  - `given:` - Setup and test data preparation
-  - `when:` - Action being tested
-  - `then:` - Assertions and verifications
-  - `and:` - Additional setup or assertions
-  - Text descriptions after keywords provide readable test documentation
+ - `given:` - Setup and test data preparation
+ - `when:` - Action being tested
+ - `then:` - Assertions and verifications
+ - `and:` - Additional setup or assertions
+ - Text descriptions after keywords provide readable test documentation
 
 - **ApplicationRunner Pattern**: Encapsulates API interactions
-  - Provides high-level methods for interacting with the application API
-  - Hides low-level HTTP details from test code
-  - Returns `ApiResponse<T>` for uniform error handling
+ - Provides high-level methods for interacting with the application API
+ - Hides low-level HTTP details from test code
+ - Returns `ApiResponse<T>` for uniform error handling
+ - Uses Spring's `RestClient` (Spring Boot 4.0+) configured with error handling
+ - RestClient is initialized with base URL in `start(port)` method
 
 - **ApiResponse Pattern**: Type-safe response handling using sealed interfaces
-  - `ApiResponse.Success<T>` - successful response with body
-  - `ApiResponse.Error<T>` - error response with status code and body
-  - Use `expectSuccess()` when success is expected
-  - Use `expectError()` when error is expected
-  - Exhaustive pattern matching ensures all cases are handled
+ - `ApiResponse.Success<T>` - successful response with body
+ - `ApiResponse.Error<T>` - error response with status code and body
+ - Use `expectSuccess()` when success is expected
+ - Use `expectError()` when error is expected
+ - Exhaustive pattern matching ensures all cases are handled
 
 **Example Spock test structure:**
 ```groovy
@@ -524,10 +535,14 @@ def "subscription with 3 recipes"() {
 
 **Example ApplicationRunner method:**
 ```java
-public ApiResponse<SubscriptionResponse> createSubscription(String customerEmail, List<Long> recipeIds) {
-    CreateSubscriptionRequest request = new CreateSubscriptionRequest(customerEmail, recipeIds);
-    ResponseEntity<SubscriptionResponse> response = restTemplate.postForEntity(
-            "/subscriptions", request, SubscriptionResponse.class);
+public ApiResponse<SubscriptionResponse> createSubscription(String token, List<Long> recipeIds) {
+    CreateSubscriptionRequest request = new CreateSubscriptionRequest(recipeIds, null, null);
+    ResponseEntity<SubscriptionResponse> response = restClient.post()
+        .uri("/subscriptions")
+        .header("Authorization", "Bearer " + token)
+        .body(request)
+        .retrieve()
+        .toEntity(SubscriptionResponse.class);
     return ApiResponse.from(response);
 }
 ```

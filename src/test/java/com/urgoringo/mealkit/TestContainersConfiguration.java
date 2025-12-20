@@ -5,6 +5,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.web.client.RestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 
@@ -22,6 +23,12 @@ public class TestContainersConfiguration {
     @Primary
     public TestClock testClock() {
         return new TestClock();
+    }
+
+    @Bean
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder()
+                .defaultStatusHandler(status -> true, (request, response) -> {});
     }
 
 }
