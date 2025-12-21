@@ -7,6 +7,7 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,6 +27,7 @@ import java.security.interfaces.RSAPublicKey;
 @NullMarked
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -38,7 +40,6 @@ public class SecurityConfig {
                 .requestMatchers("/customers/signup", "/customers/login").permitAll()
                 .requestMatchers("/recipes/**").permitAll()
                 .requestMatchers("/ingredients/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/orders/*/delivered").hasRole("BACKOFFICE")
                 .requestMatchers(HttpMethod.GET, "/subscriptions").authenticated()
                 .requestMatchers(HttpMethod.POST, "/subscriptions").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/subscriptions/upcoming-order/recipes").authenticated()

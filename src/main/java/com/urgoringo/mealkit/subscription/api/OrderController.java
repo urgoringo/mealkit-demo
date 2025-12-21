@@ -7,6 +7,7 @@ import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ public class OrderController {
 
     private final DeliverOrderService deliverOrderService;
 
+    @PreAuthorize("hasRole('BACKOFFICE')")
     @PostMapping("/{orderId}/delivered")
     public ResponseEntity<Void> deliverOrder(@PathVariable Long orderId) {
         deliverOrderService.execute(Id.of(orderId));
