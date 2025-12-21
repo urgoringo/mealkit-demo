@@ -25,6 +25,6 @@ class OrderDeliverySpec extends ApplicationSpecification {
             def response = app.tryDeliverOrderAsCustomer(nextOrder.id(), customer.authToken)
 
         then: "request is forbidden"
-            response == 403
+            response.expectError() == 403
     }
 }

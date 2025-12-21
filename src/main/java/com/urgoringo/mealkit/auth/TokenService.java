@@ -1,5 +1,6 @@
 package com.urgoringo.mealkit.auth;
 
+import com.urgoringo.mealkit.backoffice.domain.BackofficeUser;
 import com.urgoringo.mealkit.customer.domain.Customer;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
@@ -32,13 +33,14 @@ public class TokenService {
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    public String generateBackofficeToken(String userId) {
+    public String generateBackofficeToken(BackofficeUser user) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("mealkit")
                 .issuedAt(now)
                 .expiresAt(now.plus(1, ChronoUnit.HOURS))
-                .subject(userId)
+                .subject(user.id().value().toString())
+                .claim("email", user.email())
                 .claim("role", "BACKOFFICE")
                 .build();
 

@@ -1,5 +1,6 @@
 package com.urgoringo.mealkit.scaffolding;
 
+import com.urgoringo.mealkit.backoffice.domain.BackofficeUser;
 import com.urgoringo.mealkit.customer.domain.Customers;
 import com.urgoringo.mealkit.recipecatalog.api.IngredientController.CreateIngredientRequest;
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.CreateRecipeRequest;
@@ -47,6 +48,8 @@ public class ApplicationRunner {
     private final TestClock testClock;
     private final SelectRecipesForUpcomingOrdersService selectRecipesForUpcomingOrdersService;
     private final com.urgoringo.mealkit.auth.TokenService tokenService;
+    private final com.urgoringo.mealkit.auth.PasswordHasher passwordHasher;
+    private final com.urgoringo.mealkit.backoffice.domain.BackofficeUsers backofficeUsers;
     @Nullable
     @Getter
     private String currentAuthToken;
@@ -196,6 +199,7 @@ public class ApplicationRunner {
     private void reset() {
         deleteAllSubscriptions();
         deleteAllRecipes();
+        backofficeUsers.deleteAll();
         testClock.reset();
     }
 
@@ -235,7 +239,8 @@ public class ApplicationRunner {
     }
 
     public void deliverOrder(Long orderId) {
-        String backofficeToken = tokenService.generateBackofficeToken("backoffice-user");
+        var backofficeUser = getOrCreateBackofficeUser();
+        String backofficeToken = tokenService.generateBackofficeToken(backofficeUser);
         
         restClient.post()
             .uri("/orders/{orderId}/delivered", orderId)
@@ -244,13 +249,26 @@ public class ApplicationRunner {
             .toBodilessEntity();
     }
 
-    public int tryDeliverOrderAsCustomer(Long orderId, String customerToken) {
+    private BackofficeUser getOrCreateBackofficeUser() {
+        return backofficeUsers.findByEmail("backoffice@mealkit.com")
+                .orElseGet(() -> {
+                    String hashedPassword = passwordHasher.hash("backoffice-password");
+                    return backofficeUsers.save(
+                            BackofficeUser.create(
+                                    "backoffice@mealkit.com",
+                                    hashedPassword
+                            )
+                    );
+                });
+    }
+
+    public ApiResponse<Void> tryDeliverOrderAsCustomer(Long orderId, String customerToken) {
         ResponseEntity<Void> response = restClient.post()
             .uri("/orders/{orderId}/delivered", orderId)
             .header("Authorization", "Bearer " + customerToken)
             .retrieve()
             .toEntity(Void.class);
-        return response.getStatusCode().value();
+        return ApiResponse.from(response);
     }
 
 }

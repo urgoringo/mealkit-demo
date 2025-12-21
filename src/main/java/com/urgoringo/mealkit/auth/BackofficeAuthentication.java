@@ -1,5 +1,7 @@
 package com.urgoringo.mealkit.auth;
 
+import com.urgoringo.mealkit.backoffice.domain.BackofficeUser;
+import com.urgoringo.mealkit.domain.Id;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -11,16 +13,16 @@ import java.util.List;
 @NullMarked
 public class BackofficeAuthentication extends AbstractAuthenticationToken {
 
-    private final String userId;
+    private final Id<BackofficeUser> userId;
 
-    public BackofficeAuthentication(String userId) {
+    public BackofficeAuthentication(Id<BackofficeUser> userId) {
         super(List.of(new SimpleGrantedAuthority("ROLE_BACKOFFICE")));
         this.userId = userId;
         setAuthenticated(true);
     }
 
     @Override
-    public String getPrincipal() {
+    public Id<BackofficeUser> getPrincipal() {
         return userId;
     }
 
@@ -31,6 +33,6 @@ public class BackofficeAuthentication extends AbstractAuthenticationToken {
 
     @Override
     public String getName() {
-        return userId;
+        return userId.value().toString();
     }
 }
