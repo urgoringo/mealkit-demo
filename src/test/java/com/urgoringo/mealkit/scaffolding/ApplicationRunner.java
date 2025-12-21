@@ -96,7 +96,8 @@ public class ApplicationRunner {
         ResponseEntity<List<RecipeResponse>> response = restClient.get()
             .uri("/recipes")
             .retrieve()
-            .toEntity(new ParameterizedTypeReference<>() {});
+            .toEntity(new ParameterizedTypeReference<>() {
+            });
         assertEquals(HttpStatus.OK, response.getStatusCode(),
             "Failed to get recipes");
         assertNotNull(response.getBody(), "Recipe list should not be null");
@@ -230,6 +231,17 @@ public class ApplicationRunner {
             .retrieve()
             .toEntity(IngredientResponse.class);
         return ApiResponse.from(response);
+    }
+
+    public void deliverOrder(Long orderId) {
+        var builder = restClient.post()
+            .uri("/orders/{orderId}/delivered", orderId);
+
+        if (currentAuthToken != null) {
+            builder = builder.header("Authorization", "Bearer " + currentAuthToken);
+        }
+
+        builder.retrieve().toBodilessEntity();
     }
 
 }

@@ -10,16 +10,22 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.time.temporal.ChronoUnit.*;
 import static java.time.temporal.TemporalAdjusters.next;
 
 @NullMarked
 public record Subscription(
         Id<Subscription> id,
         Id<Customer> customerId,
-        List<Order> upcomingOrders,
+        List<UpcomingOrder> upcomingOrders,
         String deliveryAddress,
         DayOfWeek deliveryDay
 ) {
+    public Subscription {
+        upcomingOrders = upcomingOrders.stream()
+                .filter(UpcomingOrder::isPending)
+                .toList();
+    }
     public static Subscription signup(
             Id<Customer> customerId,
             List<Id<Recipe>> recipeIds,
@@ -28,7 +34,7 @@ public record Subscription(
             LocalDate today
     ) {
         LocalDate deliveryDate = today.with(next(deliveryDay));
-        Order firstOrder = Order.placed(recipeIds, deliveryDate);
+        UpcomingOrder firstOrder = UpcomingOrder.placed(recipeIds, deliveryDate);
         return new Subscription(Id.unassigned(), customerId, List.of(firstOrder), deliveryAddress, deliveryDay);
     }
 
@@ -37,18 +43,14 @@ public record Subscription(
             return this;
         }
 
-        Order lastOrder = upcomingOrders.getLast();
-        if (lastOrder.deliveryDate() == null) {
-            return this;
-        }
+        UpcomingOrder lastOrder = upcomingOrders.getLast();
 
-        long daysUntilDelivery = currentDate.until(lastOrder.deliveryDate(), java.time.temporal.ChronoUnit.DAYS);
+        long daysUntilDelivery = currentDate.until(lastOrder.deliveryDate(), DAYS);
         if (daysUntilDelivery <= 3) {
             LocalDate nextDeliveryDate = lastOrder.deliveryDate().with(next(deliveryDay));
-            Order newOrder = Order.placed(recipeIds, nextDeliveryDate);
+            UpcomingOrder newOrder = UpcomingOrder.placed(recipeIds, nextDeliveryDate);
 
-            List<Order> updatedOrders = new ArrayList<>(upcomingOrders);
-            updatedOrders.add(newOrder);
+            var updatedOrders = upcomingOrdersWithAdditionalOrder(newOrder);
 
             return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
         }
@@ -56,13 +58,19 @@ public record Subscription(
         return this;
     }
 
+    private List<UpcomingOrder> upcomingOrdersWithAdditionalOrder(UpcomingOrder newOrder) {
+        List<UpcomingOrder> updatedOrders = new ArrayList<>(upcomingOrders);
+        updatedOrders.add(newOrder);
+        return updatedOrders;
+    }
+
     public Subscription withUpdatedRecipesForFirstUpcomingOrder(List<Id<Recipe>> recipeIds) {
         if (upcomingOrders.isEmpty()) {
             return this;
         }
 
-        Order firstOrder = upcomingOrders.getFirst();
-        Order updatedOrder = firstOrder.withRecipes(recipeIds);
+        UpcomingOrder firstOrder = upcomingOrders.getFirst();
+        UpcomingOrder updatedOrder = firstOrder.withRecipes(recipeIds);
 
         return new Subscription(id, customerId, List.of(updatedOrder), deliveryAddress, deliveryDay);
     }

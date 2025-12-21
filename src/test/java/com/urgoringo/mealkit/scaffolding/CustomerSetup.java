@@ -1,14 +1,13 @@
 package com.urgoringo.mealkit.scaffolding;
 
-import com.urgoringo.mealkit.subscription.api.SubscriptionController;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 
 import java.time.DayOfWeek;
 
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword;
 import static com.urgoringo.mealkit.scaffolding.TestFactory.anEmail;
+import static java.time.DayOfWeek.MONDAY;
 
 @NullMarked
 public class CustomerSetup {
@@ -21,7 +20,12 @@ public class CustomerSetup {
         this.app = app;
     }
 
+    public SubscriptionSetup havingSubscription() {
+        return havingSubscription(MONDAY);
+    }
+
     public SubscriptionSetup havingSubscription(DayOfWeek dayOfWeek) {
         return new SubscriptionSetup(app, authToken, dayOfWeek);
     }
+
 }

@@ -52,9 +52,9 @@ public class Subscriptions {
             subscriptionId = record.getId();
         }
 
-        List<Order> savedOrders = new ArrayList<>();
-        for (Order order : subscription.upcomingOrders()) {
-            Order savedOrder = saveOrder(order, subscriptionId);
+        List<UpcomingOrder> savedOrders = new ArrayList<>();
+        for (UpcomingOrder order : subscription.upcomingOrders()) {
+            UpcomingOrder savedOrder = saveOrder(order, subscriptionId);
             savedOrders.add(savedOrder);
         }
 
@@ -67,10 +67,11 @@ public class Subscriptions {
         );
     }
 
-    private Order saveOrder(Order order, Long subscriptionId) {
+    private UpcomingOrder saveOrder(UpcomingOrder order, Long subscriptionId) {
         var orderRecord = dsl.insertInto(ORDERS)
                 .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
                 .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+                .set(ORDERS.STATUS, order.status().name())
                 .returning(ORDERS.ID)
                 .fetchOne();
         if (orderRecord == null) {
@@ -85,7 +86,7 @@ public class Subscriptions {
                     .execute();
         }
 
-        return new Order(Id.of(orderId), order.recipeIds(), order.deliveryDate());
+        return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate(), order.status());
     }
 
     private void deleteOrdersForSubscription(Long subscriptionId) {
@@ -136,7 +137,7 @@ public class Subscriptions {
     }
 
     private Subscription toSubscription(com.urgoringo.mealkit.jooq.tables.records.SubscriptionsRecord record) {
-        List<Order> orders = fetchOrdersForSubscription(record.getId());
+        List<UpcomingOrder> orders = fetchOrdersForSubscription(record.getId());
         return new Subscription(
                 Id.of(record.getId()),
                 Id.of(record.getCustomerId()),
@@ -146,7 +147,7 @@ public class Subscriptions {
         );
     }
 
-    private List<Order> fetchOrdersForSubscription(Long subscriptionId) {
+    private List<UpcomingOrder> fetchOrdersForSubscription(Long subscriptionId) {
         return dsl.selectFrom(ORDERS)
                 .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId))
                 .fetch()
@@ -158,7 +159,16 @@ public class Subscriptions {
                             .stream()
                             .map(Id::<Recipe>of)
                             .toList();
-                    return new Order(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
+                    OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
+                    return new UpcomingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate(), status);
                 });
+    }
+
+    @Transactional
+    public void markOrderAsDelivered(Id<UpcomingOrder> orderId) {
+        dsl.update(ORDERS)
+                .set(ORDERS.STATUS, OrderStatus.DELIVERED.name())
+                .where(ORDERS.ID.eq(orderId.value()))
+                .execute();
     }
 }
