@@ -12,8 +12,7 @@ import java.util.List;
 public record UpcomingOrder(
     Id<UpcomingOrder> id,
     List<Id<Recipe>> recipeIds,
-    LocalDate deliveryDate,
-    OrderStatus status
+    LocalDate deliveryDate
 ) {
     private static final int MINIMUM_RECIPE_COUNT = 3;
 
@@ -24,18 +23,22 @@ public record UpcomingOrder(
     }
 
     public static UpcomingOrder placed(List<Id<Recipe>> recipeIds, LocalDate deliveryDate) {
-        return new UpcomingOrder(Id.unassigned(), recipeIds, deliveryDate, OrderStatus.PENDING);
+        return new UpcomingOrder(Id.unassigned(), recipeIds, deliveryDate);
     }
 
     public UpcomingOrder withRecipes(List<Id<Recipe>> recipeIds) {
-        return new UpcomingOrder(id, recipeIds, deliveryDate, status);
+        return new UpcomingOrder(id, recipeIds, deliveryDate);
     }
 
-    public UpcomingOrder markAsDelivered() {
-        return new UpcomingOrder(id, recipeIds, deliveryDate, OrderStatus.DELIVERED);
+    public DeliveredOrder markAsDelivered() {
+        if (!id.isAssigned()) {
+            throw new IllegalStateException("Cannot mark unassigned order as delivered");
+        }
+        return new DeliveredOrder(
+            Id.of(id.value()),
+            recipeIds,
+            deliveryDate
+        );
     }
 
-    public boolean isPending() {
-        return status == OrderStatus.PENDING;
-    }
 }

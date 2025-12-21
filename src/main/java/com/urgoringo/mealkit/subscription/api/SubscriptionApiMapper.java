@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.subscription.api;
 import com.urgoringo.mealkit.subscription.api.SubscriptionController.OrderResponse;
 import com.urgoringo.mealkit.subscription.api.SubscriptionController.SubscriptionResponse;
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.subscription.domain.DeliveredOrder;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
@@ -20,7 +21,7 @@ public class SubscriptionApiMapper {
                 subscription.id().value(),
                 subscription.customerId().value(),
                 subscription.upcomingOrders().stream()
-                        .map(this::toOrderResponse)
+                        .map(order -> toOrderResponse(order))
                         .toList(),
                 subscription.deliveryAddress(),
                 subscription.deliveryDay()
@@ -28,6 +29,14 @@ public class SubscriptionApiMapper {
     }
 
     public OrderResponse toOrderResponse(UpcomingOrder order) {
+        return new OrderResponse(
+                order.id().value(),
+                mapRecipeIdsToLong(order.recipeIds()),
+                order.deliveryDate()
+        );
+    }
+
+    public OrderResponse toOrderResponse(DeliveredOrder order) {
         return new OrderResponse(
                 order.id().value(),
                 mapRecipeIdsToLong(order.recipeIds()),

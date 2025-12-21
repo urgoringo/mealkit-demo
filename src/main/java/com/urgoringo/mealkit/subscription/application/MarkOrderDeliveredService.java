@@ -2,6 +2,7 @@ package com.urgoringo.mealkit.subscription.application;
 
 import com.urgoringo.mealkit.backoffice.domain.BackofficeUser;
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.subscription.domain.DeliveredOrder;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,8 @@ public class MarkOrderDeliveredService {
     @Transactional
     public void execute(Id<BackofficeUser> backofficeUserId, Id<UpcomingOrder> orderId) {
         log.info("Backoffice user {} marking order {} as delivered", backofficeUserId.value(), orderId.value());
-        UpcomingOrder order = subscriptions.findOrderById(orderId).markAsDelivered();
-        subscriptions.save(order);
+        UpcomingOrder order = subscriptions.findOrderById(orderId);
+        DeliveredOrder deliveredOrder = order.markAsDelivered();
+        subscriptions.save(deliveredOrder);
     }
 }

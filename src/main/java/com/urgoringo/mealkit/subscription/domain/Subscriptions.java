@@ -99,7 +99,7 @@ public class Subscriptions {
             Long orderId = order.id().value();
             dsl.update(ORDERS)
                 .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                .set(ORDERS.STATUS, order.status().name())
+                .set(ORDERS.STATUS, OrderStatus.PENDING.name())
                 .set(ORDERS.RECIPE_IDS, recipeIdsArray)
                 .where(ORDERS.ID.eq(orderId))
                 .execute();
@@ -109,7 +109,7 @@ public class Subscriptions {
             var orderRecord = dsl.insertInto(ORDERS)
                 .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
                 .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                .set(ORDERS.STATUS, order.status().name())
+                .set(ORDERS.STATUS, OrderStatus.PENDING.name())
                 .set(ORDERS.RECIPE_IDS, recipeIdsArray)
                 .returning(ORDERS.ID)
                 .fetchOne();
@@ -118,7 +118,7 @@ public class Subscriptions {
             }
             Long orderId = orderRecord.getId();
 
-            return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate(), order.status());
+            return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
         }
     }
 
@@ -179,8 +179,7 @@ public class Subscriptions {
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
-                OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
-                return new UpcomingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate(), status);
+                return new UpcomingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
             });
     }
 
@@ -192,7 +191,7 @@ public class Subscriptions {
             .execute();
     }
 
-    public List<UpcomingOrder> findDeliveredOrdersByCustomerId(Id<Customer> customerId) {
+    public List<DeliveredOrder> findDeliveredOrdersByCustomerId(Id<Customer> customerId) {
         return dsl.select(ORDERS.fields())
             .from(ORDERS)
             .join(SUBSCRIPTIONS).on(SUBSCRIPTIONS.ID.eq(ORDERS.SUBSCRIPTION_ID))
@@ -205,12 +204,10 @@ public class Subscriptions {
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
-                OrderStatus status = OrderStatus.valueOf(orderRecord.get(ORDERS.STATUS));
-                return new UpcomingOrder(
+                return new DeliveredOrder(
                     Id.of(orderId),
                     recipeIds,
-                    orderRecord.get(ORDERS.DELIVERY_DATE),
-                    status
+                    orderRecord.get(ORDERS.DELIVERY_DATE)
                 );
             });
     }
@@ -224,12 +221,10 @@ public class Subscriptions {
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
-                OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
                 return new UpcomingOrder(
                     Id.of(orderRecord.getId()),
                     recipeIds,
-                    orderRecord.getDeliveryDate(),
-                    status
+                    orderRecord.getDeliveryDate()
                 );
             })
             .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId.value()));
@@ -247,7 +242,25 @@ public class Subscriptions {
 
         dsl.update(ORDERS)
             .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-            .set(ORDERS.STATUS, order.status().name())
+            .set(ORDERS.STATUS, OrderStatus.PENDING.name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .where(ORDERS.ID.eq(order.id().value()))
+            .execute();
+    }
+
+    @Transactional
+    public void save(DeliveredOrder order) {
+        if (!order.id().isAssigned()) {
+            throw new IllegalArgumentException("Cannot save order without an assigned ID");
+        }
+
+        Long[] recipeIdsArray = order.recipeIds().stream()
+            .map(Id::value)
+            .toArray(Long[]::new);
+
+        dsl.update(ORDERS)
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, OrderStatus.DELIVERED.name())
             .set(ORDERS.RECIPE_IDS, recipeIdsArray)
             .where(ORDERS.ID.eq(order.id().value()))
             .execute();
