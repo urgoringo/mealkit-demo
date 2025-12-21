@@ -149,7 +149,8 @@ public class Subscriptions {
 
     private List<UpcomingOrder> fetchOrdersForSubscription(Long subscriptionId) {
         return dsl.selectFrom(ORDERS)
-                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId))
+                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
+                        .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
                 .fetch()
                 .map(orderRecord -> {
                     List<Id<Recipe>> recipeIds = dsl.select(ORDER_RECIPES.RECIPE_ID)

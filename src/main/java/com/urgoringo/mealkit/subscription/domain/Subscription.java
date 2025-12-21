@@ -21,11 +21,6 @@ public record Subscription(
         String deliveryAddress,
         DayOfWeek deliveryDay
 ) {
-    public Subscription {
-        upcomingOrders = upcomingOrders.stream()
-                .filter(UpcomingOrder::isPending)
-                .toList();
-    }
     public static Subscription signup(
             Id<Customer> customerId,
             List<Id<Recipe>> recipeIds,
