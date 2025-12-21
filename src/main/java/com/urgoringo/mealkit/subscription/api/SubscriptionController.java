@@ -4,6 +4,7 @@ import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.application.CreateSubscriptionService;
+import com.urgoringo.mealkit.subscription.application.GetSubscriptionHistoryService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.UpdateUpcomingOrderRecipesService;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ public class SubscriptionController {
 
     private final CreateSubscriptionService createSubscriptionService;
     private final GetSubscriptionService getSubscriptionService;
+    private final GetSubscriptionHistoryService getSubscriptionHistoryService;
     private final UpdateUpcomingOrderRecipesService updateUpcomingOrderRecipesService;
     private final SubscriptionApiMapper subscriptionApiMapper;
 
@@ -64,6 +66,15 @@ public class SubscriptionController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/history")
+    public ResponseEntity<List<OrderResponse>> getSubscriptionHistory(@AuthenticationPrincipal Id<Customer> customerId) {
+        var deliveredOrders = getSubscriptionHistoryService.execute(customerId);
+        List<OrderResponse> response = deliveredOrders.stream()
+                .map(subscriptionApiMapper::toOrderResponse)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
     public record CreateSubscriptionRequest(
             @NotNull List<Long> recipeIds,
             @NotBlank String deliveryAddress,
@@ -76,5 +87,5 @@ public class SubscriptionController {
 
     public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, DayOfWeek deliveryDay) {}
 
-    public record OrderResponse(Long id, List<Long> recipeIds, @Nullable LocalDate deliveryDate) {}
+    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate) {}
 }

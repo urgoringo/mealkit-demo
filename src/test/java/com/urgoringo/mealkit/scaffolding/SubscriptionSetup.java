@@ -19,8 +19,8 @@ public class SubscriptionSetup {
         this.authToken = authToken;
         app.create(
             aSubscription()
-                    .withRecipeIds(app.getRecipes(3))
-                    .withDeliveryDay(deliveryDay), authToken
+                .withRecipeIds(app.getRecipes(3))
+                .withDeliveryDay(deliveryDay), authToken
         ).expectSuccess();
     }
 
@@ -28,5 +28,19 @@ public class SubscriptionSetup {
         return app.getCustomerSubscription(authToken).expectSuccess();
     }
 
-
+    public void withOrderDelivered() {
+        var subscription = app.getCustomerSubscription(authToken).expectSuccess();
+        var deliveryDate = subscription.upcomingOrders().getFirst().deliveryDate();
+        app.freezeTimeOn(deliveryDate.minusDays(3));
+        app.processSubscriptionOrders();
+        app.freezeTimeOn(deliveryDate);
+        
+        var updatedSubscription = app.getCustomerSubscription(authToken).expectSuccess();
+        var orderToDeliver = updatedSubscription.upcomingOrders().stream()
+                .filter(order -> order.deliveryDate().equals(deliveryDate))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Order with delivery date " + deliveryDate + " not found"));
+        
+        app.backoffice().markOrderDelivered(orderToDeliver.id());
+    }
 }

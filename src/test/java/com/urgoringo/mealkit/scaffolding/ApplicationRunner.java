@@ -249,4 +249,14 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
+    public ApiResponse<List<OrderResponse>> getSubscriptionHistory(String token) {
+        ResponseEntity<List<OrderResponse>> response = restClient.get()
+            .uri("/subscriptions/history")
+            .header("Authorization", "Bearer " + token)
+            .retrieve()
+            .toEntity(new ParameterizedTypeReference<>() {
+            });
+        return ApiResponse.from(response);
+    }
+
 }

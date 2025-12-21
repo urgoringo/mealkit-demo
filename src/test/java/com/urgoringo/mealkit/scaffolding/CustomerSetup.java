@@ -27,5 +27,4 @@ public class CustomerSetup {
     public SubscriptionSetup havingSubscription(DayOfWeek dayOfWeek) {
         return new SubscriptionSetup(app, authToken, dayOfWeek);
     }
-
 }

@@ -38,7 +38,33 @@ public class Subscriptions {
                     .where(SUBSCRIPTIONS.ID.eq(subscriptionId))
                     .execute();
 
-            deleteOrdersForSubscription(subscriptionId);
+            List<Id<UpcomingOrder>> existingOrderIds = subscription.upcomingOrders().stream()
+                    .map(UpcomingOrder::id)
+                    .filter(Id::isAssigned)
+                    .toList();
+
+            if (!existingOrderIds.isEmpty()) {
+                List<Long> existingOrderIdValues = existingOrderIds.stream()
+                        .map(Id::value)
+                        .toList();
+                List<Long> orderIdsToDelete = dsl.select(ORDERS.ID)
+                        .from(ORDERS)
+                        .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
+                                .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name()))
+                                .and(ORDERS.ID.notIn(existingOrderIdValues)))
+                        .fetch(ORDERS.ID);
+
+                if (!orderIdsToDelete.isEmpty()) {
+                    dsl.deleteFrom(ORDER_RECIPES)
+                            .where(ORDER_RECIPES.ORDER_ID.in(orderIdsToDelete))
+                            .execute();
+                    dsl.deleteFrom(ORDERS)
+                            .where(ORDERS.ID.in(orderIdsToDelete))
+                            .execute();
+                }
+            } else {
+                deleteOrdersForSubscription(subscriptionId);
+            }
         } else {
             var record = dsl.insertInto(SUBSCRIPTIONS)
                     .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
@@ -54,7 +80,7 @@ public class Subscriptions {
 
         List<UpcomingOrder> savedOrders = new ArrayList<>();
         for (UpcomingOrder order : subscription.upcomingOrders()) {
-            UpcomingOrder savedOrder = saveOrder(order, subscriptionId);
+            UpcomingOrder savedOrder = saveOrUpdateOrder(order, subscriptionId);
             savedOrders.add(savedOrder);
         }
 
@@ -67,32 +93,55 @@ public class Subscriptions {
         );
     }
 
-    private UpcomingOrder saveOrder(UpcomingOrder order, Long subscriptionId) {
-        var orderRecord = dsl.insertInto(ORDERS)
-                .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
-                .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                .set(ORDERS.STATUS, order.status().name())
-                .returning(ORDERS.ID)
-                .fetchOne();
-        if (orderRecord == null) {
-            throw new IllegalStateException("Failed to insert order");
-        }
-        Long orderId = orderRecord.getId();
-
-        for (Id<Recipe> recipeId : order.recipeIds()) {
-            dsl.insertInto(ORDER_RECIPES)
-                    .set(ORDER_RECIPES.ORDER_ID, orderId)
-                    .set(ORDER_RECIPES.RECIPE_ID, recipeId.value())
+    private UpcomingOrder saveOrUpdateOrder(UpcomingOrder order, Long subscriptionId) {
+        if (order.id().isAssigned()) {
+            Long orderId = order.id().value();
+            dsl.update(ORDERS)
+                    .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+                    .set(ORDERS.STATUS, order.status().name())
+                    .where(ORDERS.ID.eq(orderId))
                     .execute();
-        }
 
-        return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate(), order.status());
+            dsl.deleteFrom(ORDER_RECIPES)
+                    .where(ORDER_RECIPES.ORDER_ID.eq(orderId))
+                    .execute();
+
+            for (Id<Recipe> recipeId : order.recipeIds()) {
+                dsl.insertInto(ORDER_RECIPES)
+                        .set(ORDER_RECIPES.ORDER_ID, orderId)
+                        .set(ORDER_RECIPES.RECIPE_ID, recipeId.value())
+                        .execute();
+            }
+
+            return order;
+        } else {
+            var orderRecord = dsl.insertInto(ORDERS)
+                    .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
+                    .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+                    .set(ORDERS.STATUS, order.status().name())
+                    .returning(ORDERS.ID)
+                    .fetchOne();
+            if (orderRecord == null) {
+                throw new IllegalStateException("Failed to insert order");
+            }
+            Long orderId = orderRecord.getId();
+
+            for (Id<Recipe> recipeId : order.recipeIds()) {
+                dsl.insertInto(ORDER_RECIPES)
+                        .set(ORDER_RECIPES.ORDER_ID, orderId)
+                        .set(ORDER_RECIPES.RECIPE_ID, recipeId.value())
+                        .execute();
+            }
+
+            return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate(), order.status());
+        }
     }
 
     private void deleteOrdersForSubscription(Long subscriptionId) {
         List<Long> orderIds = dsl.select(ORDERS.ID)
                 .from(ORDERS)
-                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId))
+                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
+                        .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
                 .fetch(ORDERS.ID);
 
         if (!orderIds.isEmpty()) {
@@ -102,7 +151,8 @@ public class Subscriptions {
         }
 
         dsl.deleteFrom(ORDERS)
-                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId))
+                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
+                        .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
                 .execute();
     }
 
@@ -171,5 +221,31 @@ public class Subscriptions {
                 .set(ORDERS.STATUS, OrderStatus.DELIVERED.name())
                 .where(ORDERS.ID.eq(orderId.value()))
                 .execute();
+    }
+
+    public List<UpcomingOrder> findDeliveredOrdersByCustomerId(Id<Customer> customerId) {
+        return dsl.select(ORDERS.fields())
+                .from(ORDERS)
+                .join(SUBSCRIPTIONS).on(SUBSCRIPTIONS.ID.eq(ORDERS.SUBSCRIPTION_ID))
+                .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value())
+                        .and(ORDERS.STATUS.eq(OrderStatus.DELIVERED.name())))
+                .fetch()
+                .map(orderRecord -> {
+                    Long orderId = orderRecord.get(ORDERS.ID);
+                    List<Id<Recipe>> recipeIds = dsl.select(ORDER_RECIPES.RECIPE_ID)
+                            .from(ORDER_RECIPES)
+                            .where(ORDER_RECIPES.ORDER_ID.eq(orderId))
+                            .fetch(ORDER_RECIPES.RECIPE_ID)
+                            .stream()
+                            .map(Id::<Recipe>of)
+                            .toList();
+                    OrderStatus status = OrderStatus.valueOf(orderRecord.get(ORDERS.STATUS));
+                    return new UpcomingOrder(
+                            Id.of(orderId),
+                            recipeIds,
+                            orderRecord.get(ORDERS.DELIVERY_DATE),
+                            status
+                    );
+                });
     }
 }
