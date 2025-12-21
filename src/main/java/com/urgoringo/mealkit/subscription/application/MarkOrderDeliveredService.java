@@ -21,6 +21,7 @@ public class MarkOrderDeliveredService {
     @Transactional
     public void execute(Id<BackofficeUser> backofficeUserId, Id<UpcomingOrder> orderId) {
         log.info("Backoffice user {} marking order {} as delivered", backofficeUserId.value(), orderId.value());
-        subscriptions.markOrderAsDelivered(orderId);
+        UpcomingOrder order = subscriptions.findOrderById(orderId).markAsDelivered();
+        subscriptions.save(order);
     }
 }

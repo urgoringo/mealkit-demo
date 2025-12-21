@@ -214,4 +214,42 @@ public class Subscriptions {
                 );
             });
     }
+
+    public UpcomingOrder findOrderById(Id<UpcomingOrder> orderId) {
+        return dsl.selectFrom(ORDERS)
+            .where(ORDERS.ID.eq(orderId.value()))
+            .fetchOptional()
+            .map(orderRecord -> {
+                Long[] recipeIdsArray = orderRecord.getRecipeIds();
+                List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
+                    .map(Id::<Recipe>of)
+                    .toList();
+                OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
+                return new UpcomingOrder(
+                    Id.of(orderRecord.getId()),
+                    recipeIds,
+                    orderRecord.getDeliveryDate(),
+                    status
+                );
+            })
+            .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId.value()));
+    }
+
+    @Transactional
+    public void save(UpcomingOrder order) {
+        if (!order.id().isAssigned()) {
+            throw new IllegalArgumentException("Cannot save order without an assigned ID");
+        }
+
+        Long[] recipeIdsArray = order.recipeIds().stream()
+            .map(Id::value)
+            .toArray(Long[]::new);
+
+        dsl.update(ORDERS)
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, order.status().name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .where(ORDERS.ID.eq(order.id().value()))
+            .execute();
+    }
 }
