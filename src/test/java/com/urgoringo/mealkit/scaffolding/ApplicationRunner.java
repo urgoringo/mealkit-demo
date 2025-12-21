@@ -1,6 +1,5 @@
 package com.urgoringo.mealkit.scaffolding;
 
-import com.urgoringo.mealkit.backoffice.domain.BackofficeUser;
 import com.urgoringo.mealkit.customer.domain.Customers;
 import com.urgoringo.mealkit.recipecatalog.api.IngredientController.CreateIngredientRequest;
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.CreateRecipeRequest;
@@ -47,9 +46,7 @@ public class ApplicationRunner {
     private final Subscriptions subscriptions;
     private final TestClock testClock;
     private final SelectRecipesForUpcomingOrdersService selectRecipesForUpcomingOrdersService;
-    private final com.urgoringo.mealkit.auth.TokenService tokenService;
-    private final com.urgoringo.mealkit.auth.PasswordHasher passwordHasher;
-    private final com.urgoringo.mealkit.backoffice.domain.BackofficeUsers backofficeUsers;
+    private final BackofficeApplicationRunner backofficeRunner;
     @Nullable
     @Getter
     private String currentAuthToken;
@@ -117,6 +114,7 @@ public class ApplicationRunner {
         this.restClient = restClientBuilder
             .baseUrl("http://localhost:" + port)
             .build();
+        backofficeRunner.start(port);
         reset();
         IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
     }
@@ -199,7 +197,7 @@ public class ApplicationRunner {
     private void reset() {
         deleteAllSubscriptions();
         deleteAllRecipes();
-        backofficeUsers.deleteAll();
+        backofficeRunner.reset();
         testClock.reset();
     }
 
@@ -239,27 +237,7 @@ public class ApplicationRunner {
     }
 
     public void deliverOrder(Long orderId) {
-        var backofficeUser = getOrCreateBackofficeUser();
-        String backofficeToken = tokenService.generateBackofficeToken(backofficeUser);
-        
-        restClient.post()
-            .uri("/orders/{orderId}/delivered", orderId)
-            .header("Authorization", "Bearer " + backofficeToken)
-            .retrieve()
-            .toBodilessEntity();
-    }
-
-    private BackofficeUser getOrCreateBackofficeUser() {
-        return backofficeUsers.findByEmail("backoffice@mealkit.com")
-                .orElseGet(() -> {
-                    String hashedPassword = passwordHasher.hash("backoffice-password");
-                    return backofficeUsers.save(
-                            BackofficeUser.create(
-                                    "backoffice@mealkit.com",
-                                    hashedPassword
-                            )
-                    );
-                });
+        backofficeRunner.deliverOrder(orderId);
     }
 
     public ApiResponse<Void> tryDeliverOrderAsCustomer(Long orderId, String customerToken) {
