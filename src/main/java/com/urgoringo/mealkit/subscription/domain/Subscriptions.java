@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static com.urgoringo.mealkit.jooq.tables.OrderRecipes.ORDER_RECIPES;
 import static com.urgoringo.mealkit.jooq.tables.Orders.ORDERS;
 import static com.urgoringo.mealkit.jooq.tables.Subscriptions.SUBSCRIPTIONS;
 
@@ -32,46 +32,43 @@ public class Subscriptions {
         if (subscription.id().isAssigned()) {
             subscriptionId = subscription.id().value();
             dsl.update(SUBSCRIPTIONS)
-                    .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
-                    .set(SUBSCRIPTIONS.DELIVERY_ADDRESS, subscription.deliveryAddress())
-                    .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
-                    .where(SUBSCRIPTIONS.ID.eq(subscriptionId))
-                    .execute();
+                .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
+                .set(SUBSCRIPTIONS.DELIVERY_ADDRESS, subscription.deliveryAddress())
+                .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
+                .where(SUBSCRIPTIONS.ID.eq(subscriptionId))
+                .execute();
 
             List<Id<UpcomingOrder>> existingOrderIds = subscription.upcomingOrders().stream()
-                    .map(UpcomingOrder::id)
-                    .filter(Id::isAssigned)
-                    .toList();
+                .map(UpcomingOrder::id)
+                .filter(Id::isAssigned)
+                .toList();
 
             if (!existingOrderIds.isEmpty()) {
                 List<Long> existingOrderIdValues = existingOrderIds.stream()
-                        .map(Id::value)
-                        .toList();
+                    .map(Id::value)
+                    .toList();
                 List<Long> orderIdsToDelete = dsl.select(ORDERS.ID)
-                        .from(ORDERS)
-                        .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
-                                .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name()))
-                                .and(ORDERS.ID.notIn(existingOrderIdValues)))
-                        .fetch(ORDERS.ID);
+                    .from(ORDERS)
+                    .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
+                        .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name()))
+                        .and(ORDERS.ID.notIn(existingOrderIdValues)))
+                    .fetch(ORDERS.ID);
 
                 if (!orderIdsToDelete.isEmpty()) {
-                    dsl.deleteFrom(ORDER_RECIPES)
-                            .where(ORDER_RECIPES.ORDER_ID.in(orderIdsToDelete))
-                            .execute();
                     dsl.deleteFrom(ORDERS)
-                            .where(ORDERS.ID.in(orderIdsToDelete))
-                            .execute();
+                        .where(ORDERS.ID.in(orderIdsToDelete))
+                        .execute();
                 }
             } else {
                 deleteOrdersForSubscription(subscriptionId);
             }
         } else {
             var record = dsl.insertInto(SUBSCRIPTIONS)
-                    .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
-                    .set(SUBSCRIPTIONS.DELIVERY_ADDRESS, subscription.deliveryAddress())
-                    .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
-                    .returning(SUBSCRIPTIONS.ID)
-                    .fetchOne();
+                .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
+                .set(SUBSCRIPTIONS.DELIVERY_ADDRESS, subscription.deliveryAddress())
+                .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
+                .returning(SUBSCRIPTIONS.ID)
+                .fetchOne();
             if (record == null) {
                 throw new IllegalStateException("Failed to insert subscription");
             }
@@ -85,103 +82,78 @@ public class Subscriptions {
         }
 
         return new Subscription(
-                Id.of(subscriptionId),
-                subscription.customerId(),
-                savedOrders,
-                subscription.deliveryAddress(),
-                subscription.deliveryDay()
+            Id.of(subscriptionId),
+            subscription.customerId(),
+            savedOrders,
+            subscription.deliveryAddress(),
+            subscription.deliveryDay()
         );
     }
 
     private UpcomingOrder saveOrUpdateOrder(UpcomingOrder order, Long subscriptionId) {
+        Long[] recipeIdsArray = order.recipeIds().stream()
+            .map(Id::value)
+            .toArray(Long[]::new);
+
         if (order.id().isAssigned()) {
             Long orderId = order.id().value();
             dsl.update(ORDERS)
-                    .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                    .set(ORDERS.STATUS, order.status().name())
-                    .where(ORDERS.ID.eq(orderId))
-                    .execute();
-
-            dsl.deleteFrom(ORDER_RECIPES)
-                    .where(ORDER_RECIPES.ORDER_ID.eq(orderId))
-                    .execute();
-
-            for (Id<Recipe> recipeId : order.recipeIds()) {
-                dsl.insertInto(ORDER_RECIPES)
-                        .set(ORDER_RECIPES.ORDER_ID, orderId)
-                        .set(ORDER_RECIPES.RECIPE_ID, recipeId.value())
-                        .execute();
-            }
+                .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+                .set(ORDERS.STATUS, order.status().name())
+                .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+                .where(ORDERS.ID.eq(orderId))
+                .execute();
 
             return order;
         } else {
             var orderRecord = dsl.insertInto(ORDERS)
-                    .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
-                    .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                    .set(ORDERS.STATUS, order.status().name())
-                    .returning(ORDERS.ID)
-                    .fetchOne();
+                .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
+                .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+                .set(ORDERS.STATUS, order.status().name())
+                .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+                .returning(ORDERS.ID)
+                .fetchOne();
             if (orderRecord == null) {
                 throw new IllegalStateException("Failed to insert order");
             }
             Long orderId = orderRecord.getId();
-
-            for (Id<Recipe> recipeId : order.recipeIds()) {
-                dsl.insertInto(ORDER_RECIPES)
-                        .set(ORDER_RECIPES.ORDER_ID, orderId)
-                        .set(ORDER_RECIPES.RECIPE_ID, recipeId.value())
-                        .execute();
-            }
 
             return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate(), order.status());
         }
     }
 
     private void deleteOrdersForSubscription(Long subscriptionId) {
-        List<Long> orderIds = dsl.select(ORDERS.ID)
-                .from(ORDERS)
-                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
-                        .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
-                .fetch(ORDERS.ID);
-
-        if (!orderIds.isEmpty()) {
-            dsl.deleteFrom(ORDER_RECIPES)
-                    .where(ORDER_RECIPES.ORDER_ID.in(orderIds))
-                    .execute();
-        }
-
         dsl.deleteFrom(ORDERS)
-                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
-                        .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
-                .execute();
+            .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
+                .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
+            .execute();
     }
 
     public Optional<Subscription> findById(Id<Subscription> id) {
         return dsl.selectFrom(SUBSCRIPTIONS)
-                .where(SUBSCRIPTIONS.ID.eq(id.value()))
-                .fetchOptional()
-                .map(this::toSubscription);
+            .where(SUBSCRIPTIONS.ID.eq(id.value()))
+            .fetchOptional()
+            .map(this::toSubscription);
     }
 
     public Optional<Subscription> findByCustomerId(Id<Customer> customerId) {
         return dsl.selectFrom(SUBSCRIPTIONS)
-                .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value()))
-                .fetchOptional()
-                .map(this::toSubscription);
+            .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value()))
+            .fetchOptional()
+            .map(this::toSubscription);
     }
 
     public List<Id<Subscription>> findAllIds() {
         return dsl.select(SUBSCRIPTIONS.ID)
-                .from(SUBSCRIPTIONS)
-                .fetch(SUBSCRIPTIONS.ID)
-                .stream()
-                .map(Id::<Subscription>of)
-                .toList();
+            .from(SUBSCRIPTIONS)
+            .fetch(SUBSCRIPTIONS.ID)
+            .stream()
+            .map(Id::<Subscription>of)
+            .toList();
     }
 
     @Transactional
     public void deleteAll() {
-        dsl.deleteFrom(ORDER_RECIPES).execute();
         dsl.deleteFrom(ORDERS).execute();
         dsl.deleteFrom(SUBSCRIPTIONS).execute();
     }
@@ -189,63 +161,57 @@ public class Subscriptions {
     private Subscription toSubscription(com.urgoringo.mealkit.jooq.tables.records.SubscriptionsRecord record) {
         List<UpcomingOrder> orders = fetchOrdersForSubscription(record.getId());
         return new Subscription(
-                Id.of(record.getId()),
-                Id.of(record.getCustomerId()),
-                orders,
-                record.getDeliveryAddress(),
-                DayOfWeek.valueOf(record.getDeliveryDay())
+            Id.of(record.getId()),
+            Id.of(record.getCustomerId()),
+            orders,
+            record.getDeliveryAddress(),
+            DayOfWeek.valueOf(record.getDeliveryDay())
         );
     }
 
     private List<UpcomingOrder> fetchOrdersForSubscription(Long subscriptionId) {
         return dsl.selectFrom(ORDERS)
-                .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
-                        .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
-                .fetch()
-                .map(orderRecord -> {
-                    List<Id<Recipe>> recipeIds = dsl.select(ORDER_RECIPES.RECIPE_ID)
-                            .from(ORDER_RECIPES)
-                            .where(ORDER_RECIPES.ORDER_ID.eq(orderRecord.getId()))
-                            .fetch(ORDER_RECIPES.RECIPE_ID)
-                            .stream()
-                            .map(Id::<Recipe>of)
-                            .toList();
-                    OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
-                    return new UpcomingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate(), status);
-                });
+            .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
+                .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
+            .fetch()
+            .map(orderRecord -> {
+                Long[] recipeIdsArray = orderRecord.getRecipeIds();
+                List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
+                    .map(Id::<Recipe>of)
+                    .toList();
+                OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
+                return new UpcomingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate(), status);
+            });
     }
 
     @Transactional
     public void markOrderAsDelivered(Id<UpcomingOrder> orderId) {
         dsl.update(ORDERS)
-                .set(ORDERS.STATUS, OrderStatus.DELIVERED.name())
-                .where(ORDERS.ID.eq(orderId.value()))
-                .execute();
+            .set(ORDERS.STATUS, OrderStatus.DELIVERED.name())
+            .where(ORDERS.ID.eq(orderId.value()))
+            .execute();
     }
 
     public List<UpcomingOrder> findDeliveredOrdersByCustomerId(Id<Customer> customerId) {
         return dsl.select(ORDERS.fields())
-                .from(ORDERS)
-                .join(SUBSCRIPTIONS).on(SUBSCRIPTIONS.ID.eq(ORDERS.SUBSCRIPTION_ID))
-                .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value())
-                        .and(ORDERS.STATUS.eq(OrderStatus.DELIVERED.name())))
-                .fetch()
-                .map(orderRecord -> {
-                    Long orderId = orderRecord.get(ORDERS.ID);
-                    List<Id<Recipe>> recipeIds = dsl.select(ORDER_RECIPES.RECIPE_ID)
-                            .from(ORDER_RECIPES)
-                            .where(ORDER_RECIPES.ORDER_ID.eq(orderId))
-                            .fetch(ORDER_RECIPES.RECIPE_ID)
-                            .stream()
-                            .map(Id::<Recipe>of)
-                            .toList();
-                    OrderStatus status = OrderStatus.valueOf(orderRecord.get(ORDERS.STATUS));
-                    return new UpcomingOrder(
-                            Id.of(orderId),
-                            recipeIds,
-                            orderRecord.get(ORDERS.DELIVERY_DATE),
-                            status
-                    );
-                });
+            .from(ORDERS)
+            .join(SUBSCRIPTIONS).on(SUBSCRIPTIONS.ID.eq(ORDERS.SUBSCRIPTION_ID))
+            .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value())
+                .and(ORDERS.STATUS.eq(OrderStatus.DELIVERED.name())))
+            .fetch()
+            .map(orderRecord -> {
+                Long orderId = orderRecord.get(ORDERS.ID);
+                Long[] recipeIdsArray = orderRecord.get(ORDERS.RECIPE_IDS);
+                List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
+                    .map(Id::<Recipe>of)
+                    .toList();
+                OrderStatus status = OrderStatus.valueOf(orderRecord.get(ORDERS.STATUS));
+                return new UpcomingOrder(
+                    Id.of(orderId),
+                    recipeIds,
+                    orderRecord.get(ORDERS.DELIVERY_DATE),
+                    status
+                );
+            });
     }
 }
