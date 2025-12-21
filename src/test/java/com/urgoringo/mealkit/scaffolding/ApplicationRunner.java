@@ -46,6 +46,7 @@ public class ApplicationRunner {
     private final Subscriptions subscriptions;
     private final TestClock testClock;
     private final SelectRecipesForUpcomingOrdersService selectRecipesForUpcomingOrdersService;
+    private final com.urgoringo.mealkit.auth.TokenService tokenService;
     @Nullable
     @Getter
     private String currentAuthToken;
@@ -234,14 +235,22 @@ public class ApplicationRunner {
     }
 
     public void deliverOrder(Long orderId) {
-        var builder = restClient.post()
-            .uri("/orders/{orderId}/delivered", orderId);
+        String backofficeToken = tokenService.generateBackofficeToken("backoffice-user");
+        
+        restClient.post()
+            .uri("/orders/{orderId}/delivered", orderId)
+            .header("Authorization", "Bearer " + backofficeToken)
+            .retrieve()
+            .toBodilessEntity();
+    }
 
-        if (currentAuthToken != null) {
-            builder = builder.header("Authorization", "Bearer " + currentAuthToken);
-        }
-
-        builder.retrieve().toBodilessEntity();
+    public int tryDeliverOrderAsCustomer(Long orderId, String customerToken) {
+        ResponseEntity<Void> response = restClient.post()
+            .uri("/orders/{orderId}/delivered", orderId)
+            .header("Authorization", "Bearer " + customerToken)
+            .retrieve()
+            .toEntity(Void.class);
+        return response.getStatusCode().value();
     }
 
 }

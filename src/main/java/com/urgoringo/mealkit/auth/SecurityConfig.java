@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/customers/signup", "/customers/login").permitAll()
                 .requestMatchers("/recipes/**").permitAll()
                 .requestMatchers("/ingredients/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/orders/*/delivered").hasRole("BACKOFFICE")
                 .requestMatchers(HttpMethod.GET, "/subscriptions").authenticated()
                 .requestMatchers(HttpMethod.POST, "/subscriptions").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/subscriptions/upcoming-order/recipes").authenticated()

@@ -8,8 +8,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 /**
- * Converts JWT tokens to CustomerAuthentication by extracting the customer ID.
- * This allows application code to work with Id<Customer> instead of raw JWT tokens.
+ * Converts JWT tokens to appropriate Authentication by extracting role and ID.
+ * Supports both customer and backoffice user authentication.
  */
 @NullMarked
 @Component
@@ -17,6 +17,12 @@ public class CustomerJwtAuthenticationConverter implements Converter<Jwt, Abstra
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
+        String role = jwt.getClaimAsString("role");
+        
+        if ("BACKOFFICE".equals(role)) {
+            return new BackofficeAuthentication(jwt.getSubject());
+        }
+        
         Long customerId = Long.parseLong(jwt.getSubject());
         return new CustomerAuthentication(Id.of(customerId));
     }

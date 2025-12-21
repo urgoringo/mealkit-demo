@@ -18,7 +18,7 @@ public class CustomerAuthentication extends AbstractAuthenticationToken {
     private final Id<Customer> customerId;
 
     public CustomerAuthentication(Id<Customer> customerId) {
-        super(List.of());
+        super(List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_CUSTOMER")));
         this.customerId = customerId;
         setAuthenticated(true);
     }

@@ -22,9 +22,7 @@ public class OrderController {
     private final DeliverOrderService deliverOrderService;
 
     @PostMapping("/{orderId}/delivered")
-    public ResponseEntity<Void> deliverOrder(
-            @AuthenticationPrincipal Id<Customer> customerId,
-            @PathVariable Long orderId) {
+    public ResponseEntity<Void> deliverOrder(@PathVariable Long orderId) {
         deliverOrderService.execute(Id.of(orderId));
         return ResponseEntity.noContent().build();
     }

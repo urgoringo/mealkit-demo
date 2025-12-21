@@ -14,4 +14,17 @@ class OrderDeliverySpec extends ApplicationSpecification {
             def subscription = app.getCustomerSubscription(customer.authToken).expectSuccess()
             !subscription.upcomingOrders().contains(nextOrder)
     }
+
+    def "customer cannot deliver their own order"() {
+        given: "a customer with a subscription"
+            def customer = app.havingCustomer()
+            def subscriptionResponse = customer.havingSubscription().get()
+            def nextOrder = subscriptionResponse.upcomingOrders().first
+
+        when: "customer tries to deliver their order"
+            def response = app.tryDeliverOrderAsCustomer(nextOrder.id(), customer.authToken)
+
+        then: "request is forbidden"
+            response == 403
+    }
 }
