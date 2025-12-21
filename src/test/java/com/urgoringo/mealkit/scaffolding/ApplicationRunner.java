@@ -236,8 +236,8 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    public void deliverOrder(Long orderId) {
-        backofficeRunner.deliverOrder(orderId);
+    public BackofficeApplicationRunner backoffice() {
+        return backofficeRunner;
     }
 
     public ApiResponse<Void> tryDeliverOrderAsCustomer(Long orderId, String customerToken) {

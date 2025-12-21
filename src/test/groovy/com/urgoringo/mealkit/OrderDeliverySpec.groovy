@@ -8,7 +8,7 @@ class OrderDeliverySpec extends ApplicationSpecification {
             def nextOrder = subscriptionResponse.upcomingOrders().first
 
         when: "next upcoming order is delivered"
-            app.deliverOrder(nextOrder.id())
+            app.backoffice().markOrderDelivered(nextOrder.id())
 
         then: "subscription should not contain that order"
             def subscription = app.getCustomerSubscription(customer.authToken).expectSuccess()

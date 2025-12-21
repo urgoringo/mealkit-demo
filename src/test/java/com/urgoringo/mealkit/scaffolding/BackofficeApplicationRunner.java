@@ -30,7 +30,7 @@ public class BackofficeApplicationRunner {
         backofficeUsers.deleteAll();
     }
 
-    public void deliverOrder(Long orderId) {
+    public void markOrderDelivered(Long orderId) {
         var backofficeUser = getOrCreateBackofficeUser();
         String backofficeToken = tokenService.generateBackofficeToken(backofficeUser);
         
