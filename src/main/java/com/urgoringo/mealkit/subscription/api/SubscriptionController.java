@@ -2,6 +2,7 @@ package com.urgoringo.mealkit.subscription.api;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.subscription.domain.OrderStatus;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.application.CreateSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionHistoryService;
@@ -87,5 +88,5 @@ public class SubscriptionController {
 
     public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, DayOfWeek deliveryDay) {}
 
-    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate) {}
+    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate, OrderStatus status) {}
 }

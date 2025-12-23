@@ -9,6 +9,8 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+
 @NullMarked
 public record UpcomingOrder(
     Id<UpcomingOrder> id,
@@ -16,6 +18,7 @@ public record UpcomingOrder(
     LocalDate deliveryDate
 ) {
     private static final int MINIMUM_RECIPE_COUNT = 3;
+    private static final int DAYS_BEFORE_DELIVERY_TO_LOCK = 3;
 
     public UpcomingOrder {
         if (recipeIds.size() < MINIMUM_RECIPE_COUNT) {
@@ -44,6 +47,17 @@ public record UpcomingOrder(
             recipeIds,
             deliveryDate
         );
+    }
+
+    public OrderStatus status(Clock clock) {
+        LocalDate currentDate = LocalDate.now(clock);
+        long daysUntilDelivery = currentDate.until(deliveryDate, DAYS);
+        
+        if (daysUntilDelivery <= DAYS_BEFORE_DELIVERY_TO_LOCK) {
+            return OrderStatus.LOCKED;
+        }
+        
+        return OrderStatus.PENDING;
     }
 
 }

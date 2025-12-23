@@ -4,17 +4,23 @@ import com.urgoringo.mealkit.subscription.api.SubscriptionController.OrderRespon
 import com.urgoringo.mealkit.subscription.api.SubscriptionController.SubscriptionResponse;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.DeliveredOrder;
+import com.urgoringo.mealkit.subscription.domain.OrderStatus;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.util.List;
 
 @NullMarked
 @Component
+@RequiredArgsConstructor
 public class SubscriptionApiMapper {
+
+    private final Clock clock;
 
     public SubscriptionResponse toResponse(Subscription subscription) {
         return new SubscriptionResponse(
@@ -32,7 +38,8 @@ public class SubscriptionApiMapper {
         return new OrderResponse(
                 order.id().value(),
                 mapRecipeIdsToLong(order.recipeIds()),
-                order.deliveryDate()
+                order.deliveryDate(),
+                order.status(clock)
         );
     }
 
@@ -40,7 +47,8 @@ public class SubscriptionApiMapper {
         return new OrderResponse(
                 order.id().value(),
                 mapRecipeIdsToLong(order.recipeIds()),
-                order.deliveryDate()
+                order.deliveryDate(),
+                OrderStatus.DELIVERED
         );
     }
 

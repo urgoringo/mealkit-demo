@@ -1,8 +1,6 @@
 package com.urgoringo.mealkit
 
-import java.time.Duration
-
-import static java.time.Duration.*
+import static java.time.Period.ofDays
 
 class OrderDeliverySpec extends ApplicationSpecification {
     def "when upcoming order is delivered it should be removed from subscription"() {

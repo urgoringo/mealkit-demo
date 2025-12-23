@@ -5,5 +5,6 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public enum OrderStatus {
     PENDING,
+    LOCKED,
     DELIVERED
 }
