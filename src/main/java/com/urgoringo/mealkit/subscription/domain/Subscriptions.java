@@ -137,11 +137,10 @@ public class Subscriptions {
             .map(this::toSubscription);
     }
 
-    public Optional<Subscription> findByCustomerId(Id<Customer> customerId) {
-        return dsl.selectFrom(SUBSCRIPTIONS)
+    public Subscription findByCustomerId(Id<Customer> customerId) {
+        return toSubscription(dsl.selectFrom(SUBSCRIPTIONS)
             .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value()))
-            .fetchOptional()
-            .map(this::toSubscription);
+            .fetchSingle());
     }
 
     public List<Id<Subscription>> findAllIds() {
@@ -275,6 +274,14 @@ public class Subscriptions {
             .set(ORDERS.STATUS, OrderStatus.DELIVERED.name())
             .set(ORDERS.RECIPE_IDS, recipeIdsArray)
             .where(ORDERS.ID.eq(order.id().value()))
+            .execute();
+    }
+
+    @Transactional
+    public void lockOrder(Id<UpcomingOrder> orderId) {
+        dsl.update(ORDERS)
+            .set(ORDERS.STATUS, OrderStatus.LOCKED.name())
+            .where(ORDERS.ID.eq(orderId.value()))
             .execute();
     }
 }

@@ -5,7 +5,9 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import org.jspecify.annotations.NullMarked;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,8 +42,8 @@ public record Subscription(
 
         UpcomingOrder lastOrder = upcomingOrders.getLast();
 
-        long daysUntilDelivery = currentDate.until(lastOrder.deliveryDate(), DAYS);
-        if (daysUntilDelivery <= 3) {
+        Duration daysUntilDelivery = Duration.between(currentDate.atStartOfDay(), lastOrder.deliveryDate().atStartOfDay());
+        if (daysUntilDelivery.toDays() <= 3) {
             LocalDate nextDeliveryDate = lastOrder.deliveryDate().with(next(deliveryDay));
             UpcomingOrder newOrder = UpcomingOrder.placed(recipeIds, nextDeliveryDate);
 
@@ -69,4 +71,13 @@ public record Subscription(
 
         return new Subscription(id, customerId, List.of(updatedOrder), deliveryAddress, deliveryDay);
     }
+
+    public Subscription withUpdatedRecipes(Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds) {
+        List<UpcomingOrder> updatedOrders = upcomingOrders.stream()
+                .map(order -> order.id().equals(orderId) ? order.withUpdatedRecipes(recipeIds) : order)
+                .toList();
+
+        return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
+    }
+
 }

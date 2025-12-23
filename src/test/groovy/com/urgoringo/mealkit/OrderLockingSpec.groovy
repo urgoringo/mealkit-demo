@@ -41,16 +41,15 @@ class OrderLockingSpec extends ApplicationSpecification {
             subscription.upcomingOrders().first.status() == PENDING
     }
 
-    @PendingFeature
     def "locked order cannot be updated"() {
         given: "a subscription with a locked order"
             def customer = app.havingCustomer()
-            customer.havingSubscription().withOrderLocked()
+            def subscription = customer.havingSubscription().withOrderLocked().get()
 
-        when: "customer tries to update their subscription"
-            def response = customer.update(customer.authToken, aSubscription().withDeliveryDay(SUNDAY))
+        when: "customer tries to update their upcoming order"
+            def response = app.updateUpcomingOrderRecipes(customer.authToken, subscription.upcomingOrders()[0].id(), [])
 
-        then: "system returns 403"
-            response.expectError() == 403
+        then: "system returns 422"
+            response.expectError() == 422
     }
 }

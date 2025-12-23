@@ -57,10 +57,6 @@ public class SelectRecipesForUpcomingOrdersService {
 
     private void processSubscription(Subscription subscription) {
         List<Recipe> allRecipes = recipesCatalog.findAll();
-        if (allRecipes.size() < 3) {
-            throw new IllegalArgumentException("Not enough recipes available");
-        }
-
         Collections.shuffle(allRecipes);
         List<Id<Recipe>> selectedRecipeIds = allRecipes.stream()
             .limit(3)
@@ -68,6 +64,7 @@ public class SelectRecipesForUpcomingOrdersService {
             .toList();
 
         LocalDate currentDate = LocalDate.now(clock);
+        //TODO pass clock
         Subscription updatedSubscription = subscription.withNewUpcomingOrder(currentDate, selectedRecipeIds);
 
         if (updatedSubscription != subscription) {

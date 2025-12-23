@@ -5,6 +5,7 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
+import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
@@ -18,12 +19,11 @@ import java.util.List;
 public class UpdateUpcomingOrderRecipesService {
 
     private final Subscriptions subscriptions;
-    private final GetSubscriptionService getSubscriptionService;
 
     @Transactional
-    public Subscription execute(Id<Customer> customerId, List<Id<Recipe>> recipeIds) {
-        Subscription subscription = getSubscriptionService.executeForAuthenticatedCustomer(customerId);
-        Subscription updatedSubscription = subscription.withUpdatedRecipesForFirstUpcomingOrder(recipeIds);
+    public Subscription execute(Id<Customer> customerId, Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds) {
+        Subscription subscription = subscriptions.findByCustomerId(customerId);
+        Subscription updatedSubscription = subscription.withUpdatedRecipes(orderId, recipeIds);
         return subscriptions.save(updatedSubscription);
     }
 }

@@ -31,6 +31,9 @@ public record UpcomingOrder(
     }
 
     public UpcomingOrder withUpdatedRecipes(List<Id<Recipe>> recipeIds) {
+//        if (status == OrderStatus.LOCKED) {
+//            throw new ValidationException("Cannot update locked order");
+//        }
         return new UpcomingOrder(id, recipeIds, deliveryDate);
     }
 

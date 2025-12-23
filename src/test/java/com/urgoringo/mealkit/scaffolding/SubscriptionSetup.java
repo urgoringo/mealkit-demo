@@ -4,6 +4,7 @@ import com.urgoringo.mealkit.subscription.api.SubscriptionController;
 import lombok.RequiredArgsConstructor;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aSubscription;
 import static com.urgoringo.mealkit.subscription.api.SubscriptionController.*;
@@ -26,6 +27,13 @@ public class SubscriptionSetup {
 
     public SubscriptionResponse get() {
         return app.getCustomerSubscription(authToken).expectSuccess();
+    }
+
+    public SubscriptionSetup withOrderLocked() {
+        var subscription = app.getCustomerSubscription(authToken).expectSuccess();
+        var deliveryDate = subscription.upcomingOrders().getFirst().deliveryDate();
+        app.freezeTimeOn(deliveryDate.minusDays(3));
+        return this;
     }
 
     public void withOrderDelivered() {

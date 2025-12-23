@@ -119,15 +119,19 @@ public class ApplicationRunner {
         IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
     }
 
-    public void updateUpcomingOrderRecipes(List<Long> recipeIds, String authToken) {
+    public ApiResponse<SubscriptionResponse> updateUpcomingOrderRecipes(Long orderId, List<Long> recipeIds, String authToken) {
         UpdateUpcomingOrderRecipesRequest request = new UpdateUpcomingOrderRecipesRequest(recipeIds);
         ResponseEntity<SubscriptionResponse> response = restClient.put()
-            .uri("/subscriptions/upcoming-order/recipes")
+            .uri("/subscriptions/upcoming-orders/{orderId}/recipes", orderId)
             .header("Authorization", "Bearer " + authToken)
             .body(request)
             .retrieve()
             .toEntity(SubscriptionResponse.class);
-        ApiResponse.from(response).expectSuccess();
+        return ApiResponse.from(response);
+    }
+
+    public ApiResponse<SubscriptionResponse> updateUpcomingOrderRecipes(String authToken, Long orderId, List<Long> recipeIds) {
+        return updateUpcomingOrderRecipes(orderId, recipeIds, authToken);
     }
 
 

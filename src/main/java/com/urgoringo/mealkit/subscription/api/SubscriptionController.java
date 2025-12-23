@@ -4,6 +4,7 @@ import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.OrderStatus;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
+import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import com.urgoringo.mealkit.subscription.application.CreateSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionHistoryService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionService;
@@ -57,12 +58,13 @@ public class SubscriptionController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/upcoming-order/recipes")
+    @PutMapping("/upcoming-orders/{orderId}/recipes")
     public ResponseEntity<SubscriptionResponse> updateUpcomingOrderRecipes(
             @AuthenticationPrincipal Id<Customer> customerId,
+            @PathVariable Long orderId,
             @Valid @RequestBody UpdateUpcomingOrderRecipesRequest request) {
         var recipeIds = subscriptionApiMapper.mapRecipeIds(request.recipeIds());
-        Subscription subscription = updateUpcomingOrderRecipesService.execute(customerId, recipeIds);
+        Subscription subscription = updateUpcomingOrderRecipesService.execute(customerId, Id.of(orderId), recipeIds);
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
         return ResponseEntity.ok(response);
     }

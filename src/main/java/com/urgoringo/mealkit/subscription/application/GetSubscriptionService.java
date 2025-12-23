@@ -19,7 +19,6 @@ public class GetSubscriptionService {
 
     @Transactional(readOnly = true)
     public Subscription executeForAuthenticatedCustomer(Id<Customer> customerId) {
-        return subscriptions.findByCustomerId(customerId)
-                .orElseThrow(() -> new ValidationException("Subscription not found"));
+        return subscriptions.findByCustomerId(customerId);
     }
 }
