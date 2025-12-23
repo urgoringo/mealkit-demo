@@ -13,9 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+
+import static java.time.Duration.ofDays;
 
 @NullMarked
 @Slf4j
@@ -28,10 +31,16 @@ public class SelectRecipesForUpcomingOrdersService {
     private final Clock clock;
     private final TransactionTemplate transactionTemplate;
 
+    private static final Duration PRESELECTION_THRESHOLD_DAYS = ofDays(3);
+
     @Scheduled(cron = "0 0 2 * * *") // Daily at 2 AM UTC
     public void execute() {
         log.info("Starting scheduled job to process subscription orders");
-        List<Id<Subscription>> subscriptionIds = subscriptions.findAllIds();
+        LocalDate currentDate = LocalDate.now(clock);
+        LocalDate thresholdDate = currentDate.plusDays(PRESELECTION_THRESHOLD_DAYS.toDays());
+        List<Id<Subscription>> subscriptionIds = subscriptions.findSubscriptionsWithPendingOrdersByDeliveryDate(thresholdDate);
+        log.info("Found {} subscriptions requiring recipe preselection", subscriptionIds.size());
+        
         for (Id<Subscription> subscriptionId : subscriptionIds) {
             try {
                 transactionTemplate.executeWithoutResult(_ -> {

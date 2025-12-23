@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -147,6 +148,17 @@ public class Subscriptions {
         return dsl.select(SUBSCRIPTIONS.ID)
             .from(SUBSCRIPTIONS)
             .fetch(SUBSCRIPTIONS.ID)
+            .stream()
+            .map(Id::<Subscription>of)
+            .toList();
+    }
+
+    public List<Id<Subscription>> findSubscriptionsWithPendingOrdersByDeliveryDate(LocalDate maxDeliveryDate) {
+        return dsl.selectDistinct(ORDERS.SUBSCRIPTION_ID)
+            .from(ORDERS)
+            .where(ORDERS.STATUS.eq(OrderStatus.PENDING.name())
+                .and(ORDERS.DELIVERY_DATE.le(maxDeliveryDate)))
+            .fetch(ORDERS.SUBSCRIPTION_ID)
             .stream()
             .map(Id::<Subscription>of)
             .toList();
