@@ -5,6 +5,7 @@ import com.urgoringo.mealkit.domain.ValidationException;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import org.jspecify.annotations.NullMarked;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -26,13 +27,17 @@ public record UpcomingOrder(
         return new UpcomingOrder(Id.unassigned(), recipeIds, deliveryDate);
     }
 
-    public UpcomingOrder withRecipes(List<Id<Recipe>> recipeIds) {
+    public UpcomingOrder withUpdatedRecipes(List<Id<Recipe>> recipeIds) {
         return new UpcomingOrder(id, recipeIds, deliveryDate);
     }
 
-    public DeliveredOrder markAsDelivered() {
+    public DeliveredOrder markAsDelivered(Clock clock) {
         if (!id.isAssigned()) {
             throw new IllegalStateException("Cannot mark unassigned order as delivered");
+        }
+        LocalDate currentDate = LocalDate.now(clock);
+        if (currentDate.isBefore(deliveryDate)) {
+            throw new ValidationException("Cannot deliver order before delivery date");
         }
         return new DeliveredOrder(
             Id.of(id.value()),

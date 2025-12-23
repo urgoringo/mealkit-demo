@@ -1,7 +1,6 @@
 package com.urgoringo.mealkit.scaffolding;
 
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 import org.springframework.http.ResponseEntity;
 
 @NullMarked
@@ -39,7 +38,7 @@ public sealed interface ApiResponse<T> {
     }
 
     static <T> ApiResponse<T> from(ResponseEntity<T> response) {
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+        if (response.getStatusCode().is2xxSuccessful()) {
             return new Success<>(response.getBody());
         } else {
             String errorBody = response.getBody() != null ? response.getBody().toString() : "";

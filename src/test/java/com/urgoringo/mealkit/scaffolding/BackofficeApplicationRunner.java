@@ -18,6 +18,7 @@ public class BackofficeApplicationRunner {
     private final TokenService tokenService;
     private final PasswordHasher passwordHasher;
     private final BackofficeUsers backofficeUsers;
+
     private RestClient restClient;
 
     public void start(int port) {
@@ -31,14 +32,20 @@ public class BackofficeApplicationRunner {
     }
 
     public void markOrderDelivered(Long orderId) {
+        tryMarkOrderDelivered(orderId).expectSuccess();
+    }
+
+    public ApiResponse<Void> tryMarkOrderDelivered(Long orderId) {
         var backofficeUser = getOrCreateBackofficeUser();
         String backofficeToken = tokenService.generateBackofficeToken(backofficeUser);
         
-        restClient.post()
+        var response = restClient.post()
             .uri("/orders/{orderId}/delivered", orderId)
             .header("Authorization", "Bearer " + backofficeToken)
             .retrieve()
             .toBodilessEntity();
+        
+        return ApiResponse.from(response);
     }
 
     private BackofficeUser getOrCreateBackofficeUser() {

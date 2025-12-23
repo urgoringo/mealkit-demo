@@ -24,7 +24,7 @@ public class TestClock extends Clock {
         return instant;
     }
 
-    public void freezeTime(LocalDate date) {
+    public void frozenOn(LocalDate date) {
         this.instant = date.atStartOfDay(zoneId).toInstant();
     }
 

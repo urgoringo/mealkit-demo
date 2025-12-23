@@ -11,6 +11,9 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDate;
+
 @Slf4j
 @NullMarked
 @Service
@@ -18,12 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class MarkOrderDeliveredService {
 
     private final Subscriptions subscriptions;
+    private final Clock clock;
 
     @Transactional
     public void execute(Id<BackofficeUser> backofficeUserId, Id<UpcomingOrder> orderId) {
         log.info("Backoffice user {} marking order {} as delivered", backofficeUserId.value(), orderId.value());
         UpcomingOrder order = subscriptions.findOrderById(orderId);
-        DeliveredOrder deliveredOrder = order.markAsDelivered();
+        DeliveredOrder deliveredOrder = order.markAsDelivered(clock);
         subscriptions.save(deliveredOrder);
     }
 }

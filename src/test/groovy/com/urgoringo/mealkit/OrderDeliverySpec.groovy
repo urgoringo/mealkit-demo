@@ -1,11 +1,18 @@
 package com.urgoringo.mealkit
 
+import java.time.Duration
+
+import static java.time.Duration.*
+
 class OrderDeliverySpec extends ApplicationSpecification {
     def "when upcoming order is delivered it should be removed from subscription"() {
         given: "a subscription with an upcoming order"
             def customer = app.havingCustomer()
             def subscriptionResponse = customer.havingSubscription().get()
             def nextOrder = subscriptionResponse.upcomingOrders().first
+
+        and: "time is set to the delivery date"
+            app.freezeTimeOn(nextOrder.deliveryDate())
 
         when: "next upcoming order is delivered"
             app.backoffice().markOrderDelivered(nextOrder.id())
@@ -21,10 +28,29 @@ class OrderDeliverySpec extends ApplicationSpecification {
             def subscriptionResponse = customer.havingSubscription().get()
             def nextOrder = subscriptionResponse.upcomingOrders().first
 
+        and: "time is set to the delivery date"
+            app.freezeTimeOn(nextOrder.deliveryDate())
+
         when: "customer tries to deliver their order"
             def response = app.tryDeliverOrderAsCustomer(nextOrder.id(), customer.authToken)
 
         then: "request is forbidden"
             response.expectError() == 403
+    }
+
+    def "cannot deliver order before delivery date"() {
+        given: "a subscription with an upcoming order"
+            def customer = app.havingCustomer()
+            def subscriptionResponse = customer.havingSubscription().get()
+            def nextOrder = subscriptionResponse.upcomingOrders().first
+
+        and: "current date is before the delivery date"
+            app.freezeTimeOn(nextOrder.deliveryDate() - ofDays(1))
+
+        when: "backoffice tries to mark the order as delivered"
+            def response = app.backoffice().tryMarkOrderDelivered(nextOrder.id())
+
+        then: "system returns validation error"
+            response.expectError() == 422
     }
 }

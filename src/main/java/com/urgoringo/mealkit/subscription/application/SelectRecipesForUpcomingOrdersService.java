@@ -40,12 +40,12 @@ public class SelectRecipesForUpcomingOrdersService {
         LocalDate thresholdDate = currentDate.plusDays(PRESELECTION_THRESHOLD_DAYS.toDays());
         List<Id<Subscription>> subscriptionIds = subscriptions.findSubscriptionsWithPendingOrdersByDeliveryDate(thresholdDate);
         log.info("Found {} subscriptions requiring recipe preselection", subscriptionIds.size());
-        
+
         for (Id<Subscription> subscriptionId : subscriptionIds) {
             try {
                 transactionTemplate.executeWithoutResult(_ -> {
                     Subscription subscription = subscriptions.findById(subscriptionId)
-                            .orElseThrow(() -> new IllegalArgumentException("Subscription not found: " + subscriptionId.value()));
+                        .orElseThrow(() -> new IllegalArgumentException("Subscription not found: " + subscriptionId.value()));
                     processSubscription(subscription);
                 });
             } catch (Exception e) {
@@ -63,9 +63,9 @@ public class SelectRecipesForUpcomingOrdersService {
 
         Collections.shuffle(allRecipes);
         List<Id<Recipe>> selectedRecipeIds = allRecipes.stream()
-                .limit(3)
-                .map(Recipe::id)
-                .toList();
+            .limit(3)
+            .map(Recipe::id)
+            .toList();
 
         LocalDate currentDate = LocalDate.now(clock);
         Subscription updatedSubscription = subscription.withNewUpcomingOrder(currentDate, selectedRecipeIds);

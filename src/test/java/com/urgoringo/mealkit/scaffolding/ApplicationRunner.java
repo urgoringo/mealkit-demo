@@ -190,7 +190,7 @@ public class ApplicationRunner {
     }
 
     public ApplicationRunner freezeTimeOn(LocalDate date) {
-        testClock.freezeTime(date);
+        testClock.frozenOn(date);
         return this;
     }
 

@@ -1,10 +1,14 @@
 package com.urgoringo.mealkit.scaffolding;
 
+import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.Unit;
+import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.With;
 import net.datafaker.Faker;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 
 import static java.time.DayOfWeek.WEDNESDAY;
@@ -43,6 +47,14 @@ public class TestFactory {
         return new IngredientBuilder("ingredient", "1", Unit.PIECE);
     }
 
+    public static UpcomingOrderBuilder anUpcomingOrder() {
+        return new UpcomingOrderBuilder(
+            Id.of(1L),
+            List.of(Id.of(1L), Id.of(2L), Id.of(3L)),
+            LocalDate.now().plusDays(7)
+        );
+    }
+
 
    @With
     public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredients) {
@@ -55,6 +67,16 @@ public class TestFactory {
     @With
     public record SubscriptionBuilder(List<Long> recipeIds, String deliveryAddress,
                                       DayOfWeek deliveryDay) {
+    }
+
+    @With
+    public record UpcomingOrderBuilder(Id<UpcomingOrder> id,
+                                       List<Id<Recipe>> recipeIds,
+                                       LocalDate deliveryDate) {
+        
+        public UpcomingOrder build() {
+            return new UpcomingOrder(id, recipeIds, deliveryDate);
+        }
     }
 
 }
