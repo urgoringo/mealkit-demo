@@ -57,9 +57,6 @@ public class SelectRecipesForUpcomingOrdersService {
     }
 
     private void processSubscription(Subscription subscription) {
-        List<Id<UpcomingOrder>> ordersToLock = subscription.ordersToLock(clock);
-        ordersToLock.forEach(subscriptions::lockOrder);
-
         List<Recipe> allRecipes = recipesCatalog.findAll();
         Collections.shuffle(allRecipes);
         List<Id<Recipe>> selectedRecipeIds = allRecipes.stream()
@@ -67,11 +64,12 @@ public class SelectRecipesForUpcomingOrdersService {
             .map(Recipe::id)
             .toList();
 
-        LocalDate currentDate = LocalDate.now(clock);
-        Subscription updatedSubscription = subscription.withNewUpcomingOrder(currentDate, selectedRecipeIds);
-
-        if (updatedSubscription != subscription) {
-            subscriptions.save(updatedSubscription);
+        Subscription.SubscriptionUpdate update = subscription.withLockedOrdersAndNewUpcomingOrder(clock, selectedRecipeIds);
+        
+        update.ordersToLock().forEach(subscriptions::lockOrder);
+        
+        if (update.subscription() != subscription) {
+            subscriptions.save(update.subscription());
         }
     }
 }

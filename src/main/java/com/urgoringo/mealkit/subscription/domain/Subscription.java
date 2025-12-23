@@ -99,4 +99,22 @@ public record Subscription(
                 .toList();
     }
 
+    public SubscriptionUpdate withLockedOrdersAndNewUpcomingOrder(Clock clock, List<Id<Recipe>> recipeIds) {
+        List<Id<UpcomingOrder>> ordersToLock = ordersToLock(clock);
+        
+        LocalDate currentDate = LocalDate.now(clock);
+        Subscription updatedSubscription = withNewUpcomingOrder(currentDate, recipeIds);
+        
+        return new SubscriptionUpdate(updatedSubscription, ordersToLock);
+    }
+
+    public record SubscriptionUpdate(
+        Subscription subscription,
+        List<Id<UpcomingOrder>> ordersToLock
+    ) {
+        public boolean hasChanges() {
+            return !ordersToLock.isEmpty();
+        }
+    }
+
 }
