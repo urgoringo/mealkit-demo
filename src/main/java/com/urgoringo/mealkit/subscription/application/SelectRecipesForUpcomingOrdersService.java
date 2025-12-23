@@ -5,6 +5,7 @@ import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
+import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
@@ -56,6 +57,9 @@ public class SelectRecipesForUpcomingOrdersService {
     }
 
     private void processSubscription(Subscription subscription) {
+        List<Id<UpcomingOrder>> ordersToLock = subscription.ordersToLock(clock);
+        ordersToLock.forEach(subscriptions::lockOrder);
+
         List<Recipe> allRecipes = recipesCatalog.findAll();
         Collections.shuffle(allRecipes);
         List<Id<Recipe>> selectedRecipeIds = allRecipes.stream()
@@ -64,7 +68,6 @@ public class SelectRecipesForUpcomingOrdersService {
             .toList();
 
         LocalDate currentDate = LocalDate.now(clock);
-        //TODO pass clock
         Subscription updatedSubscription = subscription.withNewUpcomingOrder(currentDate, selectedRecipeIds);
 
         if (updatedSubscription != subscription) {

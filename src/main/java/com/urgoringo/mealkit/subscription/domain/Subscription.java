@@ -80,4 +80,13 @@ public record Subscription(
         return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
     }
 
+    public List<Id<UpcomingOrder>> ordersToLock(Clock clock) {
+        LocalDate currentDate = LocalDate.now(clock);
+        return upcomingOrders.stream()
+                .filter(order -> order.status(clock) == OrderStatus.LOCKED)
+                .filter(order -> order.id().isAssigned())
+                .map(UpcomingOrder::id)
+                .toList();
+    }
+
 }
