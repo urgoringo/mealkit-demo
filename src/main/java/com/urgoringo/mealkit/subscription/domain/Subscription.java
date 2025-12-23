@@ -2,6 +2,7 @@ package com.urgoringo.mealkit.subscription.domain;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.domain.ValidationException;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import org.jspecify.annotations.NullMarked;
 
@@ -72,7 +73,16 @@ public record Subscription(
         return new Subscription(id, customerId, List.of(updatedOrder), deliveryAddress, deliveryDay);
     }
 
-    public Subscription withUpdatedRecipes(Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds) {
+    public Subscription withUpdatedRecipes(Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds, Clock clock) {
+        UpcomingOrder orderToUpdate = upcomingOrders.stream()
+                .filter(order -> order.id().equals(orderId))
+                .findFirst()
+                .orElseThrow(() -> new ValidationException("Order not found"));
+        
+        if (orderToUpdate.status(clock) == OrderStatus.LOCKED) {
+            throw new ValidationException("Cannot update locked order");
+        }
+        
         List<UpcomingOrder> updatedOrders = upcomingOrders.stream()
                 .map(order -> order.id().equals(orderId) ? order.withUpdatedRecipes(recipeIds) : order)
                 .toList();
