@@ -119,7 +119,12 @@ public class Subscriptions {
             }
             Long orderId = orderRecord.getId();
 
-            return new PendingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
+            return switch (order) {
+                case PendingOrder pendingOrder -> 
+                    new PendingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
+                case LockedOrder lockedOrder -> 
+                    new LockedOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
+            };
         }
     }
 
@@ -249,6 +254,33 @@ public class Subscriptions {
             .orElseThrow(() -> new IllegalArgumentException("Locked order not found: " + orderId.value()));
     }
 
+    public UpcomingOrder findUpcomingOrderById(Id<Order> orderId) {
+        return dsl.selectFrom(ORDERS)
+            .where(ORDERS.ID.eq(orderId.value())
+                .and(ORDERS.STATUS.in(OrderStatus.PENDING.name(), OrderStatus.LOCKED.name())))
+            .fetchOptional()
+            .map(orderRecord -> {
+                Long[] recipeIdsArray = orderRecord.getRecipeIds();
+                List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
+                    .map(Id::<Recipe>of)
+                    .toList();
+                return switch (OrderStatus.valueOf(orderRecord.getStatus())) {
+                    case PENDING -> (UpcomingOrder) new PendingOrder(
+                        Id.of(orderRecord.getId()),
+                        recipeIds,
+                        orderRecord.getDeliveryDate()
+                    );
+                    case LOCKED -> (UpcomingOrder) new LockedOrder(
+                        Id.of(orderRecord.getId()),
+                        recipeIds,
+                        orderRecord.getDeliveryDate()
+                    );
+                    case DELIVERED -> throw new IllegalArgumentException("Cannot find upcoming order with DELIVERED status");
+                };
+            })
+            .orElseThrow(() -> new IllegalArgumentException("Upcoming order not found: " + orderId.value()));
+    }
+
     @Transactional
     public void save(PendingOrder order) {
         if (!order.id().isAssigned()) {
@@ -262,6 +294,24 @@ public class Subscriptions {
         dsl.update(ORDERS)
             .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
             .set(ORDERS.STATUS, OrderStatus.PENDING.name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .where(ORDERS.ID.eq(order.id().value()))
+            .execute();
+    }
+
+    @Transactional
+    public void save(LockedOrder order) {
+        if (!order.id().isAssigned()) {
+            throw new IllegalArgumentException("Cannot save order without an assigned ID");
+        }
+
+        Long[] recipeIdsArray = order.recipeIds().stream()
+            .map(Id::value)
+            .toArray(Long[]::new);
+
+        dsl.update(ORDERS)
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, OrderStatus.LOCKED.name())
             .set(ORDERS.RECIPE_IDS, recipeIdsArray)
             .where(ORDERS.ID.eq(order.id().value()))
             .execute();

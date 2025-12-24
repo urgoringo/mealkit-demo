@@ -2,6 +2,7 @@ package com.urgoringo.mealkit.subscription.domain;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.domain.ValidationException;
 import com.urgoringo.mealkit.infra.Lists;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import org.jspecify.annotations.NullMarked;
@@ -44,7 +45,7 @@ public record Subscription(
                 if (order.id().equals(orderId)) {
                     return switch (order) {
                         case PendingOrder pendingOrder -> pendingOrder.withUpdatedRecipes(recipeIds);
-                        case LockedOrder lockedOrder -> lockedOrder;
+                        case LockedOrder lockedOrder -> throw new ValidationException("Cannot update locked order");
                     };
                 }
                 return order;
@@ -71,12 +72,18 @@ public record Subscription(
     }
 
     public Subscription withLockedUpcomingOrder(Clock clock) {
+        if (upcomingOrders.isEmpty()) {
+            return this;
+        }
+        
         UpcomingOrder nextOrder = upcomingOrders.getFirst();
 
         return switch (nextOrder) {
             case PendingOrder pendingOrder -> {
                 if (pendingOrder.shouldBeLocked(clock)) {
-                    List<UpcomingOrder> updatedOrders = Lists.of(upcomingOrders, pendingOrder.locked());
+                    List<UpcomingOrder> updatedOrders = upcomingOrders.stream()
+                        .map(order -> order.equals(pendingOrder) ? pendingOrder.locked() : order)
+                        .toList();
                     yield new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
                 }
                 yield this;
