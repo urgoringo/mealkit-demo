@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.scaffolding;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.Unit;
+import com.urgoringo.mealkit.subscription.domain.OrderStatus;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.With;
 import net.datafaker.Faker;
@@ -51,7 +52,8 @@ public class TestFactory {
         return new UpcomingOrderBuilder(
             Id.of(1L),
             List.of(Id.of(1L), Id.of(2L), Id.of(3L)),
-            LocalDate.now().plusDays(7)
+            LocalDate.now().plusDays(7),
+            OrderStatus.PENDING
         );
     }
 
@@ -72,10 +74,11 @@ public class TestFactory {
     @With
     public record UpcomingOrderBuilder(Id<UpcomingOrder> id,
                                        List<Id<Recipe>> recipeIds,
-                                       LocalDate deliveryDate) {
+                                       LocalDate deliveryDate,
+                                       OrderStatus status) {
         
         public UpcomingOrder build() {
-            return new UpcomingOrder(id, recipeIds, deliveryDate);
+            return new UpcomingOrder(id, recipeIds, deliveryDate, status);
         }
     }
 

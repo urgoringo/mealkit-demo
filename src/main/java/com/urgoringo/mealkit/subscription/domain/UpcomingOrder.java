@@ -15,7 +15,8 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public record UpcomingOrder(
     Id<UpcomingOrder> id,
     List<Id<Recipe>> recipeIds,
-    LocalDate deliveryDate
+    LocalDate deliveryDate,
+    OrderStatus status
 ) {
     private static final int MINIMUM_RECIPE_COUNT = 3;
     private static final int DAYS_BEFORE_DELIVERY_TO_LOCK = 3;
@@ -27,14 +28,18 @@ public record UpcomingOrder(
     }
 
     public static UpcomingOrder placed(List<Id<Recipe>> recipeIds, LocalDate deliveryDate) {
-        return new UpcomingOrder(Id.unassigned(), recipeIds, deliveryDate);
+        return new UpcomingOrder(Id.unassigned(), recipeIds, deliveryDate, OrderStatus.PENDING);
     }
 
     public UpcomingOrder withUpdatedRecipes(List<Id<Recipe>> recipeIds) {
-//        if (status == OrderStatus.LOCKED) {
-//            throw new ValidationException("Cannot update locked order");
-//        }
-        return new UpcomingOrder(id, recipeIds, deliveryDate);
+        if (status == OrderStatus.LOCKED) {
+            throw new ValidationException("Cannot update locked order");
+        }
+        return new UpcomingOrder(id, recipeIds, deliveryDate, status);
+    }
+
+    public UpcomingOrder withLockedStatus() {
+        return new UpcomingOrder(id, recipeIds, deliveryDate, OrderStatus.LOCKED);
     }
 
     public DeliveredOrder markAsDelivered(Clock clock) {
@@ -52,7 +57,7 @@ public record UpcomingOrder(
         );
     }
 
-    public OrderStatus status(Clock clock) {
+    public OrderStatus statusBasedOnDeliveryDate(Clock clock) {
         LocalDate currentDate = LocalDate.now(clock);
         long daysUntilDelivery = currentDate.until(deliveryDate, DAYS);
         
@@ -61,6 +66,10 @@ public record UpcomingOrder(
         }
         
         return OrderStatus.PENDING;
+    }
+
+    public boolean shouldBeLocked(Clock clock) {
+        return status == OrderStatus.PENDING && statusBasedOnDeliveryDate(clock) == OrderStatus.LOCKED;
     }
 
 }

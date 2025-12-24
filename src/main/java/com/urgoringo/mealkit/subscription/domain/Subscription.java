@@ -79,7 +79,7 @@ public record Subscription(
                 .findFirst()
                 .orElseThrow(() -> new ValidationException("Order not found"));
         
-        if (orderToUpdate.status(clock) == OrderStatus.LOCKED) {
+        if (orderToUpdate.status() == OrderStatus.LOCKED) {
             throw new ValidationException("Cannot update locked order");
         }
         
@@ -91,9 +91,8 @@ public record Subscription(
     }
 
     public List<Id<UpcomingOrder>> ordersToLock(Clock clock) {
-        LocalDate currentDate = LocalDate.now(clock);
         return upcomingOrders.stream()
-                .filter(order -> order.status(clock) == OrderStatus.LOCKED)
+                .filter(order -> order.shouldBeLocked(clock))
                 .filter(order -> order.id().isAssigned())
                 .map(UpcomingOrder::id)
                 .toList();

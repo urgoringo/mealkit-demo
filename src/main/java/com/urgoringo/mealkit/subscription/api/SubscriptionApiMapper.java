@@ -39,7 +39,7 @@ public class SubscriptionApiMapper {
                 order.id().value(),
                 mapRecipeIdsToLong(order.recipeIds()),
                 order.deliveryDate(),
-                order.status(clock)
+                order.statusBasedOnDeliveryDate(clock)
         );
     }
 

@@ -100,7 +100,7 @@ public class Subscriptions {
             Long orderId = order.id().value();
             dsl.update(ORDERS)
                 .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                .set(ORDERS.STATUS, OrderStatus.PENDING.name())
+                .set(ORDERS.STATUS, order.status().name())
                 .set(ORDERS.RECIPE_IDS, recipeIdsArray)
                 .where(ORDERS.ID.eq(orderId))
                 .execute();
@@ -110,7 +110,7 @@ public class Subscriptions {
             var orderRecord = dsl.insertInto(ORDERS)
                 .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
                 .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                .set(ORDERS.STATUS, OrderStatus.PENDING.name())
+                .set(ORDERS.STATUS, order.status().name())
                 .set(ORDERS.RECIPE_IDS, recipeIdsArray)
                 .returning(ORDERS.ID)
                 .fetchOne();
@@ -119,7 +119,7 @@ public class Subscriptions {
             }
             Long orderId = orderRecord.getId();
 
-            return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
+            return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate(), order.status());
         }
     }
 
@@ -190,7 +190,8 @@ public class Subscriptions {
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
-                return new UpcomingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
+                OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
+                return new UpcomingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate(), status);
             });
     }
 
@@ -232,10 +233,12 @@ public class Subscriptions {
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
+                OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
                 return new UpcomingOrder(
                     Id.of(orderRecord.getId()),
                     recipeIds,
-                    orderRecord.getDeliveryDate()
+                    orderRecord.getDeliveryDate(),
+                    status
                 );
             })
             .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId.value()));
