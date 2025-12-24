@@ -6,12 +6,11 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
-import static com.urgoringo.mealkit.scaffolding.TestFactory.anUpcomingOrder;
+import static com.urgoringo.mealkit.scaffolding.TestFactory.anPendingOrder;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 
-class UpcomingOrderTest {
+class LockedOrderTest {
 
     private final TestClock clock = new TestClock();
 
@@ -19,9 +18,10 @@ class UpcomingOrderTest {
     void deliveryDateCanBeToday() {
         LocalDate today = LocalDate.of(2025, 12, 23);
         clock.frozenOn(today);
-        UpcomingOrder order = anUpcomingOrder()
+        LockedOrder order = anPendingOrder()
             .withDeliveryDate(today)
-            .build();
+            .build()
+            .locked();
 
         order.markAsDelivered(clock);
     }
@@ -31,9 +31,10 @@ class UpcomingOrderTest {
         LocalDate today = LocalDate.of(2025, 12, 23);
         clock.frozenOn(today);
         LocalDate pastDate = LocalDate.of(2025, 12, 20);
-        UpcomingOrder order = anUpcomingOrder()
+        LockedOrder order = anPendingOrder()
             .withDeliveryDate(pastDate)
-            .build();
+            .build()
+            .locked();
 
         order.markAsDelivered(clock);
     }
@@ -43,9 +44,10 @@ class UpcomingOrderTest {
         LocalDate today = LocalDate.of(2025, 12, 23);
         clock.frozenOn(today);
         LocalDate futureDate = LocalDate.of(2025, 12, 25);
-        UpcomingOrder order = anUpcomingOrder()
+        LockedOrder order = anPendingOrder()
             .withDeliveryDate(futureDate)
-            .build();
+            .build()
+            .locked();
 
         ValidationException exception = assertThrows(
             ValidationException.class,

@@ -39,8 +39,8 @@ public class Subscriptions {
                 .where(SUBSCRIPTIONS.ID.eq(subscriptionId))
                 .execute();
 
-            List<Id<UpcomingOrder>> existingOrderIds = subscription.upcomingOrders().stream()
-                .map(UpcomingOrder::id)
+            List<Id<Order>> existingOrderIds = subscription.upcomingOrders().stream()
+                .map(Order::id)
                 .filter(Id::isAssigned)
                 .toList();
 
@@ -119,7 +119,7 @@ public class Subscriptions {
             }
             Long orderId = orderRecord.getId();
 
-            return new UpcomingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate(), order.status());
+            return new PendingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
         }
     }
 
@@ -190,13 +190,19 @@ public class Subscriptions {
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
-                OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
-                return new UpcomingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate(), status);
+                return switch (OrderStatus.valueOf(orderRecord.getStatus())) {
+                    case PENDING ->
+                        new PendingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
+                    case LOCKED ->
+                        new LockedOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
+                    case DELIVERED ->
+                        throw new IllegalArgumentException("Invalid order status: " + orderRecord.getStatus());
+                };
             });
     }
 
     @Transactional
-    public void markOrderAsDelivered(Id<UpcomingOrder> orderId) {
+    public void markOrderAsDelivered(Id<PendingOrder> orderId) {
         dsl.update(ORDERS)
             .set(ORDERS.STATUS, OrderStatus.DELIVERED.name())
             .where(ORDERS.ID.eq(orderId.value()))
@@ -224,28 +230,27 @@ public class Subscriptions {
             });
     }
 
-    public UpcomingOrder findOrderById(Id<UpcomingOrder> orderId) {
+    public LockedOrder findLockedOrderById(Id<Order> orderId) {
         return dsl.selectFrom(ORDERS)
-            .where(ORDERS.ID.eq(orderId.value()))
+            .where(ORDERS.ID.eq(orderId.value())
+                .and(ORDERS.STATUS.eq(OrderStatus.LOCKED.name())))
             .fetchOptional()
             .map(orderRecord -> {
                 Long[] recipeIdsArray = orderRecord.getRecipeIds();
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
-                OrderStatus status = OrderStatus.valueOf(orderRecord.getStatus());
-                return new UpcomingOrder(
+                return new LockedOrder(
                     Id.of(orderRecord.getId()),
                     recipeIds,
-                    orderRecord.getDeliveryDate(),
-                    status
+                    orderRecord.getDeliveryDate()
                 );
             })
-            .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId.value()));
+            .orElseThrow(() -> new IllegalArgumentException("Locked order not found: " + orderId.value()));
     }
 
     @Transactional
-    public void save(UpcomingOrder order) {
+    public void save(PendingOrder order) {
         if (!order.id().isAssigned()) {
             throw new IllegalArgumentException("Cannot save order without an assigned ID");
         }
@@ -281,7 +286,7 @@ public class Subscriptions {
     }
 
     @Transactional
-    public void lockOrder(Id<UpcomingOrder> orderId) {
+    public void lockOrder(Id<PendingOrder> orderId) {
         dsl.update(ORDERS)
             .set(ORDERS.STATUS, OrderStatus.LOCKED.name())
             .where(ORDERS.ID.eq(orderId.value()))

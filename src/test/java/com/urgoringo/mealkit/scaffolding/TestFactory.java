@@ -3,7 +3,9 @@ package com.urgoringo.mealkit.scaffolding;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.Unit;
+import com.urgoringo.mealkit.subscription.domain.Order;
 import com.urgoringo.mealkit.subscription.domain.OrderStatus;
+import com.urgoringo.mealkit.subscription.domain.PendingOrder;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.With;
 import net.datafaker.Faker;
@@ -48,15 +50,13 @@ public class TestFactory {
         return new IngredientBuilder("ingredient", "1", Unit.PIECE);
     }
 
-    public static UpcomingOrderBuilder anUpcomingOrder() {
-        return new UpcomingOrderBuilder(
+    public static PendingOrderBuilder anPendingOrder() {
+        return new PendingOrderBuilder(
             Id.of(1L),
             List.of(Id.of(1L), Id.of(2L), Id.of(3L)),
-            LocalDate.now().plusDays(7),
-            OrderStatus.PENDING
+            LocalDate.now().plusDays(7)
         );
     }
-
 
    @With
     public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredients) {
@@ -72,13 +72,12 @@ public class TestFactory {
     }
 
     @With
-    public record UpcomingOrderBuilder(Id<UpcomingOrder> id,
-                                       List<Id<Recipe>> recipeIds,
-                                       LocalDate deliveryDate,
-                                       OrderStatus status) {
+    public record PendingOrderBuilder(Id<Order> id,
+                                      List<Id<Recipe>> recipeIds,
+                                      LocalDate deliveryDate) {
         
-        public UpcomingOrder build() {
-            return new UpcomingOrder(id, recipeIds, deliveryDate, status);
+        public PendingOrder build() {
+            return new PendingOrder(id, recipeIds, deliveryDate);
         }
     }
 

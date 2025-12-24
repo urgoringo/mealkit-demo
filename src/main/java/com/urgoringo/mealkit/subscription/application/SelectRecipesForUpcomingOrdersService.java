@@ -5,7 +5,6 @@ import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
-import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
@@ -64,12 +63,10 @@ public class SelectRecipesForUpcomingOrdersService {
             .map(Recipe::id)
             .toList();
 
-        Subscription.SubscriptionUpdate update = subscription.withLockedOrdersAndNewUpcomingOrder(clock, selectedRecipeIds);
-        
-        update.ordersToLock().forEach(subscriptions::lockOrder);
-        
-        if (update.subscription() != subscription) {
-            subscriptions.save(update.subscription());
-        }
+        Subscription updatedSubscription = subscription
+            .withNewUpcomingOrder(selectedRecipeIds)
+            .withLockedUpcomingOrder(clock);
+
+        subscriptions.save(updatedSubscription);
     }
 }

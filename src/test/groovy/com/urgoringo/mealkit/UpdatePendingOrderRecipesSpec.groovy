@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 import static java.time.DayOfWeek.WEDNESDAY
 
-class UpdateUpcomingOrderRecipesSpec extends ApplicationSpecification {
+class UpdatePendingOrderRecipesSpec extends ApplicationSpecification {
 
     def "update recipes for upcoming order"() {
         given: "a subscription exists with 3 recipes for upcoming order"
