@@ -7,7 +7,6 @@ import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeIngredient
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeResponse;
 import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
-import com.urgoringo.mealkit.subscription.application.ProcessSubscriptionOrdersService;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +44,6 @@ public class ApplicationRunner {
     private final Customers customers;
     private final Subscriptions subscriptions;
     private final TestClock testClock;
-    private final ProcessSubscriptionOrdersService processSubscriptionOrdersService;
     private final BackofficeApplicationRunner backofficeRunner;
     @Nullable
     @Getter
@@ -149,10 +147,6 @@ public class ApplicationRunner {
             .retrieve()
             .toEntity(SubscriptionResponse.class);
         return ApiResponse.from(response);
-    }
-
-    public void processSubscriptionOrders() {
-        processSubscriptionOrdersService.execute();
     }
 
     public ApiResponse<@NotNull SignupResponse> signupCustomer() {

@@ -45,7 +45,7 @@ dependencies {
 	implementation("org.springframework.security:spring-security-oauth2-jose")
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	implementation("org.flywaydb:flyway-database-postgresql")
-	implementation("com.github.kagkarlsson:db-scheduler-spring-boot-starter:15.1.0")
+	implementation("com.github.kagkarlsson:db-scheduler-spring-boot-starter:16.6.0")
 	implementation("org.jspecify:jspecify:1.0.0")
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 	compileOnly("org.projectlombok:lombok")

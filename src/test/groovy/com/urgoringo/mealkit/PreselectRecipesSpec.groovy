@@ -18,7 +18,7 @@ class PreselectRecipesSpec extends ApplicationSpecification {
 
         when: "current day becomes 2025.11.21"
             def currentDate = LocalDate.parse("2025-11-21")
-            app.freezeTimeOn(currentDate).processSubscriptionOrders()
+            app.freezeTimeOn(currentDate)
             def subscription = app.getCustomerSubscription(authToken).expectSuccess()
 
         then: "system adds new upcoming order with delivery date 2025.12.01"

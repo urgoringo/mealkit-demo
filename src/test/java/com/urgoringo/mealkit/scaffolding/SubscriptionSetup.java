@@ -40,7 +40,6 @@ public class SubscriptionSetup {
         var subscription = app.getCustomerSubscription(authToken).expectSuccess();
         var deliveryDate = subscription.upcomingOrders().getFirst().deliveryDate();
         app.freezeTimeOn(deliveryDate.minusDays(3));
-        app.processSubscriptionOrders();
         app.freezeTimeOn(deliveryDate);
         
         var updatedSubscription = app.getCustomerSubscription(authToken).expectSuccess();

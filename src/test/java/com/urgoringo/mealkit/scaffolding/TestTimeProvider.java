@@ -1,16 +1,18 @@
 package com.urgoringo.mealkit.scaffolding;
 
-import com.github.kagkarlsson.scheduler.Clock;
 import com.github.kagkarlsson.scheduler.Scheduler;
+import com.urgoringo.mealkit.subscription.application.ProcessSubscriptionOrdersService;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 
-public class TestTimeProvider implements Clock {
+public class TestTimeProvider {
     
     private final TestClock testClock;
     @Nullable
     private Scheduler scheduler;
+    @Nullable
+    private ProcessSubscriptionOrdersService processSubscriptionOrdersService;
 
     public TestTimeProvider(TestClock testClock, @Nullable Scheduler scheduler) {
         this.testClock = testClock;
@@ -21,14 +23,18 @@ public class TestTimeProvider implements Clock {
         this.scheduler = scheduler;
     }
 
-    @Override
+    public void setProcessSubscriptionOrdersService(ProcessSubscriptionOrdersService service) {
+        this.processSubscriptionOrdersService = service;
+    }
+
     public Instant now() {
         return testClock.instant();
     }
 
     public void triggerSchedulerCheck() {
-        if (scheduler != null) {
-            scheduler.triggerCheckForDueExecutions();
+        // Directly execute the service logic instead of trying to trigger the scheduler
+        if (processSubscriptionOrdersService != null) {
+            processSubscriptionOrdersService.execute();
         }
     }
 }
