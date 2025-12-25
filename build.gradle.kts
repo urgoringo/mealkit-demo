@@ -36,12 +36,6 @@ repositories {
 	mavenCentral()
 }
 
-dependencyManagement {
-	imports {
-		mavenBom("org.springframework.modulith:spring-modulith-bom:1.3.3")
-	}
-}
-
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-jooq")
 	implementation("org.springframework.boot:spring-boot-starter-web")
@@ -51,7 +45,7 @@ dependencies {
 	implementation("org.springframework.security:spring-security-oauth2-jose")
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	implementation("org.flywaydb:flyway-database-postgresql")
-	implementation("org.springframework.modulith:spring-modulith-moments")
+	implementation("com.github.kagkarlsson:db-scheduler-spring-boot-starter:15.1.0")
 	implementation("org.jspecify:jspecify:1.0.0")
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 	compileOnly("org.projectlombok:lombok")

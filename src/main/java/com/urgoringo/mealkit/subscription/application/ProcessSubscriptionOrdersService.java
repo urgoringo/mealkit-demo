@@ -8,9 +8,7 @@ import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.modulith.moments.DayHasPassed;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
@@ -25,7 +23,7 @@ import static java.time.Duration.ofDays;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UpdateSubscriptionOrdersService {
+public class ProcessSubscriptionOrdersService {
 
     private final Subscriptions subscriptions;
     private final RecipesCatalog recipesCatalog;
@@ -34,10 +32,9 @@ public class UpdateSubscriptionOrdersService {
 
     private static final Duration PRESELECTION_THRESHOLD_DAYS = ofDays(3);
 
-    @TransactionalEventListener
-    public void on(DayHasPassed event) {
+    public void execute() {
         log.info("Starting scheduled job to process subscription orders");
-        LocalDate currentDate = event.getDate();
+        LocalDate currentDate = LocalDate.now(clock);
         LocalDate thresholdDate = currentDate.plusDays(PRESELECTION_THRESHOLD_DAYS.toDays());
         List<Id<Subscription>> subscriptionIds = subscriptions.findSubscriptionsWithPendingOrdersByDeliveryDate(thresholdDate);
         log.info("Found {} subscriptions requiring recipe preselection", subscriptionIds.size());
