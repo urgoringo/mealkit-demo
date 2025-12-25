@@ -33,4 +33,7 @@ public class TestClock extends Clock {
     }
 
 
+    public LocalDate date() {
+        return Instant.ofEpochSecond(instant.getEpochSecond()).atZone(zoneId).toLocalDate();
+    }
 }

@@ -1,6 +1,6 @@
 package com.urgoringo.mealkit.subscription.application;
 
-import com.urgoringo.mealkit.domain.*;
+import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
@@ -8,8 +8,9 @@ import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.modulith.moments.DayHasPassed;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
@@ -24,7 +25,7 @@ import static java.time.Duration.ofDays;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SelectRecipesForUpcomingOrdersService {
+public class UpdateSubscriptionOrdersService {
 
     private final Subscriptions subscriptions;
     private final RecipesCatalog recipesCatalog;
@@ -33,10 +34,10 @@ public class SelectRecipesForUpcomingOrdersService {
 
     private static final Duration PRESELECTION_THRESHOLD_DAYS = ofDays(3);
 
-    @Scheduled(cron = "0 0 2 * * *") // Daily at 2 AM UTC
-    public void execute() {
+    @TransactionalEventListener
+    public void on(DayHasPassed event) {
         log.info("Starting scheduled job to process subscription orders");
-        LocalDate currentDate = LocalDate.now(clock);
+        LocalDate currentDate = event.getDate();
         LocalDate thresholdDate = currentDate.plusDays(PRESELECTION_THRESHOLD_DAYS.toDays());
         List<Id<Subscription>> subscriptionIds = subscriptions.findSubscriptionsWithPendingOrdersByDeliveryDate(thresholdDate);
         log.info("Found {} subscriptions requiring recipe preselection", subscriptionIds.size());

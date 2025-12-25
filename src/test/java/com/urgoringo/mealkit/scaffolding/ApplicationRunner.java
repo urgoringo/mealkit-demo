@@ -7,7 +7,7 @@ import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeIngredient
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeResponse;
 import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
-import com.urgoringo.mealkit.subscription.application.SelectRecipesForUpcomingOrdersService;
+import com.urgoringo.mealkit.subscription.application.UpdateSubscriptionOrdersService;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.modulith.moments.DayHasPassed;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -45,7 +46,7 @@ public class ApplicationRunner {
     private final Customers customers;
     private final Subscriptions subscriptions;
     private final TestClock testClock;
-    private final SelectRecipesForUpcomingOrdersService selectRecipesForUpcomingOrdersService;
+    private final UpdateSubscriptionOrdersService updateSubscriptionOrdersService;
     private final BackofficeApplicationRunner backofficeRunner;
     @Nullable
     @Getter
@@ -152,7 +153,7 @@ public class ApplicationRunner {
     }
 
     public void processSubscriptionOrders() {
-        selectRecipesForUpcomingOrdersService.execute();
+        updateSubscriptionOrdersService.on(DayHasPassed.of(testClock.date()));
     }
 
     public ApiResponse<@NotNull SignupResponse> signupCustomer() {
