@@ -2,16 +2,13 @@ package com.urgoringo.mealkit.infra;
 
 import com.urgoringo.mealkit.domain.NotFound;
 import com.urgoringo.mealkit.domain.ValidationFailed;
+import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import static org.springframework.http.HttpMethod.*;
 import static org.springframework.http.HttpStatus.*;
 
 /**
@@ -39,7 +36,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NotFound.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(HttpRequest request, NotFound ex) {
+    public ResponseEntity<ErrorResponse> handleNotFoundException(HttpServletRequest request, NotFound ex) {
         String message = ex.getMessage();
         ErrorResponse error = new ErrorResponse(message);
 
@@ -49,8 +46,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(UNPROCESSABLE_CONTENT).body(error);
     }
 
-    private static boolean isQuery(HttpRequest request) {
-        return request.getMethod() == GET || request.getMethod() == HEAD;
+    private static boolean isQuery(HttpServletRequest request) {
+        String method = request.getMethod();
+        return "GET".equals(method) || "HEAD".equals(method);
     }
 
     /**

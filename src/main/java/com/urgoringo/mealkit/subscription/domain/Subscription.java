@@ -23,9 +23,6 @@ public record Subscription(
     DayOfWeek deliveryDay
 ) {
     public Subscription {
-        if (upcomingOrders.isEmpty()) {
-            throw new ValidationFailed("Subscription must have at least one upcoming order");
-        }
 //        upcomingOrders = new TreeSet<>(upcomingOrders, Comparator.comparing(UpcomingOrder::deliveryDate));
     }
 

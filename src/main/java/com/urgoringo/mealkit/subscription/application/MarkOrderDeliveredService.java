@@ -24,9 +24,18 @@ public class MarkOrderDeliveredService {
     public void execute(Id<BackofficeUser> backofficeUserId, Id<Order> orderId) {
         log.info("Backoffice user {} marking order {} as delivered", backofficeUserId.value(), orderId.value());
         
-        LockedOrder order = subscriptions.findLockedOrderById(orderId);
+        UpcomingOrder order = subscriptions.findUpcomingOrderById(orderId);
         
-        DeliveredOrder deliveredOrder = order.markAsDelivered(clock);
+        LockedOrder lockedOrder = switch (order) {
+            case PendingOrder pendingOrder -> {
+                LockedOrder locked = pendingOrder.locked();
+                subscriptions.save(locked);
+                yield locked;
+            }
+            case LockedOrder locked -> locked;
+        };
+        
+        DeliveredOrder deliveredOrder = lockedOrder.markAsDelivered(clock);
         subscriptions.update(deliveredOrder);
     }
 }
