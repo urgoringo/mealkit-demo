@@ -1,6 +1,6 @@
 package com.urgoringo.mealkit.subscription.domain;
 
-import com.urgoringo.mealkit.domain.ValidationException;
+import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.scaffolding.TestClock;
 import org.junit.jupiter.api.Test;
 
@@ -49,8 +49,8 @@ class LockedOrderTest {
             .build()
             .locked();
 
-        ValidationException exception = assertThrows(
-            ValidationException.class,
+        ValidationFailed exception = assertThrows(
+            ValidationFailed.class,
             () -> order.markAsDelivered(clock)
         );
         

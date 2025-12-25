@@ -2,8 +2,8 @@ package com.urgoringo.mealkit.subscription.domain;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
-import com.urgoringo.mealkit.domain.ValidationException;
-import com.urgoringo.mealkit.infra.Lists;
+import com.urgoringo.mealkit.domain.ValidationFailed;
+import com.urgoringo.mealkit.infra.OrderList;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import org.jspecify.annotations.NullMarked;
 
@@ -22,6 +22,13 @@ public record Subscription(
     String deliveryAddress,
     DayOfWeek deliveryDay
 ) {
+    public Subscription {
+        if (upcomingOrders.isEmpty()) {
+            throw new ValidationFailed("Subscription must have at least one upcoming order");
+        }
+//        upcomingOrders = new TreeSet<>(upcomingOrders, Comparator.comparing(UpcomingOrder::deliveryDate));
+    }
+
     public static Subscription signup(
         Id<Customer> customerId,
         List<Id<Recipe>> recipeIds,
@@ -45,7 +52,7 @@ public record Subscription(
                 if (order.id().equals(orderId)) {
                     return switch (order) {
                         case PendingOrder pendingOrder -> pendingOrder.withUpdatedRecipes(recipeIds);
-                        case LockedOrder lockedOrder -> throw new ValidationException("Cannot update locked order");
+                        case LockedOrder _ -> throw new ValidationFailed("Cannot update locked order");
                     };
                 }
                 return order;
@@ -67,7 +74,7 @@ public record Subscription(
         LocalDate nextDeliveryDate = nextUpcomingOrderDeliveryDate();
         PendingOrder newOrder = PendingOrder.placed(recipeIds, nextDeliveryDate);
 
-        var updatedOrders = Lists.of(upcomingOrders, newOrder);
+        var updatedOrders = OrderList.with(upcomingOrders, newOrder);
         return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
     }
 
@@ -88,7 +95,7 @@ public record Subscription(
                 }
                 yield this;
             }
-            case LockedOrder lockedOrder -> this;
+            case LockedOrder _ -> this;
         };
     }
 }

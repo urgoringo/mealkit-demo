@@ -2,7 +2,7 @@ package com.urgoringo.mealkit.customer.application.application;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.customer.domain.Customers;
-import com.urgoringo.mealkit.domain.ValidationException;
+import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.auth.PasswordHasher;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
@@ -24,7 +24,7 @@ public class SignupCustomerService {
     @Transactional
     public Customer execute(String email, String plainPassword) {
         if (customers.existsByEmail(email)) {
-            throw new ValidationException("Customer with email " + email + " already exists");
+            throw new ValidationFailed("Customer with email " + email + " already exists");
         }
 
         String hashedPassword = passwordHasher.hash(plainPassword);

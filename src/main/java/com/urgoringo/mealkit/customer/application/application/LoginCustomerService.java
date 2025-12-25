@@ -2,7 +2,7 @@ package com.urgoringo.mealkit.customer.application.application;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.customer.domain.Customers;
-import com.urgoringo.mealkit.domain.ValidationException;
+import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.auth.PasswordHasher;
 import com.urgoringo.mealkit.auth.TokenService;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +22,10 @@ public class LoginCustomerService {
     @Transactional(readOnly = true)
     public String execute(String email, String plainPassword) {
         Customer customer = customers.findByEmail(email)
-                .orElseThrow(() -> new ValidationException("Invalid email or password"));
+                .orElseThrow(() -> new ValidationFailed("Invalid email or password"));
 
         if (!passwordHasher.verify(plainPassword, customer.hashedPassword())) {
-            throw new ValidationException("Invalid email or password");
+            throw new ValidationFailed("Invalid email or password");
         }
 
         return tokenService.generateToken(customer);

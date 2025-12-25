@@ -1,7 +1,7 @@
 package com.urgoringo.mealkit.subscription.domain;
 
 import com.urgoringo.mealkit.domain.Id;
-import com.urgoringo.mealkit.domain.ValidationException;
+import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 
 import java.time.Clock;
@@ -17,7 +17,7 @@ public record LockedOrder(
     public DeliveredOrder markAsDelivered(Clock clock) {
         LocalDate currentDate = LocalDate.now(clock);
         if (currentDate.isBefore(deliveryDate)) {
-            throw new ValidationException("Cannot deliver order before delivery date");
+            throw new ValidationFailed("Cannot deliver order before delivery date");
         }
         return new DeliveredOrder(
             Id.of(id.value()),

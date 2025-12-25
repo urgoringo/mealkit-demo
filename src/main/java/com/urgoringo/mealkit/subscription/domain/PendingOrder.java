@@ -1,7 +1,7 @@
 package com.urgoringo.mealkit.subscription.domain;
 
 import com.urgoringo.mealkit.domain.Id;
-import com.urgoringo.mealkit.domain.ValidationException;
+import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import org.jspecify.annotations.NullMarked;
 
@@ -23,7 +23,7 @@ public record PendingOrder(
 
     public PendingOrder {
         if (recipeIds.size() < MINIMUM_RECIPE_COUNT) {
-            throw new ValidationException("Order must contain at least " + MINIMUM_RECIPE_COUNT + " recipes");
+            throw new ValidationFailed("Order must contain at least " + MINIMUM_RECIPE_COUNT + " recipes");
         }
     }
 

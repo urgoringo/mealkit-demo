@@ -2,6 +2,7 @@ package com.urgoringo.mealkit.subscription.domain;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.domain.NotFound;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -251,7 +252,7 @@ public class Subscriptions {
                     orderRecord.getDeliveryDate()
                 );
             })
-            .orElseThrow(() -> new IllegalArgumentException("Locked order not found: " + orderId.value()));
+            .orElseThrow(() -> new NotFound("Locked order not found: " + orderId.value()));
     }
 
     public UpcomingOrder findUpcomingOrderById(Id<Order> orderId) {
@@ -318,11 +319,7 @@ public class Subscriptions {
     }
 
     @Transactional
-    public void save(DeliveredOrder order) {
-        if (!order.id().isAssigned()) {
-            throw new IllegalArgumentException("Cannot save order without an assigned ID");
-        }
-
+    public void update(DeliveredOrder order) {
         Long[] recipeIdsArray = order.recipeIds().stream()
             .map(Id::value)
             .toArray(Long[]::new);
@@ -335,11 +332,4 @@ public class Subscriptions {
             .execute();
     }
 
-    @Transactional
-    public void lockOrder(Id<PendingOrder> orderId) {
-        dsl.update(ORDERS)
-            .set(ORDERS.STATUS, OrderStatus.LOCKED.name())
-            .where(ORDERS.ID.eq(orderId.value()))
-            .execute();
-    }
 }

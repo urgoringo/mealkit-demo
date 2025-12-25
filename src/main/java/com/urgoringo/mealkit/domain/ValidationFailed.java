@@ -10,9 +10,9 @@ import java.util.Objects;
  * Always includes a non-null error message.
  */
 @NullMarked
-public class ValidationException extends RuntimeException {
+public class ValidationFailed extends RuntimeException {
 
-    public ValidationException(String message) {
+    public ValidationFailed(String message) {
         super(Objects.requireNonNull(message, "Validation exception message must not be null"));
     }
 
