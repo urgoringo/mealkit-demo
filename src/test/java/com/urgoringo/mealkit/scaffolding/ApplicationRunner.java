@@ -43,7 +43,7 @@ public class ApplicationRunner {
     private final IngredientsCatalog ingredientsCatalog;
     private final Customers customers;
     private final Subscriptions subscriptions;
-    private final TestClock testClock;
+    private final TimeMachine timeMachine;
     private final BackofficeApplicationRunner backofficeRunner;
     @Nullable
     @Getter
@@ -188,7 +188,7 @@ public class ApplicationRunner {
     }
 
     public ApplicationRunner freezeTimeOn(LocalDate date) {
-        testClock.frozenOn(date);
+        timeMachine.shiftTimeTo(date);
         return this;
     }
 
@@ -196,7 +196,7 @@ public class ApplicationRunner {
         deleteAllSubscriptions();
         deleteAllRecipes();
         backofficeRunner.reset();
-        testClock.reset();
+        timeMachine.reset();
     }
 
     public void havingRecipes(List<String> names) {

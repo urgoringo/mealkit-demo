@@ -28,23 +28,15 @@ public class TestClock extends Clock {
         return instant;
     }
 
-    public void setTimeProvider(TestTimeProvider timeProvider) {
-        this.timeProvider = timeProvider;
-    }
-
     public void frozenOn(LocalDate date) {
         this.instant = date.atStartOfDay(zoneId).toInstant();
-        // Trigger scheduler to check for due executions when time changes
-        if (timeProvider != null) {
-            timeProvider.triggerSchedulerCheck();
-        }
     }
 
     public void reset() {
         this.instant = Instant.now();
     }
 
-    public LocalDate date() {
-        return Instant.ofEpochSecond(instant.getEpochSecond()).atZone(zoneId).toLocalDate();
+    public void frozenAt(Instant instant) {
+        this.instant = instant;
     }
 }

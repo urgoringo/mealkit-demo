@@ -22,8 +22,8 @@ public class LockOrdersTask {
     @Bean
     public RecurringTask<Void> recurringLockOrdersTask() {
         return Tasks
-            .recurring(TASK_NAME, Schedules.daily(LocalTime.of(2, 0)))
-            .execute((taskInstance, executionContext) -> 
+            .recurring(TASK_NAME, Schedules.daily(LocalTime.of(0, 0)))
+            .execute((_, _) ->
                 processSubscriptionOrdersService.execute()
             );
     }

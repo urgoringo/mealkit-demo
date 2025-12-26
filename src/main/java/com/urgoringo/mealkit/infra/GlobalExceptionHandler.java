@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleValidationException(ValidationFailed ex) {
         String message = ex.getMessage();
         ErrorResponse error = new ErrorResponse(message);
-        return ResponseEntity.status(UNPROCESSABLE_CONTENT).body(error);
+        return ResponseEntity.status(UNPROCESSABLE_ENTITY).body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .orElse("Validation error");
         ErrorResponse error = new ErrorResponse(message);
-        return ResponseEntity.status(UNPROCESSABLE_CONTENT).body(error);
+        return ResponseEntity.status(UNPROCESSABLE_ENTITY).body(error);
     }
 
     @ExceptionHandler(NotFound.class)
@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
         if (isQuery(request)) {
             return ResponseEntity.status(NO_CONTENT).build();
         }
-        return ResponseEntity.status(UNPROCESSABLE_CONTENT).body(error);
+        return ResponseEntity.status(UNPROCESSABLE_ENTITY).body(error);
     }
 
     private static boolean isQuery(HttpServletRequest request) {

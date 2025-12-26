@@ -1,19 +1,16 @@
 package com.urgoringo.mealkit;
 
+import com.github.kagkarlsson.scheduler.testhelper.SettableClock;
 import com.urgoringo.mealkit.scaffolding.TestClock;
-import com.urgoringo.mealkit.scaffolding.TestSchedulerConfiguration;
-import com.urgoringo.mealkit.scaffolding.TestTimeProvider;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.web.client.RestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 
 @TestConfiguration(proxyBeanMethods = false)
-@Import(TestSchedulerConfiguration.class)
 public class TestContainersConfiguration {
 
     @Bean
@@ -30,8 +27,8 @@ public class TestContainersConfiguration {
     }
 
     @Bean
-    public TestTimeProvider testTimeProvider(TestClock testClock) {
-        return new TestTimeProvider(testClock, null);
+    public SettableClock dbSchedulerClock() {
+        return new SettableClock();
     }
 
     @Bean

@@ -6,7 +6,7 @@ import org.jooq.meta.jaxb.Logging
 plugins {
 	java
 	groovy
-	id("org.springframework.boot") version "4.0.0"
+	id("org.springframework.boot") version "3.5.9"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("net.ltgt.errorprone") version "4.3.0"
 	id("net.ltgt.nullaway") version "2.3.0"
@@ -43,7 +43,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.security:spring-security-oauth2-resource-server")
 	implementation("org.springframework.security:spring-security-oauth2-jose")
-	implementation("org.springframework.boot:spring-boot-starter-flyway")
+	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
 	implementation("com.github.kagkarlsson:db-scheduler-spring-boot-starter:16.6.0")
 	implementation("org.jspecify:jspecify:1.0.0")
@@ -58,8 +58,8 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers:2.0.2")
-    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
-    testImplementation("org.testcontainers:testcontainers-postgresql")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
+    testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
     testImplementation("io.cucumber:cucumber-java:7.21.1")
     testImplementation("io.cucumber:cucumber-spring:7.21.1")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.21.1")
@@ -70,6 +70,7 @@ dependencies {
     testImplementation("org.spockframework:spock-core:2.4-M7-groovy-5.0")
     testImplementation("org.spockframework:spock-spring:2.4-M7-groovy-5.0")
     testImplementation("com.athaydes:spock-reports:2.5.1-groovy-4.0")
+	testImplementation("org.awaitility:awaitility:4.3.0")
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")

@@ -13,5 +13,5 @@ db-scheduler:
   polling-interval: 10s
   heartbeat-interval: 5m
   table-name: scheduled_tasks
-  immediate-execution-enabled: false
+  immediate-execution-enabled: true
   scheduler-name: mealkit-scheduler
