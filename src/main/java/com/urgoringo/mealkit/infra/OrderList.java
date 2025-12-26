@@ -2,8 +2,7 @@ package com.urgoringo.mealkit.infra;
 
 import com.urgoringo.mealkit.subscription.domain.Order;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class OrderList {
 
@@ -11,6 +10,6 @@ public class OrderList {
         List<T> result = new ArrayList<>(existing);
         result.removeIf(existingOrder -> existingOrder.id().equals(orderToAddOrReplace.id()));
         result.add(orderToAddOrReplace);
-        return result;
+        return result.stream().sorted(Comparator.comparing(Order::deliveryDate)).toList();
     }
 }

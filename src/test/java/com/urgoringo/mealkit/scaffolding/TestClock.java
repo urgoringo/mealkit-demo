@@ -10,8 +10,6 @@ import java.time.ZoneId;
 public class TestClock extends Clock {
     private Instant instant = Instant.now();
     private final ZoneId zoneId = ZoneId.of("UTC");
-    @Nullable
-    private TestTimeProvider timeProvider;
 
     @Override
     public ZoneId getZone() {

@@ -1,5 +1,7 @@
 package com.urgoringo.mealkit
 
+import java.time.LocalDate
+
 class SubscriptionHistorySpec extends ApplicationSpecification {
 
     def "customer can see subscription history"() {

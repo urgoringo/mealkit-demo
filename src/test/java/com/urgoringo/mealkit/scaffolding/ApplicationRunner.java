@@ -10,6 +10,7 @@ import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.core.ParameterizedTypeReference;
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ApplicationRunner {
 
     private final RestClient.Builder restClientBuilder;
@@ -188,6 +190,7 @@ public class ApplicationRunner {
     }
 
     public ApplicationRunner freezeTimeOn(LocalDate date) {
+        log.info("Freezing time on {}", date);
         timeMachine.shiftTimeTo(date);
         return this;
     }

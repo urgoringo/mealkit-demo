@@ -10,7 +10,10 @@ import org.jspecify.annotations.NullMarked;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import static java.time.temporal.TemporalAdjusters.next;
 
@@ -22,9 +25,9 @@ public record Subscription(
     String deliveryAddress,
     DayOfWeek deliveryDay
 ) {
-    public Subscription {
-//        upcomingOrders = new TreeSet<>(upcomingOrders, Comparator.comparing(UpcomingOrder::deliveryDate));
-    }
+//    public Subscription {
+//        upcomingOrders = new TreeSet<>(Comparator.comparing(UpcomingOrder::deliveryDate));
+//    }
 
     public static Subscription signup(
         Id<Customer> customerId,
@@ -33,7 +36,7 @@ public record Subscription(
         DayOfWeek deliveryDay,
         LocalDate today
     ) {
-        LocalDate deliveryDate = today.with(next(deliveryDay));
+        LocalDate deliveryDate = today.plusDays(3).with(next(deliveryDay));
         PendingOrder firstOrder = PendingOrder.placed(recipeIds, deliveryDate);
         return new Subscription(Id.unassigned(), customerId, List.of(firstOrder), deliveryAddress, deliveryDay);
     }

@@ -10,7 +10,7 @@ spring:
 db-scheduler:
   enabled: true
   threads: 5
-  polling-interval: 10s
+  polling-interval: 10ms
   heartbeat-interval: 5m
   table-name: scheduled_tasks
   immediate-execution-enabled: true

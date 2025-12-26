@@ -162,7 +162,7 @@ public class Subscriptions {
         return dsl.selectDistinct(ORDERS.SUBSCRIPTION_ID)
             .from(ORDERS)
             .where(ORDERS.STATUS.eq(OrderStatus.PENDING.name())
-                .and(ORDERS.DELIVERY_DATE.le(maxDeliveryDate)))
+                .and(ORDERS.DELIVERY_DATE.lessOrEqual(maxDeliveryDate)))
             .fetch(ORDERS.SUBSCRIPTION_ID)
             .stream()
             .map(Id::<Subscription>of)
@@ -253,33 +253,6 @@ public class Subscriptions {
                 );
             })
             .orElseThrow(() -> new NotFound("Locked order not found: " + orderId.value()));
-    }
-
-    public UpcomingOrder findUpcomingOrderById(Id<Order> orderId) {
-        return dsl.selectFrom(ORDERS)
-            .where(ORDERS.ID.eq(orderId.value())
-                .and(ORDERS.STATUS.in(OrderStatus.PENDING.name(), OrderStatus.LOCKED.name())))
-            .fetchOptional()
-            .map(orderRecord -> {
-                Long[] recipeIdsArray = orderRecord.getRecipeIds();
-                List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
-                    .map(Id::<Recipe>of)
-                    .toList();
-                return switch (OrderStatus.valueOf(orderRecord.getStatus())) {
-                    case PENDING -> (UpcomingOrder) new PendingOrder(
-                        Id.of(orderRecord.getId()),
-                        recipeIds,
-                        orderRecord.getDeliveryDate()
-                    );
-                    case LOCKED -> (UpcomingOrder) new LockedOrder(
-                        Id.of(orderRecord.getId()),
-                        recipeIds,
-                        orderRecord.getDeliveryDate()
-                    );
-                    case DELIVERED -> throw new IllegalArgumentException("Cannot find upcoming order with DELIVERED status");
-                };
-            })
-            .orElseThrow(() -> new IllegalArgumentException("Upcoming order not found: " + orderId.value()));
     }
 
     @Transactional
