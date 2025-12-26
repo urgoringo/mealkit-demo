@@ -25,14 +25,20 @@ public class TimeMachine {
         testClock.frozenAt(testClock.instant().plus(duration));
         settableClock.set(testClock.instant().plus(duration));
         scheduler.triggerCheckForDueExecutions();
-        await().until(() -> countDueTasks() == 0);
+        await()
+            .pollInterval(Duration.ofMillis(10))
+            .atMost(Duration.ofSeconds(5))
+            .until(() -> countDueTasks() == 0);
     }
 
     public void shiftTimeTo(LocalDate date) {
         testClock.frozenOn(date);
         settableClock.set(testClock.instant());
         scheduler.triggerCheckForDueExecutions();
-        await().until(() -> countDueTasks() == 0);
+        await()
+            .pollInterval(Duration.ofMillis(10))
+            .atMost(Duration.ofSeconds(5))
+            .until(() -> countDueTasks() == 0);
     }
 
     public void reset() {
