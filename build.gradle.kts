@@ -60,6 +60,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:2.0.2")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
+    testImplementation("io.zonky.test:embedded-database-spring-test:2.7.1")
     testImplementation("io.cucumber:cucumber-java:7.21.1")
     testImplementation("io.cucumber:cucumber-spring:7.21.1")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.21.1")

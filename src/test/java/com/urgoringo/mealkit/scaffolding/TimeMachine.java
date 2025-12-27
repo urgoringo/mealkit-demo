@@ -49,8 +49,7 @@ public class TimeMachine {
     private int countDueTasks() {
         return dslContext.fetchCount(dslContext.select()
             .from(SCHEDULED_TASKS)
-            .where(SCHEDULED_TASKS.EXECUTION_TIME.lessOrEqual(testClock.instant().atOffset(ZoneOffset.UTC)))
-            .and(SCHEDULED_TASKS.PICKED.eq(false)));
+            .where(SCHEDULED_TASKS.EXECUTION_TIME.lessOrEqual(testClock.instant().atOffset(ZoneOffset.UTC))));
     }
 }
 

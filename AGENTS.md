@@ -8,7 +8,8 @@ Mealkit is a Spring Boot 3.5 application for managing meal kit recipes. It uses:
 - **Java 25** (with toolchain configured in build.gradle.kts)
 - **Spring Boot 3.5.7** with Spring Data JPA and Spring Web
 - **PostgreSQL** database with Flyway migrations
-- **Testcontainers** for integration testing with PostgreSQL
+- **Embedded Database (Zonky)** for application specs with PostgreSQL
+- **Testcontainers** for other integration tests with PostgreSQL
 - **Spock Framework** for BDD-style testing
 - **Lombok** for reducing boilerplate code
 - **MapStruct** for mapping between persistence and domain models
@@ -31,14 +32,7 @@ Mealkit is a Spring Boot 3.5 application for managing meal kit recipes. It uses:
 ./gradlew test --tests ClassName.methodName       # Run specific test method
 ```
 
-**Note**: Tests use Testcontainers with PostgreSQL 17-alpine. Container reuse is enabled to speed up test execution.
-
-**Container Reuse Configuration:**
-- Testcontainers reuse is enabled via `~/.testcontainers.properties` with `testcontainers.reuse.enable=true`
-- Containers use `.withReuse(true)` in `TestContainersConfiguration`
-- Same container persists across test runs until explicitly stopped
-- Get connection details: `./db-info.sh`
-- Connect via psql: `psql -h localhost -p <port> -U test -d test` (password: `test`)
+**Note**: Application specs (Spock tests extending `ApplicationSpecification`) use embedded PostgreSQL database via `embedded-database-spring-test` library. This provides faster test execution compared to Testcontainers. Other integration tests may still use Testcontainers.
 
 **Gradle Daemon**: Always use the Gradle daemon (default behavior). Do not use `--no-daemon` flag unless there's a specific reason (e.g., CI/CD environments requiring clean JVM per build). The daemon provides faster builds by reusing JVM processes and keeping compiled classes in memory.
 
@@ -202,10 +196,10 @@ public interface RecipeMapper {
 - Database baseline is automatically created on first migration (`baseline-on-migrate: true`)
 
 ### Testing Architecture
-- All integration tests should import `TestContainersConfiguration` to get a PostgreSQL container
+- **Application specs** (Spock tests extending `ApplicationSpecification`) use `EmbeddedDatabaseConfiguration` with embedded PostgreSQL via `embedded-database-spring-test` library
+- **Other integration tests** may use `TestContainersConfiguration` for Testcontainers PostgreSQL
 - Use `@ActiveProfiles("test")` for test-specific configuration
-- PostgreSQL container uses `withReuse(true)` to persist between test runs for faster execution
-- Container image: `postgres:17-alpine`
+- Embedded database provides faster test execution compared to Testcontainers
 - `RestClient.Builder` bean is configured with `defaultStatusHandler` to prevent exceptions on HTTP errors
 - This allows tests to inspect error responses using the `ApiResponse` pattern
 
@@ -465,8 +459,9 @@ containing name, quantity, and unit (supports: g, piece, cup).
 - Provides immediate feedback on design decisions
 
 #### Integration Testing
-- Integration tests require `@Import(TestContainersConfiguration.class)`
-- Tests automatically use Testcontainers PostgreSQL instance
+- Application specs (Spock tests) require `@Import(EmbeddedDatabaseConfiguration.class)` - uses embedded PostgreSQL
+- Other integration tests may use `@Import(TestContainersConfiguration.class)` - uses Testcontainers PostgreSQL
+- Tests automatically use the configured database instance
 - No need for manual database setup during testing
 
 #### Spock Test Architecture
