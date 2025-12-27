@@ -81,6 +81,9 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 	
+	// Run tests in parallel using all available CPU cores
+	maxParallelForks = Runtime.getRuntime().availableProcessors()
+	
 	// Show test output for Spock given/when/then blocks
 	testLogging {
 		events("passed", "skipped", "failed")
