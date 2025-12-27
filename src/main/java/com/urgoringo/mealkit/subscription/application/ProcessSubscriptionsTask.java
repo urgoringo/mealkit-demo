@@ -13,7 +13,7 @@ import java.time.LocalTime;
 @NullMarked
 @Configuration
 @RequiredArgsConstructor
-public class LockOrdersTask {
+public class ProcessSubscriptionsTask {
 
     private final ProcessSubscriptionOrdersService processSubscriptionOrdersService;
 
