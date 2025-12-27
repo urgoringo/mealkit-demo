@@ -62,8 +62,8 @@ public class IngredientsCatalog {
         return saved;
     }
 
-    public Ingredient findOrCreate(String name) {
-        return repository.findByName(name).orElseGet(() -> save(Ingredient.create(name)));
+    public Ingredient findOrSave(Ingredient ingredient) {
+        return repository.findByName(ingredient.name()).orElseGet(() -> save(ingredient));
     }
 
     public void deleteAll() {

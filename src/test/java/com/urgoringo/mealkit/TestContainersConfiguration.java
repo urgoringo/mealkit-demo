@@ -16,7 +16,7 @@ public class TestContainersConfiguration {
     @Bean
     @ServiceConnection
     PostgreSQLContainer<?> postgresContainer() {
-        return new PostgreSQLContainer<>("postgres:17-alpine")
+        return new PostgreSQLContainer<>("postgres:18.1-alpine")
                 .withReuse(true);
     }
 

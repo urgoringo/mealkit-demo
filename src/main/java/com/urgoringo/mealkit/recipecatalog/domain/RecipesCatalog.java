@@ -115,6 +115,10 @@ public class RecipesCatalog {
         }
     }
 
+    public int count() {
+        return dsl.fetchCount(RECIPES);
+    }
+
     private record RecipeIngredientDto(
             @JsonProperty("ingredient_id") Long ingredientId,
             String quantity,

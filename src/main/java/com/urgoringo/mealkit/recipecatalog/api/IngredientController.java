@@ -21,8 +21,7 @@ public class IngredientController {
 
     @PostMapping
     public ResponseEntity<IngredientResponse> createIngredient(@RequestBody CreateIngredientRequest request) {
-        Ingredient ingredient = Ingredient.create(request.name);
-        Ingredient saved = ingredientsCatalog.save(ingredient);
+        Ingredient saved = ingredientsCatalog.findOrSave(Ingredient.create(request.name));
         return ok(new IngredientResponse(saved.id().value(), saved.name()));
     }
 

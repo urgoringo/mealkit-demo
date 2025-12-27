@@ -105,18 +105,16 @@ public class ApplicationRunner {
         return response.getBody();
     }
 
-    public void deleteAllRecipes() {
-        recipesCatalog.deleteAll();
-        ingredientsCatalog.deleteAll();
-    }
-
     public void start(int port) {
         this.restClient = restClientBuilder
             .baseUrl("http://localhost:" + port)
             .build();
         backofficeRunner.start(port);
         reset();
-        IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
+
+        if (recipesCatalog.count() == 0) {
+            IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
+        }
     }
 
     public ApiResponse<SubscriptionResponse> updateUpcomingOrderRecipes(Long orderId, List<Long> recipeIds, String authToken) {
@@ -197,7 +195,6 @@ public class ApplicationRunner {
 
     private void reset() {
         deleteAllSubscriptions();
-        deleteAllRecipes();
         backofficeRunner.reset();
         timeMachine.reset();
     }

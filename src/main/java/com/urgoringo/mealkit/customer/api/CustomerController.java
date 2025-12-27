@@ -26,9 +26,14 @@ public class CustomerController {
 
     @PostMapping("/signup")
     public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
+        long signupMillis = System.currentTimeMillis();
         Customer customer = signupCustomerService.execute(request.email(), request.password());
+        System.out.println("Signup customer service took " + (System.currentTimeMillis() - signupMillis) + "ms");
+        long loginMillis = System.currentTimeMillis();
         String token = loginCustomerService.execute(request.email(), request.password());
+        System.out.println("Login customer took " + (System.currentTimeMillis() - loginMillis) + "ms");
         SignupResponse response = new SignupResponse(customer.id().value(), customer.email(), token);
+        System.out.println("Signup total took " + (System.currentTimeMillis() - signupMillis) + "ms");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
