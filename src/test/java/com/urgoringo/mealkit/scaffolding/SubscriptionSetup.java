@@ -39,16 +39,22 @@ public class SubscriptionSetup {
     public void withOrderDelivered() {
         var subscription = app.getCustomerSubscription(authToken).expectSuccess();
         var deliveryDate = subscription.upcomingOrders().getFirst().deliveryDate();
+
         app.freezeTimeOn(deliveryDate.minusDays(3));
-        app.processSubscriptionOrders();
+
         app.freezeTimeOn(deliveryDate);
-        
         var updatedSubscription = app.getCustomerSubscription(authToken).expectSuccess();
         var orderToDeliver = updatedSubscription.upcomingOrders().stream()
                 .filter(order -> order.deliveryDate().equals(deliveryDate))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Order with delivery date " + deliveryDate + " not found"));
-        
+
         app.backoffice().markOrderDelivered(orderToDeliver.id());
+
+        var subscriptionAfterDelivery = app.getCustomerSubscription(authToken).expectSuccess();
+        if (!subscriptionAfterDelivery.upcomingOrders().isEmpty()) {
+            var nextOrderDeliveryDate = subscriptionAfterDelivery.upcomingOrders().getFirst().deliveryDate();
+            app.freezeTimeOn(nextOrderDeliveryDate.minusDays(3));
+        }
     }
 }

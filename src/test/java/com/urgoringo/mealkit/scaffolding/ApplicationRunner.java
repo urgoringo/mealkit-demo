@@ -7,16 +7,15 @@ import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeIngredient
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeResponse;
 import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
-import com.urgoringo.mealkit.subscription.application.UpdateSubscriptionOrdersService;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.modulith.moments.DayHasPassed;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -38,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ApplicationRunner {
 
     private final RestClient.Builder restClientBuilder;
@@ -45,8 +45,7 @@ public class ApplicationRunner {
     private final IngredientsCatalog ingredientsCatalog;
     private final Customers customers;
     private final Subscriptions subscriptions;
-    private final TestClock testClock;
-    private final UpdateSubscriptionOrdersService updateSubscriptionOrdersService;
+    private final TimeMachine timeMachine;
     private final BackofficeApplicationRunner backofficeRunner;
     @Nullable
     @Getter
@@ -106,18 +105,16 @@ public class ApplicationRunner {
         return response.getBody();
     }
 
-    public void deleteAllRecipes() {
-        recipesCatalog.deleteAll();
-        ingredientsCatalog.deleteAll();
-    }
-
     public void start(int port) {
         this.restClient = restClientBuilder
             .baseUrl("http://localhost:" + port)
             .build();
         backofficeRunner.start(port);
         reset();
-        IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
+
+        if (recipesCatalog.count() == 0) {
+            IntStream.rangeClosed(1, 10).forEach(_ -> havingRecipe(aRecipe()));
+        }
     }
 
     public ApiResponse<SubscriptionResponse> updateUpcomingOrderRecipes(Long orderId, List<Long> recipeIds, String authToken) {
@@ -150,10 +147,6 @@ public class ApplicationRunner {
             .retrieve()
             .toEntity(SubscriptionResponse.class);
         return ApiResponse.from(response);
-    }
-
-    public void processSubscriptionOrders() {
-        updateSubscriptionOrdersService.on(DayHasPassed.of(testClock.date()));
     }
 
     public ApiResponse<@NotNull SignupResponse> signupCustomer() {
@@ -195,15 +188,15 @@ public class ApplicationRunner {
     }
 
     public ApplicationRunner freezeTimeOn(LocalDate date) {
-        testClock.frozenOn(date);
+        log.info("Freezing time on {}", date);
+        timeMachine.shiftTimeTo(date);
         return this;
     }
 
     private void reset() {
         deleteAllSubscriptions();
-        deleteAllRecipes();
         backofficeRunner.reset();
-        testClock.reset();
+        timeMachine.reset();
     }
 
     public void havingRecipes(List<String> names) {

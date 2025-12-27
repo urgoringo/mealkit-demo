@@ -1,9 +1,12 @@
 package com.urgoringo.mealkit
 
+import java.time.LocalDate
+
 class SubscriptionHistorySpec extends ApplicationSpecification {
 
     def "customer can see subscription history"() {
         given: "customer has a subscription with 3 delivered orders"
+            app.freezeTimeOn(LocalDate.parse("2125-11-18"))
             def customer = app.havingCustomer()
             def subscription = customer.havingSubscription()
             def order1Id = subscription.get().upcomingOrders()[0].id()

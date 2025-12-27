@@ -1,5 +1,7 @@
 package com.urgoringo.mealkit.scaffolding;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,8 +34,7 @@ public class TestClock extends Clock {
         this.instant = Instant.now();
     }
 
-
-    public LocalDate date() {
-        return Instant.ofEpochSecond(instant.getEpochSecond()).atZone(zoneId).toLocalDate();
+    public void frozenAt(Instant instant) {
+        this.instant = instant;
     }
 }

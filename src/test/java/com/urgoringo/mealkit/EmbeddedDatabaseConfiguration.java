@@ -3,22 +3,12 @@ package com.urgoringo.mealkit;
 import com.github.kagkarlsson.scheduler.testhelper.SettableClock;
 import com.urgoringo.mealkit.scaffolding.TestClock;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.web.client.RestClient;
-import org.testcontainers.containers.PostgreSQLContainer;
-
 
 @TestConfiguration(proxyBeanMethods = false)
-public class TestContainersConfiguration {
-
-    @Bean
-    @ServiceConnection
-    PostgreSQLContainer<?> postgresContainer() {
-        return new PostgreSQLContainer<>("postgres:18.1-alpine")
-                .withReuse(true);
-    }
+public class EmbeddedDatabaseConfiguration {
 
     @Bean
     @Primary
@@ -38,4 +28,3 @@ public class TestContainersConfiguration {
     }
 
 }
-
