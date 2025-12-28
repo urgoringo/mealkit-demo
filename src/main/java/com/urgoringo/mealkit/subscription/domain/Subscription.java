@@ -10,10 +10,8 @@ import org.jspecify.annotations.NullMarked;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.Comparator;
+import java.time.Period;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import static java.time.temporal.TemporalAdjusters.next;
 
@@ -25,6 +23,9 @@ public record Subscription(
     String deliveryAddress,
     DayOfWeek deliveryDay
 ) {
+
+    private static final Period PROCESSING_BEFORE_DELIVERY = Period.ofDays(3);
+
 //    public Subscription {
 //        upcomingOrders = new TreeSet<>(Comparator.comparing(UpcomingOrder::deliveryDate));
 //    }
@@ -63,15 +64,13 @@ public record Subscription(
     }
 
     public Subscription withNewUpcomingOrder(List<Id<Recipe>> recipeIds) {
-        if (upcomingOrders.isEmpty()) {
-            return this;
-        }
-
         if (upcomingOrders.size() >= 2) {
             return this;
         }
 
-        LocalDate nextDeliveryDate = nextUpcomingOrderDeliveryDate();
+        LocalDate nextDeliveryDate = upcomingOrders.isEmpty() 
+            ? LocalDate.now().plusDays(3).with(next(deliveryDay))
+            : nextUpcomingOrderDeliveryDate();
         PendingOrder newOrder = PendingOrder.placed(recipeIds, nextDeliveryDate);
 
         var updatedOrders = OrderList.with(upcomingOrders, newOrder);
@@ -79,10 +78,6 @@ public record Subscription(
     }
 
     public Subscription withLockedUpcomingOrder(Clock clock) {
-        if (upcomingOrders.isEmpty()) {
-            return this;
-        }
-        
         UpcomingOrder nextOrder = upcomingOrders.getFirst();
 
         return switch (nextOrder) {
@@ -97,5 +92,13 @@ public record Subscription(
             }
             case LockedOrder _ -> this;
         };
+    }
+
+    public LocalDate nextProcessingDate(Clock clock) {
+        UpcomingOrder nextPendingOrder = upcomingOrders.stream()
+            .filter(order -> !order.isLocked())
+            .findFirst()
+            .orElseThrow();
+        return nextPendingOrder.deliveryDate().minus(PROCESSING_BEFORE_DELIVERY);
     }
 }

@@ -136,11 +136,10 @@ public class Subscriptions {
             .execute();
     }
 
-    public Optional<Subscription> findById(Id<Subscription> id) {
-        return dsl.selectFrom(SUBSCRIPTIONS)
+    public Subscription findById(Id<Subscription> id) {
+        return toSubscription(dsl.selectFrom(SUBSCRIPTIONS)
             .where(SUBSCRIPTIONS.ID.eq(id.value()))
-            .fetchOptional()
-            .map(this::toSubscription);
+            .fetchSingle());
     }
 
     public Subscription findByCustomerId(Id<Customer> customerId) {
@@ -306,18 +305,26 @@ public class Subscriptions {
     }
 
     public UpcomingOrder findUpcomingOrderBy(Id<Customer> customerId, Id<Order> orderId) {
-        var orderRecord = dsl.selectFrom(ORDERS)
-            .where(ORDERS.SUBSCRIPTION_ID.eq(customerId.value())
+        var orderRecord = dsl.select(ORDERS.fields())
+            .from(ORDERS)
+            .join(SUBSCRIPTIONS).on(SUBSCRIPTIONS.ID.eq(ORDERS.SUBSCRIPTION_ID))
+            .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value())
                 .and(ORDERS.ID.eq(orderId.value())))
-            .fetchSingle();
-        Long[] recipeIdsArray = orderRecord.getRecipeIds();
+            .fetchOptional();
+        
+        if (orderRecord.isEmpty()) {
+            throw new NotFound("Upcoming order not found: " + orderId.value());
+        }
+        
+        var record = orderRecord.get();
+        Long[] recipeIdsArray = record.get(ORDERS.RECIPE_IDS);
         List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
             .map(Id::<Recipe>of)
             .toList();
-        return switch (OrderStatus.valueOf(orderRecord.getStatus())) {
-            case PENDING -> new PendingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
-            case LOCKED -> new LockedOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
-            case DELIVERED -> throw new IllegalArgumentException("Invalid order status: " + orderRecord.getStatus());
+        return switch (OrderStatus.valueOf(record.get(ORDERS.STATUS))) {
+            case PENDING -> new PendingOrder(Id.of(record.get(ORDERS.ID)), recipeIds, record.get(ORDERS.DELIVERY_DATE));
+            case LOCKED -> new LockedOrder(Id.of(record.get(ORDERS.ID)), recipeIds, record.get(ORDERS.DELIVERY_DATE));
+            case DELIVERED -> throw new IllegalArgumentException("Invalid order status: " + record.get(ORDERS.STATUS));
         };
     }
 }

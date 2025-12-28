@@ -1,8 +1,12 @@
 package com.urgoringo.mealkit.scaffolding;
 
 import com.github.kagkarlsson.scheduler.Scheduler;
+import com.github.kagkarlsson.scheduler.event.AbstractSchedulerListener;
+import com.github.kagkarlsson.scheduler.task.ExecutionComplete;
 import com.github.kagkarlsson.scheduler.testhelper.SettableClock;
+import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +19,7 @@ import static org.awaitility.Awaitility.await;
 
 @AllArgsConstructor
 @Component
+@Slf4j
 public class TimeMachine {
     private final TestClock testClock;
     private final SettableClock settableClock;
@@ -44,12 +49,23 @@ public class TimeMachine {
     public void reset() {
         testClock.reset();
         settableClock.set(testClock.instant());
+        dslContext.deleteFrom(SCHEDULED_TASKS).execute();
     }
 
     private int countDueTasks() {
         return dslContext.fetchCount(dslContext.select()
             .from(SCHEDULED_TASKS)
             .where(SCHEDULED_TASKS.EXECUTION_TIME.lessOrEqual(testClock.instant().atOffset(ZoneOffset.UTC))));
+    }
+
+    @PostConstruct
+    public void init() {
+        scheduler.registerSchedulerListener(new AbstractSchedulerListener() {
+            @Override
+            public void onExecutionComplete(ExecutionComplete executionComplete) {
+                log.info("Execution complete: {}", executionComplete.getExecution());
+            }
+        });
     }
 }
 

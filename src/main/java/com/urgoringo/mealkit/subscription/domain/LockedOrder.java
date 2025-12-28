@@ -30,4 +30,9 @@ public record LockedOrder(
     public OrderStatus status() {
         return OrderStatus.LOCKED;
     }
+
+    @Override
+    public boolean isLocked() {
+        return true;
+    }
 }

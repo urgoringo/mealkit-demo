@@ -50,4 +50,9 @@ public record PendingOrder(
     public OrderStatus status() {
         return PENDING;
     }
+
+    @Override
+    public boolean isLocked() {
+        return false;
+    }
 }

@@ -1,11 +1,7 @@
 package com.urgoringo.mealkit.scaffolding;
 
-import com.urgoringo.mealkit.subscription.api.SubscriptionController;
 import com.urgoringo.mealkit.subscription.api.SubscriptionController.OrderResponse;
-import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDate;
 
 @RequiredArgsConstructor
 public class UpcomingOrderSetup {

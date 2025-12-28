@@ -4,20 +4,18 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
+import com.urgoringo.mealkit.subscription.domain.SubscriptionProcessedEvent;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.Duration;
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-
-import static java.time.Duration.ofDays;
 
 @NullMarked
 @Slf4j
@@ -28,33 +26,16 @@ public class ProcessSubscriptionOrdersService {
     private final Subscriptions subscriptions;
     private final RecipesCatalog recipesCatalog;
     private final Clock clock;
-    private final TransactionTemplate transactionTemplate;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    private static final Duration PRESELECTION_THRESHOLD_DAYS = ofDays(3);
+    @Transactional
+    public void execute(Long subscriptionIdValue) {
+        log.info("Processing subscription {}", subscriptionIdValue);
+        Id<Subscription> subscriptionId = Id.of(subscriptionIdValue);
+        Subscription subscription = subscriptions.findById(subscriptionId);
 
-    public void execute() {
-        log.info("Starting scheduled job to process subscription orders");
-        LocalDate currentDate = LocalDate.now(clock);
-        LocalDate thresholdDate = currentDate.plusDays(PRESELECTION_THRESHOLD_DAYS.toDays());
-        List<Id<Subscription>> subscriptionIds = subscriptions.findSubscriptionsWithPendingOrdersByDeliveryDate(thresholdDate);
-        log.info("Found {} subscriptions requiring recipe preselection", subscriptionIds.size());
-
-        for (Id<Subscription> subscriptionId : subscriptionIds) {
-            try {
-                transactionTemplate.executeWithoutResult(_ -> {
-                    Subscription subscription = subscriptions.findById(subscriptionId)
-                        .orElseThrow(() -> new IllegalArgumentException("Subscription not found: " + subscriptionId.value()));
-                    processSubscription(subscription);
-                });
-            } catch (Exception e) {
-                log.error("Error processing subscription {}: {}", subscriptionId.value(), e.getMessage(), e);
-            }
-        }
-        log.info("Completed scheduled job to process subscription orders");
-    }
-
-    private void processSubscription(Subscription subscription) {
         List<Recipe> allRecipes = recipesCatalog.findAll();
+
         Collections.shuffle(allRecipes);
         List<Id<Recipe>> selectedRecipeIds = allRecipes.stream()
             .limit(3)
@@ -66,5 +47,7 @@ public class ProcessSubscriptionOrdersService {
             .withLockedUpcomingOrder(clock);
 
         subscriptions.save(updatedSubscription);
+
+        applicationEventPublisher.publishEvent(new SubscriptionProcessedEvent(updatedSubscription));
     }
 }
