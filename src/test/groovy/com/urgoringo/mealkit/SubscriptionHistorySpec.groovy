@@ -10,11 +10,11 @@ class SubscriptionHistorySpec extends ApplicationSpecification {
             def customer = app.havingCustomer()
             def subscription = customer.havingSubscription()
             def order1Id = subscription.get().upcomingOrders()[0].id()
-            subscription.withOrderDelivered()
+            subscription.withNextUpcomingOrder().delivered()
             def order2Id = subscription.get().upcomingOrders()[0].id()
-            subscription.withOrderDelivered()
+            subscription.withNextUpcomingOrder().delivered()
             def order3Id = subscription.get().upcomingOrders()[0].id()
-            subscription.withOrderDelivered()
+            subscription.withNextUpcomingOrder().delivered()
 
         when: "customer queries subscription history"
             def response = app.getSubscriptionHistory(customer.authToken)

@@ -1,7 +1,5 @@
 package com.urgoringo.mealkit
 
-import com.urgoringo.mealkit.subscription.domain.OrderStatus
-import spock.lang.PendingFeature
 
 import java.time.LocalDate
 
@@ -44,10 +42,11 @@ class OrderLockingSpec extends ApplicationSpecification {
     def "locked order cannot be updated"() {
         given: "a subscription with a locked order"
             def customer = app.havingCustomer()
-            def subscription = customer.havingSubscription().withOrderLocked().get()
+            def order = customer.havingSubscription().withNextUpcomingOrder().locked().get()
 
         when: "customer tries to update their upcoming order"
-            def response = app.updateUpcomingOrderRecipes(customer.authToken, subscription.upcomingOrders()[0].id(), [])
+            def recipeIds = app.getRecipes(3)
+            def response = app.updateUpcomingOrderRecipes(customer.authToken, order.id(), recipeIds)
 
         then: "system returns 422"
             response.expectError() == 422

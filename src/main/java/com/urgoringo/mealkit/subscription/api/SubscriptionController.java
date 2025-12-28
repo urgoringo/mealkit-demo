@@ -2,12 +2,14 @@ package com.urgoringo.mealkit.subscription.api;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.subscription.domain.Order;
 import com.urgoringo.mealkit.subscription.domain.OrderStatus;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.application.CreateSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionHistoryService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.UpdateUpcomingOrderRecipesService;
+import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,6 +35,7 @@ public class SubscriptionController {
     private final GetSubscriptionHistoryService getSubscriptionHistoryService;
     private final UpdateUpcomingOrderRecipesService updateUpcomingOrderRecipesService;
     private final SubscriptionApiMapper subscriptionApiMapper;
+    private final GetUpcomingOrderService getUpcomingOrderService;
 
     @PostMapping
     public ResponseEntity<SubscriptionResponse> createSubscription(
@@ -73,6 +76,13 @@ public class SubscriptionController {
         List<OrderResponse> response = deliveredOrders.stream()
                 .map(subscriptionApiMapper::toOrderResponse)
                 .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/upcoming-orders/{orderId}")
+    public ResponseEntity<OrderResponse> getUpcomingOrder(@AuthenticationPrincipal Id<Customer> customerId, @PathVariable Long orderId) {
+        UpcomingOrder order = getUpcomingOrderService.execute(customerId, Id.of(orderId));
+        OrderResponse response = subscriptionApiMapper.toOrderResponse(order);
         return ResponseEntity.ok(response);
     }
 

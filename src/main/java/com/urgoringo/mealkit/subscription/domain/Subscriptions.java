@@ -121,9 +121,9 @@ public class Subscriptions {
             Long orderId = orderRecord.getId();
 
             return switch (order) {
-                case PendingOrder pendingOrder -> 
+                case PendingOrder pendingOrder ->
                     new PendingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
-                case LockedOrder lockedOrder -> 
+                case LockedOrder lockedOrder ->
                     new LockedOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
             };
         }
@@ -305,4 +305,19 @@ public class Subscriptions {
             .execute();
     }
 
+    public UpcomingOrder findUpcomingOrderBy(Id<Customer> customerId, Id<Order> orderId) {
+        var orderRecord = dsl.selectFrom(ORDERS)
+            .where(ORDERS.SUBSCRIPTION_ID.eq(customerId.value())
+                .and(ORDERS.ID.eq(orderId.value())))
+            .fetchSingle();
+        Long[] recipeIdsArray = orderRecord.getRecipeIds();
+        List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
+            .map(Id::<Recipe>of)
+            .toList();
+        return switch (OrderStatus.valueOf(orderRecord.getStatus())) {
+            case PENDING -> new PendingOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
+            case LOCKED -> new LockedOrder(Id.of(orderRecord.getId()), recipeIds, orderRecord.getDeliveryDate());
+            case DELIVERED -> throw new IllegalArgumentException("Invalid order status: " + orderRecord.getStatus());
+        };
+    }
 }

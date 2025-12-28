@@ -257,4 +257,12 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
+    public OrderResponse getUpcomingOrder(String authToken, Long orderId) {
+        ResponseEntity<OrderResponse> response = restClient.get()
+            .uri("/subscriptions/upcoming-orders/{orderId}", orderId)
+            .header("Authorization", "Bearer " + authToken)
+            .retrieve()
+            .toEntity(OrderResponse.class);
+        return ApiResponse.from(response).expectSuccess();
+    }
 }
