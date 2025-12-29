@@ -1,6 +1,7 @@
 package com.urgoringo.mealkit.scaffolding;
 
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.recipecatalog.domain.PricingCategory;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.Unit;
 import com.urgoringo.mealkit.subscription.domain.Order;
@@ -9,11 +10,13 @@ import com.urgoringo.mealkit.subscription.domain.PendingOrder;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.With;
 import net.datafaker.Faker;
+import org.jspecify.annotations.Nullable;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.urgoringo.mealkit.recipecatalog.domain.PricingCategory.MEDIUM;
 import static java.time.DayOfWeek.WEDNESDAY;
 
 public class TestFactory {
@@ -39,7 +42,7 @@ public class TestFactory {
     }
 
     public static RecipeBuilder aRecipe() {
-        return new RecipeBuilder(aRecipeName(), List.of(), List.of(anIngredient()));
+        return new RecipeBuilder(aRecipeName(), List.of(), List.of(anIngredient()), MEDIUM);
     }
 
     public static SubscriptionBuilder aSubscription() {
@@ -59,7 +62,7 @@ public class TestFactory {
     }
 
    @With
-    public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredients) {
+    public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredients, PricingCategory pricingCategory) {
     }
 
     @With

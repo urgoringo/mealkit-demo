@@ -31,7 +31,8 @@ public class RecipesCatalog {
                         Id.of(record.getId()),
                         record.getName(),
                         toList(record.getInstructions()),
-                        parseRecipeIngredients(record.getIngredients())
+                        parseRecipeIngredients(record.getIngredients()),
+                        PricingCategory.valueOf(record.getPricingCategory())
                 ));
     }
 
@@ -43,7 +44,8 @@ public class RecipesCatalog {
                 Id.of(record.getId()),
                 record.getName(),
                 toList(record.getInstructions()),
-                parseRecipeIngredients(record.getIngredients())
+                parseRecipeIngredients(record.getIngredients()),
+                PricingCategory.valueOf(record.getPricingCategory())
         );
     }
 
@@ -53,6 +55,7 @@ public class RecipesCatalog {
                     .set(RECIPES.NAME, recipe.title())
                     .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
                     .set(RECIPES.INGREDIENTS, toJson(recipe.ingredients()))
+                    .set(RECIPES.PRICING_CATEGORY, recipe.pricingCategory().name())
                     .where(RECIPES.ID.eq(recipe.id().value()))
                     .execute();
             return recipe;
@@ -61,6 +64,7 @@ public class RecipesCatalog {
                     .set(RECIPES.NAME, recipe.title())
                     .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
                     .set(RECIPES.INGREDIENTS, toJson(recipe.ingredients()))
+                    .set(RECIPES.PRICING_CATEGORY, recipe.pricingCategory().name())
                     .returning(RECIPES.ID)
                     .fetchOne();
             if (record == null) {
@@ -70,7 +74,8 @@ public class RecipesCatalog {
                     Id.of(record.getId()),
                     recipe.title(),
                     recipe.instructions(),
-                    recipe.ingredients()
+                    recipe.ingredients(),
+                    recipe.pricingCategory()
             );
         }
     }

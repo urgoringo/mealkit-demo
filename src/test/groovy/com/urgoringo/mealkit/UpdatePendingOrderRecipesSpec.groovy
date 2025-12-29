@@ -3,6 +3,8 @@ package com.urgoringo.mealkit
 
 import java.time.LocalDate
 
+import static java.time.DayOfWeek.MONDAY
+import static java.time.DayOfWeek.TUESDAY
 import static java.time.DayOfWeek.WEDNESDAY
 
 class UpdatePendingOrderRecipesSpec extends ApplicationSpecification {
@@ -11,8 +13,8 @@ class UpdatePendingOrderRecipesSpec extends ApplicationSpecification {
         given: "a subscription exists with 3 recipes for upcoming order"
             app.freezeTimeOn(LocalDate.parse("2025-12-10"))
             app
-                    .havingCustomer()
-                    .havingSubscription(WEDNESDAY)
+                .havingCustomer()
+                .havingSubscription(WEDNESDAY)
             def authToken = app.currentAuthToken
 
             def currentSubscription = app.getCustomerSubscription(authToken).expectSuccess()
@@ -30,5 +32,25 @@ class UpdatePendingOrderRecipesSpec extends ApplicationSpecification {
 
             def firstOrder = subscription.upcomingOrders().first
             firstOrder.recipeIds() == newRecipeIds
+    }
+
+    def "update delivery day for upcoming order"() {
+        given: "customer has a subscription with delivery day Monday (2025.11.24)"
+            app.freezeTimeOn(LocalDate.of(2025, 11, 19))
+            def customer = app.havingCustomer()
+            customer.havingSubscription(MONDAY)
+            def subscription = app.getCustomerSubscription(customer.authToken).expectSuccess()
+            def orderId = subscription.upcomingOrders().first.id()
+
+        when: "customer updates delivery day of only the upcoming order to Tuesday"
+            def response = app.updateUpcomingOrderDeliveryDay(orderId, TUESDAY, customer.authToken)
+            def updatedSubscription = response.expectSuccess()
+
+        then: "upcoming order delivery day is Tuesday (2025.11.25)"
+            def firstOrder = updatedSubscription.upcomingOrders().first
+            firstOrder.deliveryDate() == LocalDate.of(2025, 11, 25)
+
+        and: "subscription delivery day is still Monday"
+            updatedSubscription.deliveryDay() == MONDAY
     }
 }

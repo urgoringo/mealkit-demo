@@ -4,6 +4,7 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.*;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,8 @@ public class CreateRecipeService {
     public record CreateRecipeCommand(
         String title,
         List<String> instructions,
-        List<IngredientInput> ingredients
+        List<IngredientInput> ingredients,
+        @Nullable PricingCategory pricingCategory
     ) {
     }
 
@@ -33,7 +35,11 @@ public class CreateRecipeService {
             .map(input -> RecipeIngredient.create(input.ingredientId(), input.quantity()))
             .toList();
 
-        var recipe = Recipe.create(command.title(), command.instructions(), recipeIngredients);
+        PricingCategory pricingCategory = command.pricingCategory() != null 
+            ? command.pricingCategory() 
+            : PricingCategory.MEDIUM;
+
+        var recipe = Recipe.create(command.title(), command.instructions(), recipeIngredients, pricingCategory);
         return recipesCatalog.save(recipe);
     }
 }

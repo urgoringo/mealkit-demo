@@ -1,6 +1,8 @@
 package com.urgoringo.mealkit.recipecatalog.api;
 
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.domain.Money;
+import com.urgoringo.mealkit.recipecatalog.domain.PricingCategory;
 import com.urgoringo.mealkit.recipecatalog.domain.Quantity;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.Unit;
@@ -8,6 +10,7 @@ import com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService;
 import com.urgoringo.mealkit.recipecatalog.application.GetRecipeService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService.*;
@@ -48,7 +52,9 @@ public class RecipeController {
                         detail.quantity().amount(),
                         detail.quantity().unit()
                     ))
-                    .toList()
+                    .toList(),
+                recipeWithDetails.pricingCategory(),
+                recipeWithDetails.price().amount()
             ))
             .toList();
         return ResponseEntity.ok(response);
@@ -70,7 +76,9 @@ public class RecipeController {
                     detail.quantity().amount(),
                     detail.quantity().unit()
                 ))
-                .toList()
+                .toList(),
+            recipeWithDetails.pricingCategory(),
+            recipeWithDetails.price().amount()
         );
         return ResponseEntity.ok(response);
     }
@@ -84,7 +92,8 @@ public class RecipeController {
         CreateRecipeCommand command = new CreateRecipeCommand(
             request.title(),
             request.instructions(),
-            ingredientInputs
+            ingredientInputs,
+            request.pricingCategory()
         );
 
         Recipe recipe = createRecipeService.execute(command);
@@ -103,7 +112,9 @@ public class RecipeController {
                     detail.quantity().amount(),
                     detail.quantity().unit()
                 ))
-                .toList()
+                .toList(),
+            recipeWithDetails.pricingCategory(),
+            recipeWithDetails.price().amount()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -111,7 +122,8 @@ public class RecipeController {
     public record CreateRecipeRequest(
         String title,
         List<String> instructions,
-        List<RecipeIngredientRequest> ingredients
+        List<RecipeIngredientRequest> ingredients,
+        @Nullable PricingCategory pricingCategory
     ) {
     }
 
@@ -122,7 +134,9 @@ public class RecipeController {
         Long id,
         String title,
         List<String> instructions,
-        List<RecipeIngredientResponse> ingredients
+        List<RecipeIngredientResponse> ingredients,
+        PricingCategory pricingCategory,
+        BigDecimal price
     ) {
     }
 

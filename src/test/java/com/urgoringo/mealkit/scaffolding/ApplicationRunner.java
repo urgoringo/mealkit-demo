@@ -1,6 +1,7 @@
 package com.urgoringo.mealkit.scaffolding;
 
 import com.urgoringo.mealkit.customer.domain.Customers;
+import com.urgoringo.mealkit.domain.Money;
 import com.urgoringo.mealkit.recipecatalog.api.IngredientController.CreateIngredientRequest;
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.CreateRecipeRequest;
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeIngredientRequest;
@@ -19,8 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static com.urgoringo.mealkit.customer.api.CustomerController.*;
@@ -66,7 +69,8 @@ public class ApplicationRunner {
         CreateRecipeRequest request = new CreateRecipeRequest(
             builder.title(),
             builder.instructions(),
-            ingredientRequests
+            ingredientRequests,
+            builder.pricingCategory()
         );
         ResponseEntity<RecipeResponse> response = restClient.post()
             .uri("/recipes")
@@ -265,4 +269,30 @@ public class ApplicationRunner {
             .toEntity(OrderResponse.class);
         return ApiResponse.from(response).expectSuccess();
     }
+
+    public ApiResponse<SubscriptionResponse> updateSubscriptionDeliveryDay(String authToken, java.time.DayOfWeek deliveryDay) {
+        UpdateSubscriptionDeliveryDayRequest request = new UpdateSubscriptionDeliveryDayRequest(deliveryDay);
+        ResponseEntity<SubscriptionResponse> response = restClient.put()
+            .uri("/subscriptions/delivery-day")
+            .header("Authorization", "Bearer " + authToken)
+            .body(request)
+            .retrieve()
+            .toEntity(SubscriptionResponse.class);
+        return ApiResponse.from(response);
+    }
+
+    public ApiResponse<SubscriptionResponse> updateUpcomingOrderDeliveryDay(Long orderId, java.time.DayOfWeek deliveryDay, String authToken) {
+        UpdateUpcomingOrderDeliveryDayRequest request = new UpdateUpcomingOrderDeliveryDayRequest(deliveryDay);
+        ResponseEntity<SubscriptionResponse> response = restClient.put()
+            .uri("/subscriptions/upcoming-orders/{orderId}/delivery-day", orderId)
+            .header("Authorization", "Bearer " + authToken)
+            .body(request)
+            .retrieve()
+            .toEntity(SubscriptionResponse.class);
+        return ApiResponse.from(response);
+    }
+
+    public record UpdateSubscriptionDeliveryDayRequest(java.time.DayOfWeek deliveryDay) {}
+
+    public record UpdateUpcomingOrderDeliveryDayRequest(java.time.DayOfWeek deliveryDay) {}
 }

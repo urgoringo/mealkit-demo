@@ -13,7 +13,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.Period;
 
 @NullMarked
 @Slf4j
