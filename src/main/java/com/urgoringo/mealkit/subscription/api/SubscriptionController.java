@@ -8,6 +8,7 @@ import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.application.CreateSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionHistoryService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionService;
+import com.urgoringo.mealkit.subscription.application.UpdateSubscriptionDeliveryDayService;
 import com.urgoringo.mealkit.subscription.application.UpdateUpcomingOrderRecipesService;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class SubscriptionController {
     private final GetSubscriptionService getSubscriptionService;
     private final GetSubscriptionHistoryService getSubscriptionHistoryService;
     private final UpdateUpcomingOrderRecipesService updateUpcomingOrderRecipesService;
+    private final UpdateSubscriptionDeliveryDayService updateSubscriptionDeliveryDayService;
     private final SubscriptionApiMapper subscriptionApiMapper;
     private final GetUpcomingOrderService getUpcomingOrderService;
 
@@ -86,6 +88,15 @@ public class SubscriptionController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/delivery-day")
+    public ResponseEntity<SubscriptionResponse> updateSubscriptionDeliveryDay(
+            @AuthenticationPrincipal Id<Customer> customerId,
+            @Valid @RequestBody UpdateSubscriptionDeliveryDayRequest request) {
+        Subscription subscription = updateSubscriptionDeliveryDayService.execute(customerId, request.deliveryDay());
+        SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
+        return ResponseEntity.ok(response);
+    }
+
     public record CreateSubscriptionRequest(
             @NotNull List<Long> recipeIds,
             @NotBlank String deliveryAddress,
@@ -94,6 +105,10 @@ public class SubscriptionController {
 
     public record UpdateUpcomingOrderRecipesRequest(
             @NotNull List<Long> recipeIds
+    ) {}
+
+    public record UpdateSubscriptionDeliveryDayRequest(
+            @NotNull DayOfWeek deliveryDay
     ) {}
 
     public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, DayOfWeek deliveryDay) {}

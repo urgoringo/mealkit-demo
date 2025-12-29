@@ -26,9 +26,11 @@ public record Subscription(
 
     private static final Period PROCESSING_BEFORE_DELIVERY = Period.ofDays(3);
 
-//    public Subscription {
-//        upcomingOrders = new TreeSet<>(Comparator.comparing(UpcomingOrder::deliveryDate));
-//    }
+    public Subscription {
+        if (upcomingOrders.isEmpty()) {
+            throw new ValidationFailed("Subscription must have at least one upcoming order");
+        }
+    }
 
     public static Subscription signup(
         Id<Customer> customerId,
@@ -68,7 +70,7 @@ public record Subscription(
             return this;
         }
 
-        LocalDate nextDeliveryDate = upcomingOrders.isEmpty() 
+        LocalDate nextDeliveryDate = upcomingOrders.isEmpty()
             ? LocalDate.now().plusDays(3).with(next(deliveryDay))
             : nextUpcomingOrderDeliveryDate();
         PendingOrder newOrder = PendingOrder.placed(recipeIds, nextDeliveryDate);
@@ -83,10 +85,11 @@ public record Subscription(
         return switch (nextOrder) {
             case PendingOrder pendingOrder -> {
                 if (pendingOrder.shouldBeLocked(clock)) {
-                    List<UpcomingOrder> updatedOrders = upcomingOrders.stream()
-                        .map(order -> order.equals(pendingOrder) ? pendingOrder.locked() : order)
-                        .toList();
-                    yield new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
+                    yield new Subscription(id,
+                        customerId,
+                        OrderList.with(upcomingOrders, pendingOrder.locked()),
+                        deliveryAddress,
+                        deliveryDay);
                 }
                 yield this;
             }
@@ -100,5 +103,22 @@ public record Subscription(
             .findFirst()
             .orElseThrow();
         return nextPendingOrder.deliveryDate().minus(PROCESSING_BEFORE_DELIVERY);
+    }
+
+    public Subscription withUpdatedDeliveryDay(DayOfWeek newDeliveryDay, Clock clock) {
+        LocalDate today = LocalDate.now(clock);
+        List<UpcomingOrder> updatedOrders = upcomingOrders.stream()
+            .map(order -> {
+                if (order.isLocked()) {
+                    return order;
+                }
+                LocalDate newDeliveryDate = today.plusDays(3).with(next(newDeliveryDay));
+                return switch (order) {
+                    case PendingOrder pendingOrder -> pendingOrder.withUpdatedDeliveryDate(newDeliveryDate);
+                    case LockedOrder lockedOrder -> lockedOrder;
+                };
+            })
+            .toList();
+        return new Subscription(id, customerId, updatedOrders, deliveryAddress, newDeliveryDay);
     }
 }

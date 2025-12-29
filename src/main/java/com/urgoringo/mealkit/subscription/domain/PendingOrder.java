@@ -35,6 +35,10 @@ public record PendingOrder(
         return new PendingOrder(id, recipeIds, deliveryDate);
     }
 
+    public PendingOrder withUpdatedDeliveryDate(LocalDate newDeliveryDate) {
+        return new PendingOrder(id, recipeIds, newDeliveryDate);
+    }
+
     public LockedOrder locked() {
         return new LockedOrder(Id.of(id.value()), recipeIds, deliveryDate);
     }
