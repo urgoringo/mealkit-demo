@@ -3,9 +3,9 @@
 - [x] Add delivery address to subscription
 - [x] Add delivery date to orders
 - [x] Select recipes for next order
-- [ ] Update recipes for an existing order
-- [ ] Lock recipes selection
-- [ ] Mark order as delivered
+- [x] Update recipes for an existing order
+- [x] Lock recipes selection
+- [x] Mark order as delivered
 - [ ] Override delivery address per order
 - [ ] Max 14 recipes per order
 - [-] JBehave report
