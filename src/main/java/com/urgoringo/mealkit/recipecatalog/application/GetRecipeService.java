@@ -8,14 +8,13 @@ import com.urgoringo.mealkit.recipecatalog.domain.PricingCategory;
 import com.urgoringo.mealkit.recipecatalog.domain.Quantity;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
-import com.urgoringo.mealkit.recipecatalog.domain.RecipePricingCategoriesRepository;
-import com.urgoringo.mealkit.recipecatalog.domain.RecipePricingCategory;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @NullMarked
 @Service
@@ -24,7 +23,13 @@ public class GetRecipeService {
 
     private final RecipesCatalog recipesCatalog;
     private final IngredientsCatalog ingredientsCatalog;
-    private final RecipePricingCategoriesRepository pricingCategoriesRepository;
+    
+    // Price lookup map for pricing categories
+    private static final Map<PricingCategory, Money> PRICING = Map.of(
+        PricingCategory.LOW, Money.of(5.00),
+        PricingCategory.MEDIUM, Money.of(10.50),
+        PricingCategory.HIGH, Money.of(15.00)
+    );
 
     public record RecipeWithDetails(
         Recipe recipe,
@@ -54,12 +59,12 @@ public class GetRecipeService {
             })
             .toList();
 
-        RecipePricingCategory recipePricingCategory = pricingCategoriesRepository.findById(recipe.pricingCategoryId());
-        if (recipePricingCategory == null) {
-            throw new IllegalStateException("Recipe pricing category not found: " + recipe.pricingCategoryId());
+        Money price = PRICING.get(recipe.pricingCategory());
+        if (price == null) {
+            throw new IllegalStateException("Price not found for pricing category: " + recipe.pricingCategory());
         }
 
-        return new RecipeWithDetails(recipe, ingredientDetails, recipePricingCategory.name(), recipePricingCategory.price());
+        return new RecipeWithDetails(recipe, ingredientDetails, recipe.pricingCategory(), price);
     }
 
     @Transactional(readOnly = true)

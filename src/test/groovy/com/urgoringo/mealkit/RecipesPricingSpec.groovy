@@ -9,13 +9,6 @@ class RecipesPricingSpec extends ApplicationSpecification {
 
     def "recipe pricing is based on pricing category"() {
         given:
-            "system has following recipe pricing categories"
-            app.havingRecipePricingCategories([
-                    (LOW): 5.0,
-                    (MEDIUM): 10.5,
-                    (HIGH): 15.0
-            ])
-        and:
             "system has a recipe with pricing category MEDIUM"
             def recipeId = app.havingRecipe(aRecipe().withPricingCategory(MEDIUM)).id()
 

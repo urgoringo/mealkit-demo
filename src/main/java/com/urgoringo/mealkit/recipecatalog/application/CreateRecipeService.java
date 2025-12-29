@@ -17,13 +17,12 @@ public class CreateRecipeService {
 
     private final RecipesCatalog recipesCatalog;
     private final IngredientsCatalog ingredientsCatalog;
-    private final RecipePricingCategoriesRepository pricingCategoriesRepository;
 
     public record CreateRecipeCommand(
         String title,
         List<String> instructions,
         List<IngredientInput> ingredients,
-        @Nullable Id<RecipePricingCategory> pricingCategoryId
+        @Nullable PricingCategory pricingCategory
     ) {
     }
 
@@ -36,14 +35,11 @@ public class CreateRecipeService {
             .map(input -> RecipeIngredient.create(input.ingredientId(), input.quantity()))
             .toList();
 
-        Id<RecipePricingCategory> pricingCategoryId = command.pricingCategoryId();
-        if (pricingCategoryId == null) {
-            RecipePricingCategory mediumCategory = pricingCategoriesRepository.findByName(PricingCategory.MEDIUM)
-                .orElseThrow(() -> new IllegalStateException("MEDIUM pricing category not found"));
-            pricingCategoryId = mediumCategory.id();
-        }
+        PricingCategory pricingCategory = command.pricingCategory() != null 
+            ? command.pricingCategory() 
+            : PricingCategory.MEDIUM;
 
-        var recipe = Recipe.create(command.title(), command.instructions(), recipeIngredients, pricingCategoryId);
+        var recipe = Recipe.create(command.title(), command.instructions(), recipeIngredients, pricingCategory);
         return recipesCatalog.save(recipe);
     }
 }

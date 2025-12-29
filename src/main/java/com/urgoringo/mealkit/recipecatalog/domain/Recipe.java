@@ -11,7 +11,7 @@ public record Recipe(
         String title,
         List<String> instructions,
         List<RecipeIngredient> ingredients,
-        Id<RecipePricingCategory> pricingCategoryId
+        PricingCategory pricingCategory
 ) {
     public Recipe {
         if (ingredients.isEmpty()) {
@@ -19,13 +19,13 @@ public record Recipe(
         }
     }
 
-    public static Recipe create(String title, List<String> instructions, List<RecipeIngredient> ingredients, Id<RecipePricingCategory> pricingCategoryId) {
+    public static Recipe create(String title, List<String> instructions, List<RecipeIngredient> ingredients, PricingCategory pricingCategory) {
         return new Recipe(
                 Id.unassigned(), 
                 title, 
                 List.copyOf(instructions),
                 List.copyOf(ingredients),
-                pricingCategoryId
+                pricingCategory
         );
     }
 }

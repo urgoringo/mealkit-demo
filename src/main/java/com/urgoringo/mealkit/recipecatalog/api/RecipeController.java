@@ -92,7 +92,7 @@ public class RecipeController {
             request.title(),
             request.instructions(),
             ingredientInputs,
-            request.pricingCategoryId() != null ? Id.of(request.pricingCategoryId()) : null
+            request.pricingCategory()
         );
 
         Recipe recipe = createRecipeService.execute(command);
@@ -122,7 +122,7 @@ public class RecipeController {
         String title,
         List<String> instructions,
         List<RecipeIngredientRequest> ingredients,
-        @Nullable Long pricingCategoryId
+        @Nullable PricingCategory pricingCategory
     ) {
     }
 

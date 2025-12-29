@@ -7,9 +7,6 @@ import com.urgoringo.mealkit.recipecatalog.api.RecipeController.CreateRecipeRequ
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeIngredientRequest;
 import com.urgoringo.mealkit.recipecatalog.api.RecipeController.RecipeResponse;
 import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
-import com.urgoringo.mealkit.recipecatalog.domain.PricingCategory;
-import com.urgoringo.mealkit.recipecatalog.domain.RecipePricingCategoriesRepository;
-import com.urgoringo.mealkit.recipecatalog.domain.RecipePricingCategory;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.Getter;
@@ -53,7 +50,6 @@ public class ApplicationRunner {
     private final Subscriptions subscriptions;
     private final TimeMachine timeMachine;
     private final BackofficeApplicationRunner backofficeRunner;
-    private final RecipePricingCategoriesRepository pricingCategoriesRepository;
     @Nullable
     @Getter
     private String currentAuthToken;
@@ -70,18 +66,11 @@ public class ApplicationRunner {
                 return new RecipeIngredientRequest(ingredientId, ingredient.quantity(), ingredient.unit());
             }).toList();
 
-        Long pricingCategoryId = null;
-        if (builder.pricingCategory() != null) {
-            pricingCategoryId = pricingCategoriesRepository.findByName(builder.pricingCategory())
-                .map(category -> category.id().value())
-                .orElse(null);
-        }
-
         CreateRecipeRequest request = new CreateRecipeRequest(
             builder.title(),
             builder.instructions(),
             ingredientRequests,
-            pricingCategoryId
+            builder.pricingCategory()
         );
         ResponseEntity<RecipeResponse> response = restClient.post()
             .uri("/recipes")
@@ -306,14 +295,4 @@ public class ApplicationRunner {
     public record UpdateSubscriptionDeliveryDayRequest(java.time.DayOfWeek deliveryDay) {}
 
     public record UpdateUpcomingOrderDeliveryDayRequest(java.time.DayOfWeek deliveryDay) {}
-
-    public void havingRecipePricingCategories(Map<PricingCategory, BigDecimal> categories) {
-        categories.forEach((category, price) -> {
-            var existing = pricingCategoriesRepository.findByName(category);
-            if (existing.isEmpty()) {
-                RecipePricingCategory pricingCategory = RecipePricingCategory.create(category, Money.of(price));
-                pricingCategoriesRepository.save(pricingCategory);
-            }
-        });
-    }
 }
