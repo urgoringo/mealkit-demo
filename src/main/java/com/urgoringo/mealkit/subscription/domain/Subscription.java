@@ -121,4 +121,23 @@ public record Subscription(
             .toList();
         return new Subscription(id, customerId, updatedOrders, deliveryAddress, newDeliveryDay);
     }
+
+    public Subscription withUpdatedOrderDeliveryDate(Id<UpcomingOrder> orderId, DayOfWeek newDeliveryDay, Clock clock) {
+        LocalDate today = LocalDate.now(clock);
+        LocalDate newDeliveryDate = today.plusDays(3).with(next(newDeliveryDay));
+        
+        List<UpcomingOrder> updatedOrders = upcomingOrders.stream()
+            .map(order -> {
+                if (order.id().equals(orderId)) {
+                    return switch (order) {
+                        case PendingOrder pendingOrder -> pendingOrder.withUpdatedDeliveryDate(newDeliveryDate);
+                        case LockedOrder _ -> throw new ValidationFailed("Cannot update locked order");
+                    };
+                }
+                return order;
+            })
+            .toList();
+
+        return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
+    }
 }

@@ -277,5 +277,18 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
+    public ApiResponse<SubscriptionResponse> updateUpcomingOrderDeliveryDay(Long orderId, java.time.DayOfWeek deliveryDay, String authToken) {
+        UpdateUpcomingOrderDeliveryDayRequest request = new UpdateUpcomingOrderDeliveryDayRequest(deliveryDay);
+        ResponseEntity<SubscriptionResponse> response = restClient.put()
+            .uri("/subscriptions/upcoming-orders/{orderId}/delivery-day", orderId)
+            .header("Authorization", "Bearer " + authToken)
+            .body(request)
+            .retrieve()
+            .toEntity(SubscriptionResponse.class);
+        return ApiResponse.from(response);
+    }
+
     public record UpdateSubscriptionDeliveryDayRequest(java.time.DayOfWeek deliveryDay) {}
+
+    public record UpdateUpcomingOrderDeliveryDayRequest(java.time.DayOfWeek deliveryDay) {}
 }

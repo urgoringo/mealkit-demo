@@ -9,6 +9,7 @@ import com.urgoringo.mealkit.subscription.application.CreateSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionHistoryService;
 import com.urgoringo.mealkit.subscription.application.GetSubscriptionService;
 import com.urgoringo.mealkit.subscription.application.UpdateSubscriptionDeliveryDayService;
+import com.urgoringo.mealkit.subscription.application.UpdateUpcomingOrderDeliveryDayService;
 import com.urgoringo.mealkit.subscription.application.UpdateUpcomingOrderRecipesService;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import jakarta.validation.Valid;
@@ -36,6 +37,7 @@ public class SubscriptionController {
     private final GetSubscriptionHistoryService getSubscriptionHistoryService;
     private final UpdateUpcomingOrderRecipesService updateUpcomingOrderRecipesService;
     private final UpdateSubscriptionDeliveryDayService updateSubscriptionDeliveryDayService;
+    private final UpdateUpcomingOrderDeliveryDayService updateUpcomingOrderDeliveryDayService;
     private final SubscriptionApiMapper subscriptionApiMapper;
     private final GetUpcomingOrderService getUpcomingOrderService;
 
@@ -97,6 +99,16 @@ public class SubscriptionController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/upcoming-orders/{orderId}/delivery-day")
+    public ResponseEntity<SubscriptionResponse> updateUpcomingOrderDeliveryDay(
+            @AuthenticationPrincipal Id<Customer> customerId,
+            @PathVariable Long orderId,
+            @Valid @RequestBody UpdateUpcomingOrderDeliveryDayRequest request) {
+        Subscription subscription = updateUpcomingOrderDeliveryDayService.execute(customerId, Id.of(orderId), request.deliveryDay());
+        SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
+        return ResponseEntity.ok(response);
+    }
+
     public record CreateSubscriptionRequest(
             @NotNull List<Long> recipeIds,
             @NotBlank String deliveryAddress,
@@ -108,6 +120,10 @@ public class SubscriptionController {
     ) {}
 
     public record UpdateSubscriptionDeliveryDayRequest(
+            @NotNull DayOfWeek deliveryDay
+    ) {}
+
+    public record UpdateUpcomingOrderDeliveryDayRequest(
             @NotNull DayOfWeek deliveryDay
     ) {}
 
