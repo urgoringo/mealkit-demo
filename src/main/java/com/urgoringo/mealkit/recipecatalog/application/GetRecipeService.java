@@ -1,11 +1,15 @@
 package com.urgoringo.mealkit.recipecatalog.application;
 
 import com.urgoringo.mealkit.domain.Id;
+import com.urgoringo.mealkit.domain.Money;
 import com.urgoringo.mealkit.recipecatalog.domain.Ingredient;
 import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
+import com.urgoringo.mealkit.recipecatalog.domain.PricingCategory;
 import com.urgoringo.mealkit.recipecatalog.domain.Quantity;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
+import com.urgoringo.mealkit.recipecatalog.domain.RecipePricingCategoriesRepository;
+import com.urgoringo.mealkit.recipecatalog.domain.RecipePricingCategory;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
@@ -20,10 +24,13 @@ public class GetRecipeService {
 
     private final RecipesCatalog recipesCatalog;
     private final IngredientsCatalog ingredientsCatalog;
+    private final RecipePricingCategoriesRepository pricingCategoriesRepository;
 
     public record RecipeWithDetails(
         Recipe recipe,
-        List<IngredientDetail> ingredientDetails
+        List<IngredientDetail> ingredientDetails,
+        PricingCategory pricingCategory,
+        Money price
     ) {
     }
 
@@ -47,7 +54,12 @@ public class GetRecipeService {
             })
             .toList();
 
-        return new RecipeWithDetails(recipe, ingredientDetails);
+        RecipePricingCategory recipePricingCategory = pricingCategoriesRepository.findById(recipe.pricingCategoryId());
+        if (recipePricingCategory == null) {
+            throw new IllegalStateException("Recipe pricing category not found: " + recipe.pricingCategoryId());
+        }
+
+        return new RecipeWithDetails(recipe, ingredientDetails, recipePricingCategory.name(), recipePricingCategory.price());
     }
 
     @Transactional(readOnly = true)
