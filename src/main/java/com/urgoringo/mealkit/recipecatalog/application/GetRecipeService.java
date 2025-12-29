@@ -8,13 +8,13 @@ import com.urgoringo.mealkit.recipecatalog.domain.PricingCategory;
 import com.urgoringo.mealkit.recipecatalog.domain.Quantity;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
+import com.urgoringo.mealkit.recipecatalog.domain.RecipePricingCategoriesRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 
 @NullMarked
 @Service
@@ -23,13 +23,7 @@ public class GetRecipeService {
 
     private final RecipesCatalog recipesCatalog;
     private final IngredientsCatalog ingredientsCatalog;
-    
-    // Price lookup map for pricing categories
-    private static final Map<PricingCategory, Money> PRICING = Map.of(
-        PricingCategory.LOW, Money.of(5.00),
-        PricingCategory.MEDIUM, Money.of(10.50),
-        PricingCategory.HIGH, Money.of(15.00)
-    );
+    private final RecipePricingCategoriesRepository pricingCategoriesRepository;
 
     public record RecipeWithDetails(
         Recipe recipe,
@@ -59,10 +53,8 @@ public class GetRecipeService {
             })
             .toList();
 
-        Money price = PRICING.get(recipe.pricingCategory());
-        if (price == null) {
-            throw new IllegalStateException("Price not found for pricing category: " + recipe.pricingCategory());
-        }
+        Money price = pricingCategoriesRepository.findPriceByCategory(recipe.pricingCategory())
+            .orElseThrow(() -> new IllegalStateException("Price not found for pricing category: " + recipe.pricingCategory()));
 
         return new RecipeWithDetails(recipe, ingredientDetails, recipe.pricingCategory(), price);
     }
