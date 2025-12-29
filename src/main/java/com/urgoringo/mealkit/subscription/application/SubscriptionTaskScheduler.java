@@ -31,7 +31,7 @@ public class SubscriptionTaskScheduler {
         log.info("Scheduling task to process subscription {} at {}", subscriptionId, processingDate);
         TaskInstance<Long> taskInstanceObj = new TaskInstance<>(
             ProcessSubscriptionsTask.TASK_NAME,
-            String.valueOf(subscriptionId),
+            subscriptionId + "_" + processingDate,
             subscriptionId
         );
         schedulerClient.scheduleIfNotExists(taskInstanceObj, processingDate.atStartOfDay(clock.getZone()).toInstant());
