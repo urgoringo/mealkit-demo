@@ -16,6 +16,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.urgoringo.mealkit.recipecatalog.domain.PricingCategory.MEDIUM;
 import static java.time.DayOfWeek.WEDNESDAY;
 
 public class TestFactory {
@@ -41,7 +42,7 @@ public class TestFactory {
     }
 
     public static RecipeBuilder aRecipe() {
-        return new RecipeBuilder(aRecipeName(), List.of(), List.of(anIngredient()), null);
+        return new RecipeBuilder(aRecipeName(), List.of(), List.of(anIngredient()), MEDIUM);
     }
 
     public static SubscriptionBuilder aSubscription() {
@@ -61,7 +62,7 @@ public class TestFactory {
     }
 
    @With
-    public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredients, @Nullable PricingCategory pricingCategory) {
+    public record RecipeBuilder(String title, List<String> instructions, List<IngredientBuilder> ingredients, PricingCategory pricingCategory) {
     }
 
     @With

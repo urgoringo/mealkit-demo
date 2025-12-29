@@ -17,6 +17,6 @@ class RecipesPricingSpec extends ApplicationSpecification {
 
         then: "system returns recipe pricing details"
             recipe.pricingCategory() == MEDIUM
-            recipe.price().toDouble() == 10.5
+            recipe.price() == 10.50
     }
 }

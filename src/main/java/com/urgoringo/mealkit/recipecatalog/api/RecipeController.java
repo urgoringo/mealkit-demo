@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService.*;
@@ -53,7 +54,7 @@ public class RecipeController {
                     ))
                     .toList(),
                 recipeWithDetails.pricingCategory(),
-                recipeWithDetails.price()
+                recipeWithDetails.price().amount()
             ))
             .toList();
         return ResponseEntity.ok(response);
@@ -77,7 +78,7 @@ public class RecipeController {
                 ))
                 .toList(),
             recipeWithDetails.pricingCategory(),
-            recipeWithDetails.price()
+            recipeWithDetails.price().amount()
         );
         return ResponseEntity.ok(response);
     }
@@ -113,7 +114,7 @@ public class RecipeController {
                 ))
                 .toList(),
             recipeWithDetails.pricingCategory(),
-            recipeWithDetails.price()
+            recipeWithDetails.price().amount()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -135,7 +136,7 @@ public class RecipeController {
         List<String> instructions,
         List<RecipeIngredientResponse> ingredients,
         PricingCategory pricingCategory,
-        Money price
+        BigDecimal price
     ) {
     }
 
