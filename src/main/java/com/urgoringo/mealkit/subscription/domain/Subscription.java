@@ -112,6 +112,11 @@ public record Subscription(
                 if (order.isLocked()) {
                     return order;
                 }
+                
+                if (order.deliveryDate().getDayOfWeek() != deliveryDay) {
+                    return order;
+                }
+                
                 LocalDate newDeliveryDate = today.plusDays(3).with(next(newDeliveryDay));
                 return switch (order) {
                     case PendingOrder pendingOrder -> pendingOrder.withUpdatedDeliveryDate(newDeliveryDate);
