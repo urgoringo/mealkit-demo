@@ -47,6 +47,34 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
             statusCode == 422
     }
 
+    def "cannot create subscription with more than 8 recipes"() {
+        given: "new customer has selected 9 recipes"
+            def authToken = app.signupCustomer().expectSuccess().token()
+
+            def chosenRecipeIds = app.getRecipes(9)
+
+        when: "customer tries to sign up for subscription"
+            def response = app.create(aSubscription().withRecipeIds(chosenRecipeIds), authToken)
+
+        then: "system returns 422 with validation error"
+            def statusCode = response.expectError()
+            statusCode == 422
+    }
+
+    def "subscription can have 8 recipes"() {
+        given: "new customer has selected 8 recipes"
+            def authToken = app.signupCustomer().expectSuccess().token()
+
+            def chosenRecipeIds = app.getRecipes(8)
+
+        when: "customer tries to sign up for subscription"
+            def response = app.create(aSubscription().withRecipeIds(chosenRecipeIds), authToken)
+
+        then: "system creates new subscription with upcoming order that contains these 8 recipes"
+            def subscription = response.expectSuccess()
+            subscription.upcomingOrders().first.recipeIds() == chosenRecipeIds
+    }
+
     def "delivery address is required"() {
         when: "customer tries to create subscription without delivery address"
             def authToken = app.signupCustomer().expectSuccess().token()

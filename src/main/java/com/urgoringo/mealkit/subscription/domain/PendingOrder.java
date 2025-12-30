@@ -19,11 +19,15 @@ public record PendingOrder(
     LocalDate deliveryDate
 ) implements UpcomingOrder {
     private static final int MINIMUM_RECIPE_COUNT = 3;
+    private static final int MAXIMUM_RECIPE_COUNT = 8;
     private static final int DAYS_BEFORE_DELIVERY_TO_LOCK = 3;
 
     public PendingOrder {
         if (recipeIds.size() < MINIMUM_RECIPE_COUNT) {
             throw new ValidationFailed("Order must contain at least " + MINIMUM_RECIPE_COUNT + " recipes");
+        }
+        if (recipeIds.size() > MAXIMUM_RECIPE_COUNT) {
+            throw new ValidationFailed("Order cannot contain more than " + MAXIMUM_RECIPE_COUNT + " recipes");
         }
     }
 
