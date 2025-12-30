@@ -13,7 +13,7 @@ class PreselectRecipesSpec extends ApplicationSpecification {
             app.freezeTimeOn(signupDate)
             app
                     .havingCustomer()
-                    .havingSubscription(deliveryDate.getDayOfWeek())
+                    .having(deliveryDate.getDayOfWeek())
             def authToken = app.currentAuthToken
 
         when: "current day becomes 2125.11.21"

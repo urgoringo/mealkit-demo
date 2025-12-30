@@ -12,7 +12,7 @@ class UpdateSubscriptionDeliveryDaySpec extends ApplicationSpecification {
             def today = LocalDate.of(2025, 11, 19)
             app.freezeTimeOn(today)
             def customer = app.havingCustomer()
-            customer.havingSubscription(MONDAY)
+            customer.having(MONDAY)
 
         when: "customer updates delivery day to Tuesday"
             def response = app.updateSubscriptionDeliveryDay(customer.authToken, TUESDAY)
@@ -28,7 +28,7 @@ class UpdateSubscriptionDeliveryDaySpec extends ApplicationSpecification {
         given: "customer has a subscription with delivery day Monday (2025.11.24)"
             app.freezeTimeOn(LocalDate.of(2025, 11, 19))
             def customer = app.havingCustomer()
-            customer.havingSubscription(MONDAY).withNextUpcomingOrder().deliveryDayChangedTo(WEDNESDAY)
+            customer.having(MONDAY).withNextUpcomingOrder().deliveryDayChangedTo(WEDNESDAY)
 
         when: "customer updates delivery day to Tuesday"
             def response = app.updateSubscriptionDeliveryDay(customer.authToken, TUESDAY)

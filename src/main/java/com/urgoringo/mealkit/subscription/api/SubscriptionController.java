@@ -129,5 +129,5 @@ public class SubscriptionController {
 
     public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, DayOfWeek deliveryDay) {}
 
-    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate, OrderStatus status) {}
+    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate, OrderStatus status, java.math.BigDecimal totalPrice) {}
 }

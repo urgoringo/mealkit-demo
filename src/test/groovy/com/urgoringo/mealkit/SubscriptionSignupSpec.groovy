@@ -83,7 +83,7 @@ class SubscriptionSignupSpec extends ApplicationSpecification {
 
         when: "customer creates subscription they select Monday as the delivery day"
             def deliveryDay = MONDAY
-            customer.havingSubscription(deliveryDay)
+            customer.having(deliveryDay)
 
         then: "first order will be delivered on 2025.11.24 (next Monday)"
             def subscription = app.getCustomerSubscription(customer.authToken).expectSuccess()

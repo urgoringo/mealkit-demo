@@ -11,7 +11,7 @@ class OrderLockingSpec extends ApplicationSpecification {
         given: "a subscription with an upcoming order on 2125-11-24"
             def customer = app.havingCustomer()
             app.freezeTimeOn(LocalDate.parse("2125-11-20"))
-            customer.havingSubscription(LocalDate.parse("2125-11-24").dayOfWeek).get()
+            customer.having(LocalDate.parse("2125-11-24").dayOfWeek).get()
 
         when: "date is 2125-11-21"
             app.freezeTimeOn(LocalDate.parse("2125-11-21"))
@@ -27,7 +27,7 @@ class OrderLockingSpec extends ApplicationSpecification {
         given: "a subscription with an upcoming order on 2125-11-24"
             def customer = app.havingCustomer()
             app.freezeTimeOn(LocalDate.parse("2125-11-20"))
-            customer.havingSubscription(LocalDate.parse("2125-11-24").dayOfWeek).get()
+            customer.having(LocalDate.parse("2125-11-24").dayOfWeek).get()
 
         when: "date is 2025-11-20"
             app.freezeTimeOn(LocalDate.parse("2025-11-20"))

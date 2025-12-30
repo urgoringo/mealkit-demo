@@ -10,7 +10,6 @@ import java.util.Objects;
 public record Money(BigDecimal amount) {
     
     public Money {
-        Objects.requireNonNull(amount, "Amount cannot be null");
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Money amount cannot be negative");
         }
@@ -31,8 +30,8 @@ public record Money(BigDecimal amount) {
         return new Money(amount.setScale(2, RoundingMode.HALF_UP));
     }
     
-    public double toDouble() {
-        return amount.doubleValue();
+    public Money add(Money other) {
+        return new Money(this.amount.add(other.amount));
     }
     
     @Override
