@@ -1,32 +1,26 @@
-package com.urgoringo.mealkit.subscription.application;
+package com.urgoringo.mealkit.subscription.domain;
 
-import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.Money;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipePrices;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.List;
+import org.springframework.stereotype.Component;
 
 @NullMarked
-@Service
+@Component
 @RequiredArgsConstructor
-public class CalculateOrderTotalPriceService {
+public class OrderPrices {
 
     private final RecipesCatalog recipesCatalog;
     private final RecipePrices recipePrices;
 
-    @Transactional(readOnly = true)
-    public Money execute(List<Id<Recipe>> recipeIds) {
-        return recipeIds.stream()
+    public Money totalPrice(Order order) {
+        return order.recipeIds().stream()
             .map(recipesCatalog::findById)
             .map(Recipe::pricingCategory)
             .map(recipePrices::by)
-            .reduce(Money.of(BigDecimal.ZERO), Money::add);
+            .reduce(Money.ZERO, Money::add);
     }
 }

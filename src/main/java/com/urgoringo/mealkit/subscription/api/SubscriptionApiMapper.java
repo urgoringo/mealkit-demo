@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.subscription.api;
 import com.urgoringo.mealkit.subscription.api.SubscriptionController.OrderResponse;
 import com.urgoringo.mealkit.subscription.api.SubscriptionController.SubscriptionResponse;
 import com.urgoringo.mealkit.domain.Id;
-import com.urgoringo.mealkit.subscription.application.CalculateOrderTotalPriceService;
 import com.urgoringo.mealkit.subscription.domain.*;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ import java.util.List;
 public class SubscriptionApiMapper {
 
     private final Clock clock;
-    private final CalculateOrderTotalPriceService calculateOrderTotalPriceService;
+    private final OrderPrices orderPrices;
 
     public SubscriptionResponse toResponse(Subscription subscription) {
         return new SubscriptionResponse(
@@ -34,7 +33,7 @@ public class SubscriptionApiMapper {
     }
 
     public OrderResponse toOrderResponse(UpcomingOrder order) {
-        var totalPrice = calculateOrderTotalPriceService.execute(order.recipeIds());
+        var totalPrice = orderPrices.totalPrice(order);
         return new OrderResponse(
                 order.id().value(),
                 mapRecipeIdsToLong(order.recipeIds()),
@@ -45,7 +44,7 @@ public class SubscriptionApiMapper {
     }
 
     public OrderResponse toOrderResponse(DeliveredOrder order) {
-        var totalPrice = calculateOrderTotalPriceService.execute(order.recipeIds());
+        var totalPrice = orderPrices.totalPrice(order);
         return new OrderResponse(
                 order.id().value(),
                 mapRecipeIdsToLong(order.recipeIds()),

@@ -9,6 +9,8 @@ import java.util.Objects;
 @NullMarked
 public record Money(BigDecimal amount) {
     
+    public static final Money ZERO = new Money(BigDecimal.ZERO);
+    
     public Money {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Money amount cannot be negative");
