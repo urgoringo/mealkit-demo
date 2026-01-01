@@ -17,7 +17,25 @@ public class TestContainersConfiguration {
     @ServiceConnection
     PostgreSQLContainer<?> postgresContainer() {
         return new PostgreSQLContainer<>("postgres:18.1-alpine")
-                .withReuse(true);
+                .withReuse(true)
+                .withCommand(
+                        "postgres",
+                        // Disable fsync for test speed (safe for tests, not for production)
+                        "-c", "fsync=off",
+                        "-c", "synchronous_commit=off",
+                        "-c", "full_page_writes=off",
+                        // I/O concurrency settings
+                        "-c", "effective_io_concurrency=200",
+                        "-c", "maintenance_io_concurrency=50",
+                        // Memory and buffer settings (adjusted for container environment)
+                        "-c", "shared_buffers=256MB",
+                        "-c", "effective_cache_size=1GB",
+                        // WAL settings for faster writes
+                        "-c", "max_wal_size=2GB",
+                        "-c", "checkpoint_timeout=30min",
+                        // Planner settings for faster queries
+                        "-c", "random_page_cost=1.1"
+                );
     }
 
     @Bean

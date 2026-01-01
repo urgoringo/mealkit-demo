@@ -50,6 +50,16 @@ The project uses the [monosoul jOOQ Gradle plugin](https://github.com/monosoul/j
 
 **Note**: Application specs (Spock tests extending `ApplicationSpecification`) use embedded PostgreSQL database via `embedded-database-spring-test` library. This provides faster test execution compared to Testcontainers. Other integration tests may still use Testcontainers.
 
+**Test Performance Optimizations**: PostgreSQL test instances are configured with settings that prioritize speed over durability:
+- `fsync=off`, `synchronous_commit=off`: Disable disk synchronization for faster writes
+- `shared_buffers=256MB`: Increased buffer cache for better query performance
+- `effective_io_concurrency=200`: Enable concurrent I/O operations
+- `maintenance_io_concurrency=50`: Parallel maintenance operations
+- WAL and checkpoint tuning: Reduce checkpoint frequency and overhead
+- `random_page_cost=1.1`: Optimized for SSD/memory storage
+
+These settings are appropriate for test environments where data durability is not required.
+
 **Gradle Daemon**: Always use the Gradle daemon (default behavior). Do not use `--no-daemon` flag unless there's a specific reason (e.g., CI/CD environments requiring clean JVM per build). The daemon provides faster builds by reusing JVM processes and keeping compiled classes in memory.
 
 ### Running the Application
