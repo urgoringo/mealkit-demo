@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urgoringo.mealkit.domain.Id;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jooq.JSON;
+import org.jooq.JSONB;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 
@@ -80,7 +80,7 @@ public class RecipesCatalog {
         return Arrays.asList(array);
     }
 
-    private List<RecipeIngredient> parseRecipeIngredients(JSON json) {
+    private List<RecipeIngredient> parseRecipeIngredients(JSONB json) {
         if (json == null) {
             return List.of();
         }
@@ -97,7 +97,7 @@ public class RecipesCatalog {
         }
     }
 
-    private JSON toJson(List<RecipeIngredient> recipeIngredients) {
+    private JSONB toJson(List<RecipeIngredient> recipeIngredients) {
         try {
             List<RecipeIngredientDto> dtos = recipeIngredients.stream()
                     .map(ri -> new RecipeIngredientDto(
@@ -106,7 +106,7 @@ public class RecipesCatalog {
                             ri.quantity().unit().name()
                     ))
                     .toList();
-            return JSON.json(objectMapper.writeValueAsString(dtos));
+            return JSONB.jsonb(objectMapper.writeValueAsString(dtos));
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize recipe ingredients to JSON", e);
         }

@@ -9,7 +9,7 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.7"
 	id("net.ltgt.errorprone") version "4.3.0"
 	id("net.ltgt.nullaway") version "2.3.0"
-	id("dev.monosoul.jooq-docker") version "6.0.18"
+	id("dev.monosoul.jooq-docker") version "8.0.9"
 }
 
 group = "com.urgoringo"
@@ -36,7 +36,10 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-jooq")
+	implementation("org.springframework.boot:spring-boot-starter-jooq") {
+		exclude(group = "org.jooq")
+	}
+	implementation("org.jooq:jooq:3.20.10")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -52,6 +55,7 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	errorprone("com.google.errorprone:error_prone_core:2.44.0")
 	errorprone("com.uber.nullaway:nullaway:0.12.12")
+	jooqCodegen("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
@@ -139,10 +143,20 @@ tasks {
 	generateJooqClasses {
 		schemas.set(listOf("public"))
 		basePackageName.set("com.urgoringo.mealkit.jooq")
+		outputDirectory.set(project.layout.buildDirectory.dir("generated-jooq"))
 	}
 	
 	// Make compileJava depend on jOOQ code generation
 	compileJava {
 		dependsOn(generateJooqClasses)
+	}
+}
+
+// Add generated sources to the main source set
+sourceSets {
+	main {
+		java {
+			srcDir("build/generated-jooq")
+		}
 	}
 }

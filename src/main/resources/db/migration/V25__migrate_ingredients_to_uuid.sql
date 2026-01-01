@@ -8,8 +8,8 @@ ALTER TABLE ingredients ALTER COLUMN id DROP DEFAULT;
 -- Drop the BIGSERIAL sequence
 DROP SEQUENCE IF EXISTS ingredients_id_seq;
 
--- Change column type to UUID
-ALTER TABLE ingredients ALTER COLUMN id SET DATA TYPE UUID;
+-- Change column type to UUID (TRUNCATE ensures no data to convert)
+ALTER TABLE ingredients ALTER COLUMN id SET DATA TYPE UUID USING gen_random_uuid();
 
 -- Set new default to generate UUID v7 (will be handled by application)
 -- No default needed as application generates UUIDs

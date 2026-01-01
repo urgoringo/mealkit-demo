@@ -4,4 +4,4 @@ TRUNCATE recipe_pricing_categories CASCADE;
 
 ALTER TABLE recipe_pricing_categories ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE IF EXISTS recipe_pricing_categories_id_seq;
-ALTER TABLE recipe_pricing_categories ALTER COLUMN id SET DATA TYPE UUID;
+ALTER TABLE recipe_pricing_categories ALTER COLUMN id SET DATA TYPE UUID USING gen_random_uuid();
