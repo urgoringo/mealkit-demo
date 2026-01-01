@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.subscription.domain;
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.NotFound;
+import com.urgoringo.mealkit.infra.UpcomingOrderList;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -37,9 +38,7 @@ public class Subscriptions {
             .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
             .execute();
 
-        for (UpcomingOrder order : subscription.upcomingOrders()) {
-            addOrder(order, subscription.id().value());
-        }
+        subscription.upcomingOrders().stream().forEach(order -> addOrder(order, subscription.id().value()));
 
         return subscription;
     }
@@ -67,9 +66,7 @@ public class Subscriptions {
             deleteOrdersForSubscription(subscription.id().value());
         }
 
-        for (UpcomingOrder order : subscription.upcomingOrders()) {
-            upsertOrder(order, subscription.id().value());
-        }
+        subscription.upcomingOrders().stream().forEach(order -> upsertOrder(order, subscription.id().value()));
 
         return subscription;
     }
@@ -170,7 +167,7 @@ public class Subscriptions {
         return new Subscription(
             Id.of(record.getId()),
             Id.of(record.getCustomerId()),
-            orders,
+            UpcomingOrderList.of(orders),
             record.getDeliveryAddress(),
             DayOfWeek.valueOf(record.getDeliveryDay())
         );
@@ -294,11 +291,11 @@ public class Subscriptions {
             .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value())
                 .and(ORDERS.ID.eq(orderId.value())))
             .fetchOptional();
-        
+
         if (orderRecord.isEmpty()) {
             throw new NotFound("Upcoming order not found: " + orderId.value());
         }
-        
+
         var record = orderRecord.get();
         UUID[] recipeIdsArray = record.get(ORDERS.RECIPE_IDS);
         List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)

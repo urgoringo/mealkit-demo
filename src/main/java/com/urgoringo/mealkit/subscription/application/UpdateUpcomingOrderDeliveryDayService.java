@@ -24,7 +24,7 @@ public class UpdateUpcomingOrderDeliveryDayService {
     @Transactional
     public Subscription execute(Id<Customer> customerId, Id<UpcomingOrder> orderId, DayOfWeek deliveryDay) {
         Subscription subscription = subscriptions.findByCustomerId(customerId);
-        Subscription updatedSubscription = subscription.withUpdatedOrderDeliveryDate(orderId, deliveryDay, clock);
+        Subscription updatedSubscription = subscription.withUpdatedOrderDeliveryDate(orderId, deliveryDay);
         return subscriptions.update(updatedSubscription);
     }
 }

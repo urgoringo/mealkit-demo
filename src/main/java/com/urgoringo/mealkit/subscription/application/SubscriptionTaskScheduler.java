@@ -25,7 +25,7 @@ public class SubscriptionTaskScheduler {
 
     public void scheduleProcessing(Subscription subscription) {
         String subscriptionId = subscription.id().value().toString();
-        LocalDate processingDate = subscription.nextProcessingDate(clock);
+        LocalDate processingDate = subscription.nextProcessingDate();
 
         log.info("Scheduling task to process subscription {} at {}", subscriptionId, processingDate);
         TaskInstance<String> taskInstanceObj = new TaskInstance<>(
