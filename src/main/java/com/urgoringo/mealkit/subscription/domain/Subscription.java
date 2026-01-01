@@ -2,8 +2,7 @@ package com.urgoringo.mealkit.subscription.domain;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
-import com.urgoringo.mealkit.domain.ValidationFailed;
-import com.urgoringo.mealkit.infra.UpcomingOrderList;
+import com.urgoringo.mealkit.infra.UpcomingSubscriptionOrders;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import org.jspecify.annotations.NullMarked;
 
@@ -11,7 +10,6 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Iterator;
 import java.util.List;
 
 import static java.time.temporal.TemporalAdjusters.next;
@@ -20,7 +18,7 @@ import static java.time.temporal.TemporalAdjusters.next;
 public record Subscription(
     Id<Subscription> id,
     Id<Customer> customerId,
-    UpcomingOrderList upcomingOrders,
+    UpcomingSubscriptionOrders upcomingOrders,
     String deliveryAddress,
     DayOfWeek deliveryDay
 ) {
@@ -36,7 +34,7 @@ public record Subscription(
     ) {
         LocalDate deliveryDate = today.plusDays(3).with(next(deliveryDay));
         PendingOrder firstOrder = PendingOrder.placed(recipeIds, deliveryDate);
-        return new Subscription(Id.generate(), customerId, UpcomingOrderList.initial(firstOrder), deliveryAddress, deliveryDay);
+        return new Subscription(Id.generate(), customerId, UpcomingSubscriptionOrders.initial(firstOrder), deliveryAddress, deliveryDay);
     }
 
     private LocalDate nextUpcomingOrderDeliveryDate() {
@@ -45,7 +43,7 @@ public record Subscription(
     }
 
     public Subscription withUpdatedRecipes(Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds) {
-        UpcomingOrderList updatedOrders = upcomingOrders.withUpdatedRecipes(orderId, recipeIds);
+        UpcomingSubscriptionOrders updatedOrders = upcomingOrders.withUpdatedRecipes(orderId, recipeIds);
         return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
     }
 
@@ -93,7 +91,7 @@ public record Subscription(
     }
 
     public Subscription withUpdatedOrderDeliveryDate(Id<UpcomingOrder> orderId, DayOfWeek newDeliveryDay) {
-        UpcomingOrderList updatedOrders = upcomingOrders.withUpdatedOrderDeliveryDate(orderId, newDeliveryDay);
+        UpcomingSubscriptionOrders updatedOrders = upcomingOrders.withUpdatedOrderDeliveryDate(orderId, newDeliveryDay);
         return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
     }
 

@@ -4,8 +4,8 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.subscription.domain.*;
+import org.jspecify.annotations.NullMarked;
 
-import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
@@ -13,29 +13,30 @@ import java.util.stream.Stream;
 
 import static java.time.temporal.TemporalAdjusters.next;
 
-public class UpcomingOrderList {
+@NullMarked
+public class UpcomingSubscriptionOrders {
     private final List<UpcomingOrder> items;
 
-    public UpcomingOrderList(List<UpcomingOrder> items) {
+    public UpcomingSubscriptionOrders(List<UpcomingOrder> items) {
         if (items.isEmpty()) {
             throw new ValidationFailed("Subscription must have at least one upcoming order");
         }
         this.items = items;
     }
 
-    public static UpcomingOrderList initial(PendingOrder firstOrder) {
-        return new UpcomingOrderList(List.of(firstOrder));
+    public static UpcomingSubscriptionOrders initial(PendingOrder firstOrder) {
+        return new UpcomingSubscriptionOrders(List.of(firstOrder));
     }
 
-    public static UpcomingOrderList of(List<UpcomingOrder> orders) {
-        return new UpcomingOrderList(orders.stream().sorted(Comparator.comparing(UpcomingOrder::deliveryDate)).toList());
+    public static UpcomingSubscriptionOrders of(List<UpcomingOrder> orders) {
+        return new UpcomingSubscriptionOrders(orders.stream().sorted(Comparator.comparing(UpcomingOrder::deliveryDate)).toList());
     }
 
-    public UpcomingOrderList with(UpcomingOrder orderToAddOrReplace) {
+    public UpcomingSubscriptionOrders with(UpcomingOrder orderToAddOrReplace) {
         List<UpcomingOrder> result = new ArrayList<>(items);
         result.removeIf(existingOrder -> existingOrder.id().equals(orderToAddOrReplace.id()));
         result.add(orderToAddOrReplace);
-        return new UpcomingOrderList(result.stream().sorted(Comparator.comparing(UpcomingOrder::deliveryDate)).toList());
+        return new UpcomingSubscriptionOrders(result.stream().sorted(Comparator.comparing(UpcomingOrder::deliveryDate)).toList());
     }
 
     public UpcomingOrder nextPendingOrder() {
@@ -61,8 +62,8 @@ public class UpcomingOrderList {
         return items.getFirst();
     }
 
-    public UpcomingOrderList withUpdatedDeliveryDay(DayOfWeek oldSubscriptionDeliveryDay, DayOfWeek newSubscriptionDeliveryDay) {
-        return new UpcomingOrderList(items.stream()
+    public UpcomingSubscriptionOrders withUpdatedDeliveryDay(DayOfWeek oldSubscriptionDeliveryDay, DayOfWeek newSubscriptionDeliveryDay) {
+        return new UpcomingSubscriptionOrders(items.stream()
             .map(order -> {
                 if (order.isLocked()) {
                     return order;
@@ -81,7 +82,7 @@ public class UpcomingOrderList {
             .toList());
     }
 
-    public UpcomingOrderList withUpdatedOrderDeliveryDate(Id<UpcomingOrder> orderId, DayOfWeek newDeliveryDay) {
+    public UpcomingSubscriptionOrders withUpdatedOrderDeliveryDate(Id<UpcomingOrder> orderId, DayOfWeek newDeliveryDay) {
         UpcomingOrder order = findItem(orderId);
 
         UpcomingOrder updatedOrder = switch (order) {
@@ -100,7 +101,7 @@ public class UpcomingOrderList {
             .orElseThrow();
     }
 
-    public UpcomingOrderList withUpdatedRecipes(Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds) {
+    public UpcomingSubscriptionOrders withUpdatedRecipes(Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds) {
         List<UpcomingOrder> updatedOrders = items.stream()
             .map(order -> {
                 if (order.id().equals(orderId)) {
@@ -113,6 +114,6 @@ public class UpcomingOrderList {
             })
             .toList();
 
-        return new UpcomingOrderList(updatedOrders);
+        return new UpcomingSubscriptionOrders(updatedOrders);
     }
 }

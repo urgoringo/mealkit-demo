@@ -3,7 +3,7 @@ package com.urgoringo.mealkit.subscription.domain;
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.NotFound;
-import com.urgoringo.mealkit.infra.UpcomingOrderList;
+import com.urgoringo.mealkit.infra.UpcomingSubscriptionOrders;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
@@ -13,10 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.urgoringo.mealkit.jooq.tables.Orders.ORDERS;
@@ -167,7 +165,7 @@ public class Subscriptions {
         return new Subscription(
             Id.of(record.getId()),
             Id.of(record.getCustomerId()),
-            UpcomingOrderList.of(orders),
+            UpcomingSubscriptionOrders.of(orders),
             record.getDeliveryAddress(),
             DayOfWeek.valueOf(record.getDeliveryDay())
         );
