@@ -68,7 +68,7 @@ public class Subscriptions {
         }
 
         for (UpcomingOrder order : subscription.upcomingOrders()) {
-            updateOrder(order);
+            upsertOrder(order, subscription.id().value());
         }
 
         return subscription;
@@ -82,6 +82,25 @@ public class Subscriptions {
         dsl.insertInto(ORDERS)
             .set(ORDERS.ID, order.id().value())
             .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, order.status().name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .execute();
+    }
+
+    private void upsertOrder(UpcomingOrder order, UUID subscriptionId) {
+        UUID[] recipeIdsArray = order.recipeIds().stream()
+            .map(Id::value)
+            .toArray(UUID[]::new);
+
+        dsl.insertInto(ORDERS)
+            .set(ORDERS.ID, order.id().value())
+            .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, order.status().name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .onConflict(ORDERS.ID)
+            .doUpdate()
             .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
             .set(ORDERS.STATUS, order.status().name())
             .set(ORDERS.RECIPE_IDS, recipeIdsArray)
