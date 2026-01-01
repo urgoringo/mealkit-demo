@@ -18,6 +18,19 @@ Mealkit is a Spring Boot 3.5 application for managing meal kit recipes. It uses:
 
 ## Build Commands
 
+### Generating jOOQ Classes
+
+**Note:** Requires Docker to be running.
+
+```bash
+./gradlew generateJooqClasses # Generate jOOQ classes from database schema
+```
+
+The project uses the [monosoul jOOQ Gradle plugin](https://github.com/monosoul/jooq-gradle-plugin) which:
+- Starts a PostgreSQL container (reuses existing if available)
+- Runs Flyway migrations
+- Generates jOOQ classes from the actual database schema
+
 ### Building the Application
 ```bash
 ./gradlew build          # Full build with tests
