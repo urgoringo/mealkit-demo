@@ -1,7 +1,6 @@
 import net.ltgt.gradle.errorprone.errorprone
 import net.ltgt.gradle.nullaway.nullaway
 import org.gradle.api.tasks.compile.GroovyCompile
-import org.jooq.meta.jaxb.Logging
 
 plugins {
 	java
@@ -10,7 +9,7 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.7"
 	id("net.ltgt.errorprone") version "4.3.0"
 	id("net.ltgt.nullaway") version "2.3.0"
-	id("org.jooq.jooq-codegen-gradle") version "3.19.27"
+	id("dev.monosoul.jooq-docker") version "6.0.18"
 }
 
 group = "com.urgoringo"
@@ -53,8 +52,6 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	errorprone("com.google.errorprone:error_prone_core:2.44.0")
 	errorprone("com.uber.nullaway:nullaway:0.12.12")
-	jooqCodegen("org.postgresql:postgresql")
-	jooqCodegen("org.jooq:jooq-meta-extensions:3.19.27")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
@@ -129,68 +126,23 @@ tasks.named<JavaCompile>("compileTestJava") {
 	}
 }
 
-// jOOQ code generation configuration
+// Configure jOOQ code generation using reusable Testcontainer
 jooq {
-	configuration {
-		logging = Logging.WARN
-		generator {
-			name = "org.jooq.codegen.JavaGenerator"
-			database {
-				name = "org.jooq.meta.extensions.ddl.DDLDatabase"
-//				inputSchema = "PUBLIC"
-//				val scriptsValue = "${projectDir}/src/main/resources/db/jooq-schema.sql"
-//				println("jOOQ scripts property: $scriptsValue")
-				properties {
-					property {
-						key = "scripts"
-						value = "src/main/resources/db/migration/*.sql"
-					}
-//					property {
-//						key = "scripts"
-//						value = scriptsValue
-//					}
-					property {
-						key = "parseDialect"
-						value = "POSTGRES"
-					}
-					property {
-						key = "sort"
-						value = "flyway"
-					}
-					property {
-						key = "defaultNameCase"
-						value = "lower"
-					}
-				}
-			}
-			generate {
-				isDeprecated = false
-				isRecords = true
-				isImmutablePojos = false
-				isFluentSetters = true
-				isPojos = true
-				isPojosEqualsAndHashCode = true
-				isPojosToString = true
-				isJavaTimeTypes = true
-			}
-			target {
-				packageName = "com.urgoringo.mealkit.jooq"
-				directory = "build/generated/sources/jooq"
-			}
+	withContainer {
+		image {
+			name = "postgres:18.1-alpine"
 		}
 	}
 }
 
-// Make sure jOOQ code generation runs before compilation
-tasks.named("compileJava") {
-	dependsOn(tasks.named("jooqCodegen"))
-}
-
-// Add generated sources to the main source set
-sourceSets {
-	main {
-		java {
-			srcDir("build/generated/sources/jooq")
-		}
+tasks {
+	generateJooqClasses {
+		schemas.set(listOf("public"))
+		basePackageName.set("com.urgoringo.mealkit.jooq")
+	}
+	
+	// Make compileJava depend on jOOQ code generation
+	compileJava {
+		dependsOn(generateJooqClasses)
 	}
 }
