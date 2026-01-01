@@ -84,13 +84,13 @@ public class UpcomingOrderList {
     public UpcomingOrderList withUpdatedOrderDeliveryDate(Id<UpcomingOrder> orderId, DayOfWeek newDeliveryDay) {
         UpcomingOrder order = findItem(orderId);
 
-        switch (order) {
+        UpcomingOrder updatedOrder = switch (order) {
             case PendingOrder pendingOrder ->
                 pendingOrder.withUpdatedDeliveryDate(order.deliveryDate().with(next(newDeliveryDay)));
             case LockedOrder _ -> throw new ValidationFailed("Cannot update locked order");
-        }
+        };
 
-        return with(order);
+        return with(updatedOrder);
     }
 
     private UpcomingOrder findItem(Id<UpcomingOrder> orderId) {
