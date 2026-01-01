@@ -8,8 +8,7 @@ Mealkit is a Spring Boot 3.5 application for managing meal kit recipes. It uses:
 - **Java 25** (with toolchain configured in build.gradle.kts)
 - **Spring Boot 3.5.7** with Spring Data JPA and Spring Web
 - **PostgreSQL** database with Flyway migrations
-- **Embedded Database (Zonky)** for application specs with PostgreSQL
-- **Testcontainers** for other integration tests with PostgreSQL
+- **Zonky Embedded Database** for all tests with PostgreSQL 18.1
 - **Spock Framework** for BDD-style testing
 - **Lombok** for reducing boilerplate code
 - **MapStruct** for mapping between persistence and domain models
@@ -48,7 +47,7 @@ The project uses the [monosoul jOOQ Gradle plugin](https://github.com/monosoul/j
 ./gradlew test --tests ClassName.methodName       # Run specific test method
 ```
 
-**Note**: Application specs (Spock tests extending `ApplicationSpecification`) use embedded PostgreSQL database via `embedded-database-spring-test` library. This provides faster test execution compared to Testcontainers. Other integration tests may still use Testcontainers.
+**Note**: All tests use Zonky embedded PostgreSQL 18.1 via `embedded-database-spring-test` library with Docker provider. This provides faster test execution compared to Testcontainers by reusing PostgreSQL containers across test runs.
 
 **Test Performance Optimizations**: PostgreSQL test instances are configured with settings that prioritize speed over durability:
 - `fsync=off`, `synchronous_commit=off`: Disable disk synchronization for faster writes
@@ -57,6 +56,7 @@ The project uses the [monosoul jOOQ Gradle plugin](https://github.com/monosoul/j
 - `maintenance_io_concurrency=50`: Parallel maintenance operations
 - WAL and checkpoint tuning: Reduce checkpoint frequency and overhead
 - `random_page_cost=1.1`: Optimized for SSD/memory storage
+- `tmpfs` enabled: Store database files in memory for maximum speed
 
 These settings are appropriate for test environments where data durability is not required.
 
@@ -222,10 +222,11 @@ public interface RecipeMapper {
 - Database baseline is automatically created on first migration (`baseline-on-migrate: true`)
 
 ### Testing Architecture
-- **Application specs** (Spock tests extending `ApplicationSpecification`) use `EmbeddedDatabaseConfiguration` with embedded PostgreSQL via `embedded-database-spring-test` library
-- **Other integration tests** may use `TestContainersConfiguration` for Testcontainers PostgreSQL
+- All tests use Zonky Embedded PostgreSQL 18.1 via `@AutoConfigureEmbeddedDatabase` annotation
+- Tests import `EmbeddedDatabaseConfiguration` for test-specific beans (TestClock, RestClient, etc.)
 - Use `@ActiveProfiles("test")` for test-specific configuration
-- Embedded database provides faster test execution compared to Testcontainers
+- Zonky uses Docker-based PostgreSQL with tmpfs for fast in-memory storage
+- PostgreSQL containers are reused across test runs for better performance
 - `RestClient.Builder` bean is configured with `defaultStatusHandler` to prevent exceptions on HTTP errors
 - This allows tests to inspect error responses using the `ApiResponse` pattern
 
@@ -491,10 +492,12 @@ containing name, quantity, and unit (supports: g, piece, cup).
 - Provides immediate feedback on design decisions
 
 #### Integration Testing
-- Application specs (Spock tests) require `@Import(EmbeddedDatabaseConfiguration.class)` - uses embedded PostgreSQL
-- Other integration tests may use `@Import(TestContainersConfiguration.class)` - uses Testcontainers PostgreSQL
-- Tests automatically use the configured database instance
+- All integration tests use `@AutoConfigureEmbeddedDatabase` annotation with Zonky embedded PostgreSQL 18.1
+- Tests import `EmbeddedDatabaseConfiguration` for test beans (TestClock, RestClient, etc.)
+- Application specs (Spock tests) extend `ApplicationSpecification` which includes the annotations
+- Tests automatically use the configured embedded database instance
 - No need for manual database setup during testing
+- PostgreSQL 18.1 runs in Docker with tmpfs for fast in-memory storage
 
 #### Spock Test Architecture
 
