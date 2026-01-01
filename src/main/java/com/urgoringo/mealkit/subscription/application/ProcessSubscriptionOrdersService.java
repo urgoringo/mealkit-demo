@@ -29,7 +29,7 @@ public class ProcessSubscriptionOrdersService {
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
-    public void execute(Long subscriptionIdValue) {
+    public void execute(String subscriptionIdValue) {
         log.info("Processing subscription {}", subscriptionIdValue);
         Id<Subscription> subscriptionId = Id.of(subscriptionIdValue);
         Subscription subscription = subscriptions.findById(subscriptionId);
@@ -46,7 +46,7 @@ public class ProcessSubscriptionOrdersService {
             .withNewUpcomingOrder(selectedRecipeIds)
             .withLockedUpcomingOrder(clock);
 
-        subscriptions.save(updatedSubscription);
+        subscriptions.update(updatedSubscription);
 
         applicationEventPublisher.publishEvent(new SubscriptionProcessedEvent(updatedSubscription));
     }

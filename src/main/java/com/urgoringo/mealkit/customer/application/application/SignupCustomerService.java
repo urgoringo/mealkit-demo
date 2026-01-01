@@ -30,6 +30,6 @@ public class SignupCustomerService {
         String hashedPassword = passwordHasher.hash(plainPassword);
         Customer customer = Customer.signup(email, hashedPassword);
 
-        return customers.save(customer);
+        return customers.add(customer);
     }
 }

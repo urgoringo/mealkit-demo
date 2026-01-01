@@ -40,6 +40,6 @@ public class CreateRecipeService {
             : PricingCategory.MEDIUM;
 
         var recipe = Recipe.create(command.title(), command.instructions(), recipeIngredients, pricingCategory);
-        return recipesCatalog.save(recipe);
+        return recipesCatalog.add(recipe);
     }
 }

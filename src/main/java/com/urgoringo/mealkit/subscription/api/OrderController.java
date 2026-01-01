@@ -25,7 +25,7 @@ public class OrderController {
     @PostMapping("/{orderId}/delivered")
     public ResponseEntity<Void> deliverOrder(
             @AuthenticationPrincipal Id<BackofficeUser> backofficeUserId,
-            @PathVariable Long orderId) {
+            @PathVariable String orderId) {
         markOrderDeliveredService.execute(backofficeUserId, Id.of(orderId));
         return ResponseEntity.noContent().build();
     }

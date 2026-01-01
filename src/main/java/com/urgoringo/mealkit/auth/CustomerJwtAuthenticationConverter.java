@@ -18,7 +18,7 @@ public class CustomerJwtAuthenticationConverter implements Converter<Jwt, Abstra
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         String role = jwt.getClaimAsString("role");
-        Long userId = Long.parseLong(jwt.getSubject());
+        String userId = jwt.getSubject();
         
         if ("BACKOFFICE".equals(role)) {
             return new BackofficeAuthentication(Id.of(userId));

@@ -21,20 +21,20 @@ public class IngredientController {
 
     @PostMapping
     public ResponseEntity<IngredientResponse> createIngredient(@RequestBody CreateIngredientRequest request) {
-        Ingredient saved = ingredientsCatalog.findOrSave(Ingredient.create(request.name));
-        return ok(new IngredientResponse(saved.id().value(), saved.name()));
+        Ingredient saved = ingredientsCatalog.findOrAdd(Ingredient.create(request.name));
+        return ok(new IngredientResponse(saved.id().value().toString(), saved.name()));
     }
 
     @GetMapping
     public ResponseEntity<IngredientResponse> getIngredientByName(@RequestParam String name) {
         return getIngredientService.execute(name)
-            .map(ing -> ok(new IngredientResponse(ing.id().value(), ing.name())))
+            .map(ing -> ok(new IngredientResponse(ing.id().value().toString(), ing.name())))
             .orElseGet(() -> notFound().build());
     }
 
     public record CreateIngredientRequest(String name) {
     }
 
-    public record IngredientResponse(Long id, String name) {
+    public record IngredientResponse(String id, String name) {
     }
 }

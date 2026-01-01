@@ -11,6 +11,6 @@ public record Customer(
 ) {
 
     public static Customer signup(String email, String hashedPassword) {
-        return new Customer(Id.unassigned(), email, hashedPassword);
+        return new Customer(Id.generate(), email, hashedPassword);
     }
 }

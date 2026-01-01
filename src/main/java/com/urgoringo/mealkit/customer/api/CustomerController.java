@@ -28,7 +28,7 @@ public class CustomerController {
     public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
         Customer customer = signupCustomerService.execute(request.email(), request.password());
         String token = loginCustomerService.execute(request.email(), request.password());
-        SignupResponse response = new SignupResponse(customer.id().value(), customer.email(), token);
+        SignupResponse response = new SignupResponse(customer.id().value().toString(), customer.email(), token);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -44,7 +44,7 @@ public class CustomerController {
             @NotBlank String password
     ) {}
 
-    public record SignupResponse(Long id, String email, String token) {}
+    public record SignupResponse(String id, String email, String token) {}
 
     public record LoginRequest(
             @NotBlank @Email String email,

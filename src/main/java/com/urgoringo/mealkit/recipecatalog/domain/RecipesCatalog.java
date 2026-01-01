@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static com.urgoringo.mealkit.jooq.tables.Recipes.RECIPES;
 
@@ -49,35 +50,26 @@ public class RecipesCatalog {
         );
     }
 
-    public Recipe save(Recipe recipe) {
-        if (recipe.id().isAssigned()) {
-            dsl.update(RECIPES)
-                    .set(RECIPES.NAME, recipe.title())
-                    .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
-                    .set(RECIPES.INGREDIENTS, toJson(recipe.ingredients()))
-                    .set(RECIPES.PRICING_CATEGORY, recipe.pricingCategory().name())
-                    .where(RECIPES.ID.eq(recipe.id().value()))
-                    .execute();
-            return recipe;
-        } else {
-            var record = dsl.insertInto(RECIPES)
-                    .set(RECIPES.NAME, recipe.title())
-                    .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
-                    .set(RECIPES.INGREDIENTS, toJson(recipe.ingredients()))
-                    .set(RECIPES.PRICING_CATEGORY, recipe.pricingCategory().name())
-                    .returning(RECIPES.ID)
-                    .fetchOne();
-            if (record == null) {
-                throw new IllegalStateException("Failed to insert recipe");
-            }
-            return new Recipe(
-                    Id.of(record.getId()),
-                    recipe.title(),
-                    recipe.instructions(),
-                    recipe.ingredients(),
-                    recipe.pricingCategory()
-            );
-        }
+    public Recipe add(Recipe recipe) {
+        dsl.insertInto(RECIPES)
+                .set(RECIPES.ID, recipe.id().value())
+                .set(RECIPES.NAME, recipe.title())
+                .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
+                .set(RECIPES.INGREDIENTS, toJson(recipe.ingredients()))
+                .set(RECIPES.PRICING_CATEGORY, recipe.pricingCategory().name())
+                .execute();
+        return recipe;
+    }
+
+    public Recipe update(Recipe recipe) {
+        dsl.update(RECIPES)
+                .set(RECIPES.NAME, recipe.title())
+                .set(RECIPES.INSTRUCTIONS, recipe.instructions().toArray(new String[0]))
+                .set(RECIPES.INGREDIENTS, toJson(recipe.ingredients()))
+                .set(RECIPES.PRICING_CATEGORY, recipe.pricingCategory().name())
+                .where(RECIPES.ID.eq(recipe.id().value()))
+                .execute();
+        return recipe;
     }
 
     public void deleteAll() {
@@ -109,7 +101,7 @@ public class RecipesCatalog {
         try {
             List<RecipeIngredientDto> dtos = recipeIngredients.stream()
                     .map(ri -> new RecipeIngredientDto(
-                            ri.ingredientId().value(),
+                            ri.ingredientId().value().toString(),
                             ri.quantity().amount(),
                             ri.quantity().unit().name()
                     ))
@@ -125,7 +117,7 @@ public class RecipesCatalog {
     }
 
     private record RecipeIngredientDto(
-            @JsonProperty("ingredient_id") Long ingredientId,
+            @JsonProperty("ingredient_id") String ingredientId,
             String quantity,
             String unit
     ) {}

@@ -25,6 +25,6 @@ public class UpdateUpcomingOrderRecipesService {
     public Subscription execute(Id<Customer> customerId, Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds) {
         Subscription subscription = subscriptions.findByCustomerId(customerId);
         Subscription updatedSubscription = subscription.withUpdatedRecipes(orderId, recipeIds);
-        return subscriptions.save(updatedSubscription);
+        return subscriptions.update(updatedSubscription);
     }
 }

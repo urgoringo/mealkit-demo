@@ -62,7 +62,7 @@ public class ApplicationRunner {
     public RecipeResponse havingRecipe(TestFactory.RecipeBuilder builder) {
         var ingredientRequests = builder.ingredients().stream()
             .map(ingredient -> {
-                long ingredientId = findOrCreateIngredient(ingredient.name());
+                String ingredientId = findOrCreateIngredient(ingredient.name());
                 return new RecipeIngredientRequest(ingredientId, ingredient.quantity(), ingredient.unit());
             }).toList();
 
@@ -80,7 +80,7 @@ public class ApplicationRunner {
         return ApiResponse.from(response).expectSuccess();
     }
 
-    private long findOrCreateIngredient(String ingredientName) {
+    private String findOrCreateIngredient(String ingredientName) {
         ApiResponse<IngredientResponse> response = findIngredient(ingredientName);
         if (response.isSuccess()) {
             return response.expectSuccess().id();
@@ -89,7 +89,7 @@ public class ApplicationRunner {
         return createdIngredient.id();
     }
 
-    public RecipeResponse getRecipe(Long id) {
+    public RecipeResponse getRecipe(String id) {
         ResponseEntity<RecipeResponse> response = restClient.get()
             .uri("/recipes/" + id)
             .retrieve()
@@ -121,7 +121,7 @@ public class ApplicationRunner {
         }
     }
 
-    public ApiResponse<SubscriptionResponse> updateUpcomingOrderRecipes(Long orderId, List<Long> recipeIds, String authToken) {
+    public ApiResponse<SubscriptionResponse> updateUpcomingOrderRecipes(String orderId, List<String> recipeIds, String authToken) {
         UpdateUpcomingOrderRecipesRequest request = new UpdateUpcomingOrderRecipesRequest(recipeIds);
         ResponseEntity<SubscriptionResponse> response = restClient.put()
             .uri("/subscriptions/upcoming-orders/{orderId}/recipes", orderId)
@@ -132,7 +132,7 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    public ApiResponse<SubscriptionResponse> updateUpcomingOrderRecipes(String authToken, Long orderId, List<Long> recipeIds) {
+    public ApiResponse<SubscriptionResponse> updateUpcomingOrderRecipes(String authToken, String orderId, List<String> recipeIds) {
         return updateUpcomingOrderRecipes(orderId, recipeIds, authToken);
     }
 
@@ -207,7 +207,7 @@ public class ApplicationRunner {
         names.forEach(this::havingRecipe);
     }
 
-    public List<Long> getRecipes(int count) {
+    public List<String> getRecipes(int count) {
         List<RecipeResponse> recipes = getAllRecipes();
         return recipes.subList(0, count).stream()
             .map(RecipeResponse::id)
@@ -242,7 +242,7 @@ public class ApplicationRunner {
         return backofficeRunner;
     }
 
-    public ApiResponse<Void> tryDeliverOrderAsCustomer(Long orderId, String customerToken) {
+    public ApiResponse<Void> tryDeliverOrderAsCustomer(String orderId, String customerToken) {
         ResponseEntity<Void> response = restClient.post()
             .uri("/orders/{orderId}/delivered", orderId)
             .header("Authorization", "Bearer " + customerToken)
@@ -261,7 +261,7 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    public OrderResponse getUpcomingOrder(String authToken, Long orderId) {
+    public OrderResponse getUpcomingOrder(String authToken, String orderId) {
         ResponseEntity<OrderResponse> response = restClient.get()
             .uri("/subscriptions/upcoming-orders/{orderId}", orderId)
             .header("Authorization", "Bearer " + authToken)
@@ -281,7 +281,7 @@ public class ApplicationRunner {
         return ApiResponse.from(response);
     }
 
-    public ApiResponse<SubscriptionResponse> updateUpcomingOrderDeliveryDay(Long orderId, java.time.DayOfWeek deliveryDay, String authToken) {
+    public ApiResponse<SubscriptionResponse> updateUpcomingOrderDeliveryDay(String orderId, java.time.DayOfWeek deliveryDay, String authToken) {
         UpdateUpcomingOrderDeliveryDayRequest request = new UpdateUpcomingOrderDeliveryDayRequest(deliveryDay);
         ResponseEntity<SubscriptionResponse> response = restClient.put()
             .uri("/subscriptions/upcoming-orders/{orderId}/delivery-day", orderId)

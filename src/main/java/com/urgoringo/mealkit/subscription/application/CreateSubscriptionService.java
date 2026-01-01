@@ -28,7 +28,7 @@ public class CreateSubscriptionService {
     public Subscription execute(Id<Customer> customerId, List<Id<Recipe>> recipeIds, String deliveryAddress, DayOfWeek deliveryDay) {
         LocalDate today = LocalDate.now(clock);
         var subscription = Subscription.signup(customerId, recipeIds, deliveryAddress, deliveryDay, today);
-        var savedSubscription = subscriptions.save(subscription);
+        var savedSubscription = subscriptions.add(subscription);
 
         taskScheduler.scheduleProcessing(savedSubscription);
 

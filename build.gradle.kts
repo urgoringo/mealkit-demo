@@ -48,6 +48,7 @@ dependencies {
 	implementation("com.github.kagkarlsson:db-scheduler-spring-boot-starter:16.6.0")
 	implementation("org.jspecify:jspecify:1.0.0")
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+	implementation("com.github.f4b6a3:uuid-creator:6.1.1")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 	errorprone("com.google.errorprone:error_prone_core:2.44.0")
@@ -136,10 +137,21 @@ jooq {
 			name = "org.jooq.codegen.JavaGenerator"
 			database {
 				name = "org.jooq.meta.extensions.ddl.DDLDatabase"
+//				inputSchema = "PUBLIC"
+//				val scriptsValue = "${projectDir}/src/main/resources/db/jooq-schema.sql"
+//				println("jOOQ scripts property: $scriptsValue")
 				properties {
 					property {
 						key = "scripts"
 						value = "src/main/resources/db/migration/*.sql"
+					}
+//					property {
+//						key = "scripts"
+//						value = scriptsValue
+//					}
+					property {
+						key = "parseDialect"
+						value = "POSTGRES"
 					}
 					property {
 						key = "sort"

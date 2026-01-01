@@ -21,7 +21,7 @@ public record Recipe(
 
     public static Recipe create(String title, List<String> instructions, List<RecipeIngredient> ingredients, PricingCategory pricingCategory) {
         return new Recipe(
-                Id.unassigned(), 
+                Id.generate(), 
                 title, 
                 List.copyOf(instructions),
                 List.copyOf(ingredients),

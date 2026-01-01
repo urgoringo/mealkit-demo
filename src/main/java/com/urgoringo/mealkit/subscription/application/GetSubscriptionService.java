@@ -25,7 +25,7 @@ public class GetSubscriptionService {
         Subscription updatedSubscription = subscription.withLockedUpcomingOrder(clock);
         
         if (updatedSubscription != subscription) {
-            return subscriptions.save(updatedSubscription);
+            return subscriptions.update(updatedSubscription);
         }
         
         return subscription;

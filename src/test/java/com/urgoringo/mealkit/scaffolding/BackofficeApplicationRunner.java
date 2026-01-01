@@ -31,11 +31,11 @@ public class BackofficeApplicationRunner {
         backofficeUsers.deleteAll();
     }
 
-    public void markOrderDelivered(Long orderId) {
+    public void markOrderDelivered(String orderId) {
         tryMarkOrderDelivered(orderId).expectSuccess();
     }
 
-    public ApiResponse<Void> tryMarkOrderDelivered(Long orderId) {
+    public ApiResponse<Void> tryMarkOrderDelivered(String orderId) {
         var backofficeUser = getOrCreateBackofficeUser();
         String backofficeToken = tokenService.generateBackofficeToken(backofficeUser);
         
@@ -52,7 +52,7 @@ public class BackofficeApplicationRunner {
         return backofficeUsers.findByEmail("backoffice@mealkit.com")
                 .orElseGet(() -> {
                     String hashedPassword = passwordHasher.hash("backoffice-password");
-                    return backofficeUsers.save(
+                    return backofficeUsers.add(
                             BackofficeUser.create(
                                     "backoffice@mealkit.com",
                                     hashedPassword

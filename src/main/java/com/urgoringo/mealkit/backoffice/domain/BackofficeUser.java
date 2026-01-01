@@ -10,6 +10,6 @@ public record BackofficeUser(
         String password
 ) {
     public static BackofficeUser create(String email, String password) {
-        return new BackofficeUser(Id.unassigned(), email, password);
+        return new BackofficeUser(Id.generate(), email, password);
     }
 }

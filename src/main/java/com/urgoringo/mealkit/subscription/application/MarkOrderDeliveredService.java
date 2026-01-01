@@ -27,6 +27,6 @@ public class MarkOrderDeliveredService {
         LockedOrder lockedOrder = subscriptions.findLockedOrderById(orderId);
         
         DeliveredOrder deliveredOrder = lockedOrder.markAsDelivered(clock);
-        subscriptions.update(deliveredOrder);
+        subscriptions.updateDeliveredOrder(deliveredOrder);
     }
 }

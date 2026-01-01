@@ -41,7 +41,7 @@ public record Subscription(
     ) {
         LocalDate deliveryDate = today.plusDays(3).with(next(deliveryDay));
         PendingOrder firstOrder = PendingOrder.placed(recipeIds, deliveryDate);
-        return new Subscription(Id.unassigned(), customerId, List.of(firstOrder), deliveryAddress, deliveryDay);
+        return new Subscription(Id.generate(), customerId, List.of(firstOrder), deliveryAddress, deliveryDay);
     }
 
     private LocalDate nextUpcomingOrderDeliveryDate() {

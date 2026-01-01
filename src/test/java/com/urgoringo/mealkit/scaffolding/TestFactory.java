@@ -55,8 +55,8 @@ public class TestFactory {
 
     public static PendingOrderBuilder anPendingOrder() {
         return new PendingOrderBuilder(
-            Id.of(1L),
-            List.of(Id.of(1L), Id.of(2L), Id.of(3L)),
+            Id.generate(),
+            List.of(Id.generate(), Id.generate(), Id.generate()),
             LocalDate.now().plusDays(7)
         );
     }
@@ -70,7 +70,7 @@ public class TestFactory {
     }
 
     @With
-    public record SubscriptionBuilder(List<Long> recipeIds, String deliveryAddress,
+    public record SubscriptionBuilder(List<String> recipeIds, String deliveryAddress,
                                       DayOfWeek deliveryDay) {
     }
 

@@ -18,11 +18,11 @@ public class ProcessSubscriptionsTask {
     public static final String TASK_NAME = "process-subscription-task";
 
     @Bean
-    public OneTimeTask<Long> processSubscriptionTask() {
+    public OneTimeTask<String> processSubscriptionTask() {
         return Tasks
-            .oneTime(TASK_NAME, Long.class)
+            .oneTime(TASK_NAME, String.class)
             .execute((taskInstance, _) -> {
-                Long subscriptionId = taskInstance.getData();
+                String subscriptionId = taskInstance.getData();
                 processSubscriptionOrdersService.execute(subscriptionId);
             });
     }

@@ -17,25 +17,22 @@ public class Customers {
 
     private final DSLContext dsl;
 
-    public Customer save(Customer customer) {
-        if (customer.id().isAssigned()) {
-            dsl.update(CUSTOMERS)
-                    .set(CUSTOMERS.EMAIL, customer.email())
-                    .set(CUSTOMERS.PASSWORD, customer.hashedPassword())
-                    .where(CUSTOMERS.ID.eq(customer.id().value()))
-                    .execute();
-            return customer;
-        } else {
-            var record = dsl.insertInto(CUSTOMERS)
-                    .set(CUSTOMERS.EMAIL, customer.email())
-                    .set(CUSTOMERS.PASSWORD, customer.hashedPassword())
-                    .returning(CUSTOMERS.ID)
-                    .fetchOne();
-            if (record == null) {
-                throw new IllegalStateException("Failed to insert customer");
-            }
-            return new Customer(Id.of(record.getId()), customer.email(), customer.hashedPassword());
-        }
+    public Customer add(Customer customer) {
+        dsl.insertInto(CUSTOMERS)
+                .set(CUSTOMERS.ID, customer.id().value())
+                .set(CUSTOMERS.EMAIL, customer.email())
+                .set(CUSTOMERS.PASSWORD, customer.hashedPassword())
+                .execute();
+        return customer;
+    }
+
+    public Customer update(Customer customer) {
+        dsl.update(CUSTOMERS)
+                .set(CUSTOMERS.EMAIL, customer.email())
+                .set(CUSTOMERS.PASSWORD, customer.hashedPassword())
+                .where(CUSTOMERS.ID.eq(customer.id().value()))
+                .execute();
+        return customer;
     }
 
     public boolean existsByEmail(String email) {

@@ -66,7 +66,7 @@ public class SubscriptionController {
     @PutMapping("/upcoming-orders/{orderId}/recipes")
     public ResponseEntity<SubscriptionResponse> updateUpcomingOrderRecipes(
             @AuthenticationPrincipal Id<Customer> customerId,
-            @PathVariable Long orderId,
+            @PathVariable String orderId,
             @Valid @RequestBody UpdateUpcomingOrderRecipesRequest request) {
         var recipeIds = subscriptionApiMapper.mapRecipeIds(request.recipeIds());
         Subscription subscription = updateUpcomingOrderRecipesService.execute(customerId, Id.of(orderId), recipeIds);
@@ -84,7 +84,7 @@ public class SubscriptionController {
     }
 
     @GetMapping("/upcoming-orders/{orderId}")
-    public ResponseEntity<OrderResponse> getUpcomingOrder(@AuthenticationPrincipal Id<Customer> customerId, @PathVariable Long orderId) {
+    public ResponseEntity<OrderResponse> getUpcomingOrder(@AuthenticationPrincipal Id<Customer> customerId, @PathVariable String orderId) {
         UpcomingOrder order = getUpcomingOrderService.execute(customerId, Id.of(orderId));
         OrderResponse response = subscriptionApiMapper.toOrderResponse(order);
         return ResponseEntity.ok(response);
@@ -102,7 +102,7 @@ public class SubscriptionController {
     @PutMapping("/upcoming-orders/{orderId}/delivery-day")
     public ResponseEntity<SubscriptionResponse> updateUpcomingOrderDeliveryDay(
             @AuthenticationPrincipal Id<Customer> customerId,
-            @PathVariable Long orderId,
+            @PathVariable String orderId,
             @Valid @RequestBody UpdateUpcomingOrderDeliveryDayRequest request) {
         Subscription subscription = updateUpcomingOrderDeliveryDayService.execute(customerId, Id.of(orderId), request.deliveryDay());
         SubscriptionResponse response = subscriptionApiMapper.toResponse(subscription);
@@ -110,13 +110,13 @@ public class SubscriptionController {
     }
 
     public record CreateSubscriptionRequest(
-            @NotNull List<Long> recipeIds,
+            @NotNull List<String> recipeIds,
             @NotBlank String deliveryAddress,
             @NotNull DayOfWeek deliveryDay
     ) {}
 
     public record UpdateUpcomingOrderRecipesRequest(
-            @NotNull List<Long> recipeIds
+            @NotNull List<String> recipeIds
     ) {}
 
     public record UpdateSubscriptionDeliveryDayRequest(
@@ -127,7 +127,7 @@ public class SubscriptionController {
             @NotNull DayOfWeek deliveryDay
     ) {}
 
-    public record SubscriptionResponse(Long id, Long customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, DayOfWeek deliveryDay) {}
+    public record SubscriptionResponse(String id, String customerId, List<OrderResponse> upcomingOrders, String deliveryAddress, DayOfWeek deliveryDay) {}
 
-    public record OrderResponse(Long id, List<Long> recipeIds, LocalDate deliveryDate, OrderStatus status, java.math.BigDecimal totalPrice) {}
+    public record OrderResponse(String id, List<String> recipeIds, LocalDate deliveryDate, OrderStatus status, java.math.BigDecimal totalPrice) {}
 }

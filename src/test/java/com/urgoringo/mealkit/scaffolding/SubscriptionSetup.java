@@ -17,7 +17,7 @@ public class SubscriptionSetup {
     public SubscriptionSetup(ApplicationRunner app, String authToken, TestFactory.SubscriptionBuilder subscription) {
         this.app = app;
         this.authToken = authToken;
-        List<Long> recipeIds = subscription.recipeIds().isEmpty() ? app.getRecipes(3) : subscription.recipeIds();
+        List<String> recipeIds = subscription.recipeIds().isEmpty() ? app.getRecipes(3) : subscription.recipeIds();
         TestFactory.SubscriptionBuilder subscriptionBuilder = subscription.withRecipeIds(recipeIds);
         app.create(subscriptionBuilder, authToken).expectSuccess();
     }

@@ -32,7 +32,7 @@ public record PendingOrder(
     }
 
     public static PendingOrder placed(List<Id<Recipe>> recipeIds, LocalDate deliveryDate) {
-        return new PendingOrder(Id.unassigned(), recipeIds, deliveryDate);
+        return new PendingOrder(Id.generate(), recipeIds, deliveryDate);
     }
 
     public PendingOrder withUpdatedRecipes(List<Id<Recipe>> recipeIds) {
@@ -44,7 +44,7 @@ public record PendingOrder(
     }
 
     public LockedOrder locked() {
-        return new LockedOrder(Id.of(id.value()), recipeIds, deliveryDate);
+        return new LockedOrder(id, recipeIds, deliveryDate);
     }
 
     public boolean shouldBeLocked(Clock clock) {

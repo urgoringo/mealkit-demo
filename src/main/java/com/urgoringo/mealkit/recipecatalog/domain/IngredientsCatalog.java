@@ -53,16 +53,14 @@ public class IngredientsCatalog {
         return repository.findByName(name);
     }
 
-    public Ingredient save(Ingredient ingredient) {
-        Ingredient saved = repository.save(ingredient);
-        if (saved.id().isAssigned()) {
-            cache.invalidate(saved.id());
-        }
+    public Ingredient add(Ingredient ingredient) {
+        Ingredient saved = repository.add(ingredient);
+        cache.put(saved.id(), saved);
         return saved;
     }
 
-    public Ingredient findOrSave(Ingredient ingredient) {
-        return repository.findByName(ingredient.name()).orElseGet(() -> save(ingredient));
+    public Ingredient findOrAdd(Ingredient ingredient) {
+        return repository.findByName(ingredient.name()).orElseGet(() -> add(ingredient));
     }
 
     public void deleteAll() {

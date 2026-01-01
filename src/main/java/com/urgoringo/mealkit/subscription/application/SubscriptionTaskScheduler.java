@@ -24,11 +24,11 @@ public class SubscriptionTaskScheduler {
     private final Clock clock;
 
     public void scheduleProcessing(Subscription subscription) {
-        Long subscriptionId = subscription.id().value();
+        String subscriptionId = subscription.id().value().toString();
         LocalDate processingDate = subscription.nextProcessingDate(clock);
 
         log.info("Scheduling task to process subscription {} at {}", subscriptionId, processingDate);
-        TaskInstance<Long> taskInstanceObj = new TaskInstance<>(
+        TaskInstance<String> taskInstanceObj = new TaskInstance<>(
             ProcessSubscriptionsTask.TASK_NAME,
             subscriptionId + "_" + processingDate,
             subscriptionId

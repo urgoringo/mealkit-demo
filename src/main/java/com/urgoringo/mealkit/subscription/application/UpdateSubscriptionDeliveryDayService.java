@@ -24,6 +24,6 @@ public class UpdateSubscriptionDeliveryDayService {
     public Subscription execute(Id<Customer> customerId, DayOfWeek deliveryDay) {
         Subscription subscription = subscriptions.findByCustomerId(customerId);
         Subscription updatedSubscription = subscription.withUpdatedDeliveryDay(deliveryDay, clock);
-        return subscriptions.save(updatedSubscription);
+        return subscriptions.update(updatedSubscription);
     }
 }

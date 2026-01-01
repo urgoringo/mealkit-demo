@@ -9,6 +9,6 @@ public record Ingredient(
         String name
 ) {
     public static Ingredient create(String name) {
-        return new Ingredient(Id.unassigned(), name);
+        return new Ingredient(Id.generate(), name);
     }
 }
