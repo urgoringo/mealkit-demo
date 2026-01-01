@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.backoffice.domain;
 import com.urgoringo.mealkit.domain.Id;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,7 +10,6 @@ import java.util.Optional;
 
 import static com.urgoringo.mealkit.jooq.tables.BackofficeUsers.BACKOFFICE_USERS;
 
-@NullMarked
 @Repository
 @RequiredArgsConstructor
 public class BackofficeUsers {

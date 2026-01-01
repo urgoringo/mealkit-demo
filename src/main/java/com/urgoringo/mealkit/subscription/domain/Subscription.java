@@ -4,7 +4,6 @@ import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.infra.UpcomingSubscriptionOrders;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
-import org.jspecify.annotations.NullMarked;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -14,7 +13,6 @@ import java.util.List;
 
 import static java.time.temporal.TemporalAdjusters.next;
 
-@NullMarked
 public record Subscription(
     Id<Subscription> id,
     Id<Customer> customerId,

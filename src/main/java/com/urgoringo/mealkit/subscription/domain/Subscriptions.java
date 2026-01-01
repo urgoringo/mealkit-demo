@@ -7,7 +7,6 @@ import com.urgoringo.mealkit.infra.UpcomingSubscriptionOrders;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +19,6 @@ import java.util.UUID;
 import static com.urgoringo.mealkit.jooq.tables.Orders.ORDERS;
 import static com.urgoringo.mealkit.jooq.tables.Subscriptions.SUBSCRIPTIONS;
 
-@NullMarked
 @Repository
 @RequiredArgsConstructor
 public class Subscriptions {

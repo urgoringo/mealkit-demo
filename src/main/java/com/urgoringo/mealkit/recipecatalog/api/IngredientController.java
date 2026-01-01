@@ -4,13 +4,11 @@ import com.urgoringo.mealkit.recipecatalog.application.GetIngredientService;
 import com.urgoringo.mealkit.recipecatalog.domain.Ingredient;
 import com.urgoringo.mealkit.recipecatalog.domain.IngredientsCatalog;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.http.ResponseEntity.*;
 
-@NullMarked
 @RestController
 @RequestMapping("/ingredients")
 @RequiredArgsConstructor

@@ -9,7 +9,6 @@ import com.urgoringo.mealkit.recipecatalog.domain.Unit;
 import com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService;
 import com.urgoringo.mealkit.recipecatalog.application.GetRecipeService;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,6 @@ import java.util.List;
 import static com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService.*;
 import static com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService.IngredientInput;
 
-@NullMarked
 @RestController
 @RequestMapping("/recipes")
 @RequiredArgsConstructor

@@ -1,9 +1,7 @@
 package com.urgoringo.mealkit.backoffice.domain;
 
 import com.urgoringo.mealkit.domain.Id;
-import org.jspecify.annotations.NullMarked;
 
-@NullMarked
 public record BackofficeUser(
         Id<BackofficeUser> id,
         String email,

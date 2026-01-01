@@ -6,11 +6,9 @@ import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.auth.PasswordHasher;
 import com.urgoringo.mealkit.auth.TokenService;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class LoginCustomerService {

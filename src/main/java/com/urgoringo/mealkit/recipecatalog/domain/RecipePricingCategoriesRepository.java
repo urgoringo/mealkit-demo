@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.recipecatalog.domain;
 import com.urgoringo.mealkit.domain.Money;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;
@@ -11,7 +10,6 @@ import java.util.Map;
 import static com.urgoringo.mealkit.jooq.tables.RecipePricingCategories.RECIPE_PRICING_CATEGORIES;
 import static java.util.stream.Collectors.toMap;
 
-@NullMarked
 @Repository
 @RequiredArgsConstructor
 public class RecipePricingCategoriesRepository {

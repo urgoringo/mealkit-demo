@@ -4,7 +4,6 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.subscription.domain.*;
-import org.jspecify.annotations.NullMarked;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -13,7 +12,6 @@ import java.util.stream.Stream;
 
 import static java.time.temporal.TemporalAdjusters.next;
 
-@NullMarked
 public class UpcomingSubscriptionOrders {
     private final List<UpcomingOrder> items;
 

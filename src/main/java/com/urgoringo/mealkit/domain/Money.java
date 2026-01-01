@@ -1,12 +1,8 @@
 package com.urgoringo.mealkit.domain;
-
-import org.jspecify.annotations.NullMarked;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
 
-@NullMarked
 public record Money(BigDecimal amount) {
     
     public static final Money ZERO = new Money(BigDecimal.ZERO);

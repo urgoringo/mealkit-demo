@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.subscription.domain;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
-import org.jspecify.annotations.NullMarked;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -12,7 +11,6 @@ import java.util.List;
 import static com.urgoringo.mealkit.subscription.domain.OrderStatus.PENDING;
 import static java.time.temporal.ChronoUnit.DAYS;
 
-@NullMarked
 public record PendingOrder(
     Id<Order> id,
     List<Id<Recipe>> recipeIds,

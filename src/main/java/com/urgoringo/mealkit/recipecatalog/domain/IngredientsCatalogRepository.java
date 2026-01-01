@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.recipecatalog.domain;
 import com.urgoringo.mealkit.domain.Id;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +11,6 @@ import java.util.Optional;
 
 import static com.urgoringo.mealkit.jooq.tables.Ingredients.INGREDIENTS;
 
-@NullMarked
 @Repository
 @RequiredArgsConstructor
 public class IngredientsCatalogRepository {

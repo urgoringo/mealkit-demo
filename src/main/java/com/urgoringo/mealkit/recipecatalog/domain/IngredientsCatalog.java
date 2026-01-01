@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.recipecatalog.domain;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.urgoringo.mealkit.domain.Id;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.toMap;
 
-@NullMarked
 @Component
 public class IngredientsCatalog {
 

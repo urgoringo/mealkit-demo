@@ -5,7 +5,6 @@ import com.urgoringo.mealkit.customer.domain.Customers;
 import com.urgoringo.mealkit.domain.ValidationFailed;
 import com.urgoringo.mealkit.auth.PasswordHasher;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
  * Application service for customer signup.
  * Follows DDD principle: one service per use case.
  */
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class SignupCustomerService {

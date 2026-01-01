@@ -8,13 +8,11 @@ import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import com.urgoringo.mealkit.subscription.domain.PendingOrder;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class UpdateUpcomingOrderRecipesService {

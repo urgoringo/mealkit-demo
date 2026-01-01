@@ -1,7 +1,6 @@
 package com.urgoringo.mealkit.domain;
 
 import com.github.f4b6a3.uuid.UuidCreator;
-import org.jspecify.annotations.NullMarked;
 
 import java.util.UUID;
 
@@ -11,7 +10,6 @@ import java.util.UUID;
  *
  * @param <T> the entity type this ID belongs to
  */
-@NullMarked
 public record Id<T>(UUID value) {
 
     /**

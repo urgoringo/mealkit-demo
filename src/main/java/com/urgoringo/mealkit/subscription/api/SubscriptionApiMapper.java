@@ -6,13 +6,11 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.*;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.util.List;
 
-@NullMarked
 @Component
 @RequiredArgsConstructor
 public class SubscriptionApiMapper {

@@ -3,14 +3,12 @@ package com.urgoringo.mealkit.recipecatalog.application;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.recipecatalog.domain.*;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class CreateRecipeService {

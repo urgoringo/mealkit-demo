@@ -8,7 +8,6 @@ import com.urgoringo.mealkit.domain.Id;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 
 import java.util.Arrays;
@@ -17,7 +16,6 @@ import java.util.UUID;
 
 import static com.urgoringo.mealkit.jooq.tables.Recipes.RECIPES;
 
-@NullMarked
 @Repository
 @RequiredArgsConstructor
 public class RecipesCatalog {

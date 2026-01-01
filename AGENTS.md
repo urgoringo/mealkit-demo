@@ -282,14 +282,21 @@ This project uses **Error Prone** for compile-time static analysis and **NullAwa
 
 #### Using JSpecify Annotations
 
-**@NullMarked** - Mark a class/package as null-safe by default:
-```java
-import org.jspecify.annotations.NullMarked;
+**NullAway Configuration:**
+NullAway is configured in `build.gradle.kts` to check all packages under `com.urgoringo`:
 
-@NullMarked
+```kotlin
+nullaway {
+    annotatedPackages.add("com.urgoringo")
+}
+```
+
+This means **all classes** in the project are null-safe by default. No `@NullMarked` annotations or `package-info.java` files are needed:
+
+```java
 public class RecipeService {
     // All parameters and returns are non-null by default
-    public Recipe getRecipe(Long id) { ... }
+    public Recipe getRecipe(UUID id) { ... }
 }
 ```
 
@@ -297,10 +304,9 @@ public class RecipeService {
 ```java
 import org.jspecify.annotations.Nullable;
 
-@NullMarked
 public class RecipeService {
     // Return type can be null
-    public @Nullable Recipe findRecipe(Long id) { ... }
+    public @Nullable Recipe findRecipe(UUID id) { ... }
 
     // Parameter can be null
     public void updateDescription(@Nullable String description) { ... }
