@@ -35,6 +35,12 @@ repositories {
 	mavenCentral()
 }
 
+dependencyManagement {
+	imports {
+		mavenBom("io.zonky.test.postgres:embedded-postgres-binaries-bom:18.1.0")
+	}
+}
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-jooq") {
 		exclude(group = "org.jooq")
@@ -63,13 +69,6 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
     testImplementation("io.zonky.test:embedded-database-spring-test:2.7.1")
-    testImplementation("io.zonky.test.postgres:embedded-postgres-binaries-linux-amd64:18.1.0")
-    testImplementation("io.zonky.test.postgres:embedded-postgres-binaries-darwin-amd64:18.1.0")
-    testImplementation("io.zonky.test.postgres:embedded-postgres-binaries-darwin-arm64v8:18.1.0")
-    testImplementation("io.zonky.test.postgres:embedded-postgres-binaries-windows-amd64:18.1.0")
-    testImplementation("io.cucumber:cucumber-java:7.21.1")
-    testImplementation("io.cucumber:cucumber-spring:7.21.1")
-    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.21.1")
     testImplementation("org.junit.platform:junit-platform-suite-api:1.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.11.4")
     testImplementation("net.datafaker:datafaker:2.4.2")
