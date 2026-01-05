@@ -9,8 +9,10 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import spock.lang.Specification
 
+import static io.zonky.test.db.AutoConfigureEmbeddedDatabase.RefreshMode
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureEmbeddedDatabase
+@AutoConfigureEmbeddedDatabase(refresh = RefreshMode.BEFORE_CLASS)
 @Import(EmbeddedDatabaseConfiguration)
 @ActiveProfiles("test")
 abstract class ApplicationSpecification extends Specification {

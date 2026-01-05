@@ -86,10 +86,13 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 
+	// Enable parallel test execution
+	maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+
 	// Show test output for Spock given/when/then blocks
 	testLogging {
 		events("passed", "skipped", "failed")
-		showStandardStreams = true
+		showStandardStreams = false  // Disable verbose logging for cleaner output
 		exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 	}
 }
