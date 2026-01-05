@@ -4,10 +4,11 @@ import lombok.Getter;
 import org.jspecify.annotations.NullMarked;
 
 import java.time.DayOfWeek;
+import java.util.List;
 
-import static com.urgoringo.mealkit.scaffolding.TestFactory.aPassword;
-import static com.urgoringo.mealkit.scaffolding.TestFactory.anEmail;
+import static com.urgoringo.mealkit.scaffolding.TestFactory.*;
 import static java.time.DayOfWeek.MONDAY;
+import static java.time.DayOfWeek.WEDNESDAY;
 
 @NullMarked
 public class CustomerSetup {
@@ -21,10 +22,15 @@ public class CustomerSetup {
     }
 
     public SubscriptionSetup havingSubscription() {
-        return havingSubscription(MONDAY);
+        return having(aSubscription().withDeliveryDay(WEDNESDAY));
     }
 
-    public SubscriptionSetup havingSubscription(DayOfWeek dayOfWeek) {
-        return new SubscriptionSetup(app, authToken, dayOfWeek);
+    public SubscriptionSetup having(DayOfWeek deliveryDay) {
+        return new SubscriptionSetup(app, authToken, aSubscription().withDeliveryDay(deliveryDay));
     }
+
+    public SubscriptionSetup having(TestFactory.SubscriptionBuilder subscription) {
+        return new SubscriptionSetup(app, authToken, subscription);
+    }
+
 }

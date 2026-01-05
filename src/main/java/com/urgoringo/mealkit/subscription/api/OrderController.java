@@ -4,7 +4,6 @@ import com.urgoringo.mealkit.backoffice.domain.BackofficeUser;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.application.MarkOrderDeliveredService;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@NullMarked
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
@@ -25,7 +23,7 @@ public class OrderController {
     @PostMapping("/{orderId}/delivered")
     public ResponseEntity<Void> deliverOrder(
             @AuthenticationPrincipal Id<BackofficeUser> backofficeUserId,
-            @PathVariable Long orderId) {
+            @PathVariable String orderId) {
         markOrderDeliveredService.execute(backofficeUserId, Id.of(orderId));
         return ResponseEntity.noContent().build();
     }

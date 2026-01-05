@@ -10,7 +10,7 @@ public class UpcomingOrderSetup {
 
     private final ApplicationRunner app;
     private final String authToken;
-    private final Long upcomingOrderId;
+    private final String upcomingOrderId;
     private boolean isLocked = false;
 
     public UpcomingOrderSetup locked() {

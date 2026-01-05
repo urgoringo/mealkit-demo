@@ -2,7 +2,6 @@ package com.urgoringo.mealkit.auth;
 
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 
@@ -12,7 +11,6 @@ import java.util.List;
  * Spring Security Authentication implementation that wraps a Customer ID.
  * This allows @AuthenticationPrincipal to inject Id<Customer> directly into controllers.
  */
-@NullMarked
 public class CustomerAuthentication extends AbstractAuthenticationToken {
 
     private final Id<Customer> customerId;

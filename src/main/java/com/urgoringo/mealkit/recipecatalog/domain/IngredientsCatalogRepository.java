@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.recipecatalog.domain;
 import com.urgoringo.mealkit.domain.Id;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +11,6 @@ import java.util.Optional;
 
 import static com.urgoringo.mealkit.jooq.tables.Ingredients.INGREDIENTS;
 
-@NullMarked
 @Repository
 @RequiredArgsConstructor
 public class IngredientsCatalogRepository {
@@ -52,26 +50,20 @@ public class IngredientsCatalogRepository {
         ));
     }
 
-    public Ingredient save(Ingredient ingredient) {
-        if (ingredient.id().isAssigned()) {
-            dsl.update(INGREDIENTS)
-                    .set(INGREDIENTS.NAME, ingredient.name())
-                    .where(INGREDIENTS.ID.eq(ingredient.id().value()))
-                    .execute();
-            return ingredient;
-        } else {
-            var record = dsl.insertInto(INGREDIENTS)
-                    .set(INGREDIENTS.NAME, ingredient.name())
-                    .returning(INGREDIENTS.ID)
-                    .fetchOne();
-            if (record == null) {
-                throw new IllegalStateException("Failed to insert ingredient");
-            }
-            return new Ingredient(
-                    Id.of(record.getId()),
-                    ingredient.name()
-            );
-        }
+    public Ingredient add(Ingredient ingredient) {
+        dsl.insertInto(INGREDIENTS)
+                .set(INGREDIENTS.ID, ingredient.id().value())
+                .set(INGREDIENTS.NAME, ingredient.name())
+                .execute();
+        return ingredient;
+    }
+
+    public Ingredient update(Ingredient ingredient) {
+        dsl.update(INGREDIENTS)
+                .set(INGREDIENTS.NAME, ingredient.name())
+                .where(INGREDIENTS.ID.eq(ingredient.id().value()))
+                .execute();
+        return ingredient;
     }
 
     public void deleteAll() {

@@ -5,14 +5,12 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 
 @Slf4j
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class MarkOrderDeliveredService {
@@ -27,6 +25,6 @@ public class MarkOrderDeliveredService {
         LockedOrder lockedOrder = subscriptions.findLockedOrderById(orderId);
         
         DeliveredOrder deliveredOrder = lockedOrder.markAsDelivered(clock);
-        subscriptions.update(deliveredOrder);
+        subscriptions.updateDeliveredOrder(deliveredOrder);
     }
 }

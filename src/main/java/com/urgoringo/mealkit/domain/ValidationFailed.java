@@ -1,7 +1,4 @@
 package com.urgoringo.mealkit.domain;
-
-import org.jspecify.annotations.NullMarked;
-
 import java.util.Objects;
 
 /**
@@ -9,7 +6,6 @@ import java.util.Objects;
  * Results in HTTP 422 Unprocessable Entity response.
  * Always includes a non-null error message.
  */
-@NullMarked
 public class ValidationFailed extends RuntimeException {
 
     public ValidationFailed(String message) {

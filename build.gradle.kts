@@ -1,7 +1,6 @@
 import net.ltgt.gradle.errorprone.errorprone
 import net.ltgt.gradle.nullaway.nullaway
 import org.gradle.api.tasks.compile.GroovyCompile
-import org.jooq.meta.jaxb.Logging
 
 plugins {
 	java
@@ -10,7 +9,7 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.7"
 	id("net.ltgt.errorprone") version "4.3.0"
 	id("net.ltgt.nullaway") version "2.3.0"
-	id("org.jooq.jooq-codegen-gradle") version "3.19.27"
+	id("dev.monosoul.jooq-docker") version "8.0.9"
 }
 
 group = "com.urgoringo"
@@ -36,8 +35,17 @@ repositories {
 	mavenCentral()
 }
 
+dependencyManagement {
+	imports {
+		mavenBom("io.zonky.test.postgres:embedded-postgres-binaries-bom:18.1.0")
+	}
+}
+
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-jooq")
+	implementation("org.springframework.boot:spring-boot-starter-jooq") {
+		exclude(group = "org.jooq")
+	}
+	implementation("org.jooq:jooq:3.20.10")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -48,12 +56,12 @@ dependencies {
 	implementation("com.github.kagkarlsson:db-scheduler-spring-boot-starter:16.6.0")
 	implementation("org.jspecify:jspecify:1.0.0")
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+	implementation("com.github.f4b6a3:uuid-creator:6.1.1")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 	errorprone("com.google.errorprone:error_prone_core:2.44.0")
 	errorprone("com.uber.nullaway:nullaway:0.12.12")
 	jooqCodegen("org.postgresql:postgresql")
-	jooqCodegen("org.jooq:jooq-meta-extensions:3.19.27")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
@@ -61,9 +69,6 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
     testImplementation("io.zonky.test:embedded-database-spring-test:2.7.1")
-    testImplementation("io.cucumber:cucumber-java:7.21.1")
-    testImplementation("io.cucumber:cucumber-spring:7.21.1")
-    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.21.1")
     testImplementation("org.junit.platform:junit-platform-suite-api:1.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.11.4")
     testImplementation("net.datafaker:datafaker:2.4.2")
@@ -81,10 +86,13 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 
+	// Enable parallel test execution
+	maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+
 	// Show test output for Spock given/when/then blocks
 	testLogging {
 		events("passed", "skipped", "failed")
-		showStandardStreams = true
+		showStandardStreams = false  // Disable verbose logging for cleaner output
 		exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 	}
 }
@@ -128,57 +136,33 @@ tasks.named<JavaCompile>("compileTestJava") {
 	}
 }
 
-// jOOQ code generation configuration
+// Configure jOOQ code generation using reusable Testcontainer
 jooq {
-	configuration {
-		logging = Logging.WARN
-		generator {
-			name = "org.jooq.codegen.JavaGenerator"
-			database {
-				name = "org.jooq.meta.extensions.ddl.DDLDatabase"
-				properties {
-					property {
-						key = "scripts"
-						value = "src/main/resources/db/migration/*.sql"
-					}
-					property {
-						key = "sort"
-						value = "flyway"
-					}
-					property {
-						key = "defaultNameCase"
-						value = "lower"
-					}
-				}
-			}
-			generate {
-				isDeprecated = false
-				isRecords = true
-				isImmutablePojos = false
-				isFluentSetters = true
-				isPojos = true
-				isPojosEqualsAndHashCode = true
-				isPojosToString = true
-				isJavaTimeTypes = true
-			}
-			target {
-				packageName = "com.urgoringo.mealkit.jooq"
-				directory = "build/generated/sources/jooq"
-			}
+	withContainer {
+		image {
+			name = "postgres:18.1-alpine"
 		}
 	}
 }
 
-// Make sure jOOQ code generation runs before compilation
-tasks.named("compileJava") {
-	dependsOn(tasks.named("jooqCodegen"))
+tasks {
+	generateJooqClasses {
+		schemas.set(listOf("public"))
+		basePackageName.set("com.urgoringo.mealkit.jooq")
+		outputDirectory.set(project.layout.buildDirectory.dir("generated-jooq"))
+	}
+	
+	// Make compileJava depend on jOOQ code generation
+	compileJava {
+		dependsOn(generateJooqClasses)
+	}
 }
 
 // Add generated sources to the main source set
 sourceSets {
 	main {
 		java {
-			srcDir("build/generated/sources/jooq")
+			srcDir("build/generated-jooq")
 		}
 	}
 }

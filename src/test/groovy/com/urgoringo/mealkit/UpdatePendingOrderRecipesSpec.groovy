@@ -14,7 +14,7 @@ class UpdatePendingOrderRecipesSpec extends ApplicationSpecification {
             app.freezeTimeOn(LocalDate.parse("2025-12-10"))
             app
                 .havingCustomer()
-                .havingSubscription(WEDNESDAY)
+                .having(WEDNESDAY)
             def authToken = app.currentAuthToken
 
             def currentSubscription = app.getCustomerSubscription(authToken).expectSuccess()
@@ -38,7 +38,7 @@ class UpdatePendingOrderRecipesSpec extends ApplicationSpecification {
         given: "customer has a subscription with delivery day Monday (2025.11.24)"
             app.freezeTimeOn(LocalDate.of(2025, 11, 19))
             def customer = app.havingCustomer()
-            customer.havingSubscription(MONDAY)
+            customer.having(MONDAY)
             def subscription = app.getCustomerSubscription(customer.authToken).expectSuccess()
             def orderId = subscription.upcomingOrders().first.id()
 

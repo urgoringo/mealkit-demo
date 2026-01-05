@@ -3,7 +3,6 @@ package com.urgoringo.mealkit.infra;
 import com.urgoringo.mealkit.domain.NotFound;
 import com.urgoringo.mealkit.domain.ValidationFailed;
 import jakarta.servlet.http.HttpServletRequest;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -14,7 +13,6 @@ import static org.springframework.http.HttpStatus.*;
 /**
  * Global exception handler for REST controllers.
  */
-@NullMarked
 @ControllerAdvice
 public class GlobalExceptionHandler {
 

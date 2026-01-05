@@ -3,8 +3,6 @@ package com.urgoringo.mealkit.recipecatalog.domain;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.urgoringo.mealkit.domain.Id;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -13,9 +11,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toMap;
 
-@NullMarked
 @Component
 public class IngredientsCatalog {
 
@@ -54,16 +51,14 @@ public class IngredientsCatalog {
         return repository.findByName(name);
     }
 
-    public Ingredient save(Ingredient ingredient) {
-        Ingredient saved = repository.save(ingredient);
-        if (saved.id().isAssigned()) {
-            cache.invalidate(saved.id());
-        }
+    public Ingredient add(Ingredient ingredient) {
+        Ingredient saved = repository.add(ingredient);
+        cache.put(saved.id(), saved);
         return saved;
     }
 
-    public Ingredient findOrSave(Ingredient ingredient) {
-        return repository.findByName(ingredient.name()).orElseGet(() -> save(ingredient));
+    public Ingredient findOrAdd(Ingredient ingredient) {
+        return repository.findByName(ingredient.name()).orElseGet(() -> add(ingredient));
     }
 
     public void deleteAll() {

@@ -8,22 +8,20 @@ import com.urgoringo.mealkit.recipecatalog.domain.PricingCategory;
 import com.urgoringo.mealkit.recipecatalog.domain.Quantity;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
-import com.urgoringo.mealkit.recipecatalog.domain.RecipePricingCategoriesRepository;
+import com.urgoringo.mealkit.recipecatalog.domain.RecipePrices;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class GetRecipeService {
 
     private final RecipesCatalog recipesCatalog;
     private final IngredientsCatalog ingredientsCatalog;
-    private final RecipePricingCategoriesRepository pricingCategoriesRepository;
+    private final RecipePrices recipePrices;
 
     public record RecipeWithDetails(
         Recipe recipe,
@@ -53,8 +51,7 @@ public class GetRecipeService {
             })
             .toList();
 
-        Money price = pricingCategoriesRepository.findPriceByCategory(recipe.pricingCategory())
-            .orElseThrow(() -> new IllegalStateException("Price not found for pricing category: " + recipe.pricingCategory()));
+        Money price = recipePrices.by(recipe.pricingCategory());
 
         return new RecipeWithDetails(recipe, ingredientDetails, recipe.pricingCategory(), price);
     }

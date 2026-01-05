@@ -6,14 +6,12 @@ import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
 
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class UpdateUpcomingOrderDeliveryDayService {
@@ -24,7 +22,7 @@ public class UpdateUpcomingOrderDeliveryDayService {
     @Transactional
     public Subscription execute(Id<Customer> customerId, Id<UpcomingOrder> orderId, DayOfWeek deliveryDay) {
         Subscription subscription = subscriptions.findByCustomerId(customerId);
-        Subscription updatedSubscription = subscription.withUpdatedOrderDeliveryDate(orderId, deliveryDay, clock);
-        return subscriptions.save(updatedSubscription);
+        Subscription updatedSubscription = subscription.withUpdatedOrderDeliveryDate(orderId, deliveryDay);
+        return subscriptions.update(updatedSubscription);
     }
 }

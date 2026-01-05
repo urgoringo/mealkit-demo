@@ -6,23 +6,22 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.*;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.util.List;
 
-@NullMarked
 @Component
 @RequiredArgsConstructor
 public class SubscriptionApiMapper {
 
     private final Clock clock;
+    private final OrderPrices orderPrices;
 
     public SubscriptionResponse toResponse(Subscription subscription) {
         return new SubscriptionResponse(
-                subscription.id().value(),
-                subscription.customerId().value(),
+                subscription.id().value().toString(),
+                subscription.customerId().value().toString(),
                 subscription.upcomingOrders().stream()
                         .map(order -> toOrderResponse(order))
                         .toList(),
@@ -32,32 +31,36 @@ public class SubscriptionApiMapper {
     }
 
     public OrderResponse toOrderResponse(UpcomingOrder order) {
+        var totalPrice = orderPrices.totalPrice(order);
         return new OrderResponse(
-                order.id().value(),
-                mapRecipeIdsToLong(order.recipeIds()),
+                order.id().value().toString(),
+                mapRecipeIdsToString(order.recipeIds()),
                 order.deliveryDate(),
-                order.status()
+                order.status(),
+                totalPrice.amount()
         );
     }
 
     public OrderResponse toOrderResponse(DeliveredOrder order) {
+        var totalPrice = orderPrices.totalPrice(order);
         return new OrderResponse(
-                order.id().value(),
-                mapRecipeIdsToLong(order.recipeIds()),
+                order.id().value().toString(),
+                mapRecipeIdsToString(order.recipeIds()),
                 order.deliveryDate(),
-                OrderStatus.DELIVERED
+                OrderStatus.DELIVERED,
+                totalPrice.amount()
         );
     }
 
-    public List<Id<Recipe>> mapRecipeIds(List<Long> ids) {
+    public List<Id<Recipe>> mapRecipeIds(List<String> ids) {
         return ids.stream()
                 .map(Id::<Recipe>of)
                 .toList();
     }
 
-    public List<Long> mapRecipeIdsToLong(List<Id<Recipe>> ids) {
+    public List<String> mapRecipeIdsToString(List<Id<Recipe>> ids) {
         return ids.stream()
-                .map(Id::value)
+                .map(id -> id.value().toString())
                 .toList();
     }
 }

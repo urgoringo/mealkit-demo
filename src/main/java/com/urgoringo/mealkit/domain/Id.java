@@ -1,49 +1,53 @@
 package com.urgoringo.mealkit.domain;
 
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.NullUnmarked;
+import com.github.f4b6a3.uuid.UuidCreator;
+
+import java.util.UUID;
 
 /**
- * Wrapper type for entity identifiers.
- * Provides type-safe IDs and handles the case of entities without assigned IDs.
+ * Wrapper type for entity identifiers using UUIDv7.
+ * Provides type-safe IDs with time-ordered UUIDs for better database performance.
  *
  * @param <T> the entity type this ID belongs to
  */
-@NullMarked
-public record Id<T>(Long value) {
+public record Id<T>(UUID value) {
 
     /**
-     * Creates an unassigned ID for a new entity.
-     * Uses NullUnmarked to opt out of null safety checks for this factory method.
+     * Creates a new ID with a generated UUIDv7.
+     * UUIDv7 provides time-ordered IDs that are database-friendly.
      *
      * @param <T> the entity type
-     * @return an ID with null value
+     * @return an ID with a new UUIDv7 value
      */
-    @NullUnmarked
-    public static <T> Id<T> unassigned() {
-        return new Id<>(null);
+    public static <T> Id<T> generate() {
+        return new Id<>(UuidCreator.getTimeOrderedEpoch());
     }
 
     /**
-     * Creates an ID from a non-null Long value.
+     * Creates an ID from a non-null UUID value.
      *
-     * @param value the ID value
+     * @param value the UUID value
      * @param <T> the entity type
      * @return an ID with the given value
      */
-    public static <T> Id<T> of(Long value) {
+    public static <T> Id<T> of(UUID value) {
         if (value == null) {
-            throw new IllegalArgumentException("Use unassigned() for IDs without a value");
+            throw new IllegalArgumentException("UUID value cannot be null");
         }
         return new Id<>(value);
     }
 
     /**
-     * Checks if this ID has been assigned a value.
+     * Creates an ID from a string representation of a UUID.
      *
-     * @return true if the ID has a value
+     * @param value the UUID string
+     * @param <T> the entity type
+     * @return an ID with the parsed UUID value
      */
-    public boolean isAssigned() {
-        return value != null;
+    public static <T> Id<T> of(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("UUID string cannot be null");
+        }
+        return new Id<>(UUID.fromString(value));
     }
 }

@@ -3,6 +3,7 @@ package com.urgoringo.mealkit.scaffolding;
 import lombok.RequiredArgsConstructor;
 
 import java.time.DayOfWeek;
+import java.util.List;
 
 import static com.urgoringo.mealkit.scaffolding.TestFactory.aSubscription;
 import static com.urgoringo.mealkit.subscription.api.SubscriptionController.*;
@@ -13,14 +14,12 @@ public class SubscriptionSetup {
     private final ApplicationRunner app;
     private final String authToken;
 
-    public SubscriptionSetup(ApplicationRunner app, String authToken, DayOfWeek deliveryDay) {
+    public SubscriptionSetup(ApplicationRunner app, String authToken, TestFactory.SubscriptionBuilder subscription) {
         this.app = app;
         this.authToken = authToken;
-        app.create(
-            aSubscription()
-                .withRecipeIds(app.getRecipes(3))
-                .withDeliveryDay(deliveryDay), authToken
-        ).expectSuccess();
+        List<String> recipeIds = subscription.recipeIds().isEmpty() ? app.getRecipes(3) : subscription.recipeIds();
+        TestFactory.SubscriptionBuilder subscriptionBuilder = subscription.withRecipeIds(recipeIds);
+        app.create(subscriptionBuilder, authToken).expectSuccess();
     }
 
     public SubscriptionResponse get() {

@@ -9,7 +9,6 @@ import com.urgoringo.mealkit.recipecatalog.domain.Unit;
 import com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService;
 import com.urgoringo.mealkit.recipecatalog.application.GetRecipeService;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,6 @@ import java.util.List;
 import static com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService.*;
 import static com.urgoringo.mealkit.recipecatalog.application.CreateRecipeService.IngredientInput;
 
-@NullMarked
 @RestController
 @RequestMapping("/recipes")
 @RequiredArgsConstructor
@@ -42,12 +40,12 @@ public class RecipeController {
 
         List<RecipeResponse> response = recipes.stream()
             .map(recipeWithDetails -> new RecipeResponse(
-                recipeWithDetails.recipe().id().value(),
+                recipeWithDetails.recipe().id().value().toString(),
                 recipeWithDetails.recipe().title(),
                 recipeWithDetails.recipe().instructions(),
                 recipeWithDetails.ingredientDetails().stream()
                     .map(detail -> new RecipeIngredientResponse(
-                        detail.ingredient().id().value(),
+                        detail.ingredient().id().value().toString(),
                         detail.ingredient().name(),
                         detail.quantity().amount(),
                         detail.quantity().unit()
@@ -61,17 +59,17 @@ public class RecipeController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RecipeResponse> getRecipe(@PathVariable Long id) {
+    public ResponseEntity<RecipeResponse> getRecipe(@PathVariable String id) {
         GetRecipeService.RecipeWithDetails recipeWithDetails =
             getRecipeService.execute(Id.of(id));
 
         RecipeResponse response = new RecipeResponse(
-            recipeWithDetails.recipe().id().value(),
+            recipeWithDetails.recipe().id().value().toString(),
             recipeWithDetails.recipe().title(),
             recipeWithDetails.recipe().instructions(),
             recipeWithDetails.ingredientDetails().stream()
                 .map(detail -> new RecipeIngredientResponse(
-                    detail.ingredient().id().value(),
+                    detail.ingredient().id().value().toString(),
                     detail.ingredient().name(),
                     detail.quantity().amount(),
                     detail.quantity().unit()
@@ -102,12 +100,12 @@ public class RecipeController {
             getRecipeService.execute(recipe.id());
 
         RecipeResponse response = new RecipeResponse(
-            recipeWithDetails.recipe().id().value(),
+            recipeWithDetails.recipe().id().value().toString(),
             recipeWithDetails.recipe().title(),
             recipeWithDetails.recipe().instructions(),
             recipeWithDetails.ingredientDetails().stream()
                 .map(detail -> new RecipeIngredientResponse(
-                    detail.ingredient().id().value(),
+                    detail.ingredient().id().value().toString(),
                     detail.ingredient().name(),
                     detail.quantity().amount(),
                     detail.quantity().unit()
@@ -127,11 +125,11 @@ public class RecipeController {
     ) {
     }
 
-    public record RecipeIngredientRequest(long ingredientId, String amount, Unit unit) {
+    public record RecipeIngredientRequest(String ingredientId, String amount, Unit unit) {
     }
 
     public record RecipeResponse(
-        Long id,
+        String id,
         String title,
         List<String> instructions,
         List<RecipeIngredientResponse> ingredients,
@@ -140,6 +138,6 @@ public class RecipeController {
     ) {
     }
 
-    public record RecipeIngredientResponse(long ingredientId, String name, String quantity, Unit unit) {
+    public record RecipeIngredientResponse(String ingredientId, String name, String quantity, Unit unit) {
     }
 }

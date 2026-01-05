@@ -1,11 +1,9 @@
 package com.urgoringo.mealkit.recipecatalog.domain;
 
 import com.urgoringo.mealkit.domain.Id;
-import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
-@NullMarked
 public record Recipe(
         Id<Recipe> id,
         String title,
@@ -21,7 +19,7 @@ public record Recipe(
 
     public static Recipe create(String title, List<String> instructions, List<RecipeIngredient> ingredients, PricingCategory pricingCategory) {
         return new Recipe(
-                Id.unassigned(), 
+                Id.generate(), 
                 title, 
                 List.copyOf(instructions),
                 List.copyOf(ingredients),

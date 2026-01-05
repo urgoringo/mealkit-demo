@@ -3,24 +3,22 @@ package com.urgoringo.mealkit.subscription.domain;
 import com.urgoringo.mealkit.customer.domain.Customer;
 import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.domain.NotFound;
+import com.urgoringo.mealkit.infra.UpcomingSubscriptionOrders;
 import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
 import static com.urgoringo.mealkit.jooq.tables.Orders.ORDERS;
 import static com.urgoringo.mealkit.jooq.tables.Subscriptions.SUBSCRIPTIONS;
 
-@NullMarked
 @Repository
 @RequiredArgsConstructor
 public class Subscriptions {
@@ -28,108 +26,94 @@ public class Subscriptions {
     private final DSLContext dsl;
 
     @Transactional
-    public Subscription save(Subscription subscription) {
-        Long subscriptionId;
+    public Subscription add(Subscription subscription) {
+        dsl.insertInto(SUBSCRIPTIONS)
+            .set(SUBSCRIPTIONS.ID, subscription.id().value())
+            .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
+            .set(SUBSCRIPTIONS.DELIVERY_ADDRESS, subscription.deliveryAddress())
+            .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
+            .execute();
 
-        if (subscription.id().isAssigned()) {
-            subscriptionId = subscription.id().value();
-            dsl.update(SUBSCRIPTIONS)
-                .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
-                .set(SUBSCRIPTIONS.DELIVERY_ADDRESS, subscription.deliveryAddress())
-                .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
-                .where(SUBSCRIPTIONS.ID.eq(subscriptionId))
-                .execute();
+        subscription.upcomingOrders().stream().forEach(order -> addOrder(order, subscription.id().value()));
 
-            List<Id<Order>> existingOrderIds = subscription.upcomingOrders().stream()
-                .map(Order::id)
-                .filter(Id::isAssigned)
-                .toList();
-
-            if (!existingOrderIds.isEmpty()) {
-                List<Long> existingOrderIdValues = existingOrderIds.stream()
-                    .map(Id::value)
-                    .toList();
-                List<Long> orderIdsToDelete = dsl.select(ORDERS.ID)
-                    .from(ORDERS)
-                    .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
-                        .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name()))
-                        .and(ORDERS.ID.notIn(existingOrderIdValues)))
-                    .fetch(ORDERS.ID);
-
-                if (!orderIdsToDelete.isEmpty()) {
-                    dsl.deleteFrom(ORDERS)
-                        .where(ORDERS.ID.in(orderIdsToDelete))
-                        .execute();
-                }
-            } else {
-                deleteOrdersForSubscription(subscriptionId);
-            }
-        } else {
-            var record = dsl.insertInto(SUBSCRIPTIONS)
-                .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
-                .set(SUBSCRIPTIONS.DELIVERY_ADDRESS, subscription.deliveryAddress())
-                .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
-                .returning(SUBSCRIPTIONS.ID)
-                .fetchOne();
-            if (record == null) {
-                throw new IllegalStateException("Failed to insert subscription");
-            }
-            subscriptionId = record.getId();
-        }
-
-        List<UpcomingOrder> savedOrders = new ArrayList<>();
-        for (UpcomingOrder order : subscription.upcomingOrders()) {
-            UpcomingOrder savedOrder = saveOrUpdateOrder(order, subscriptionId);
-            savedOrders.add(savedOrder);
-        }
-
-        return new Subscription(
-            Id.of(subscriptionId),
-            subscription.customerId(),
-            savedOrders,
-            subscription.deliveryAddress(),
-            subscription.deliveryDay()
-        );
+        return subscription;
     }
 
-    private UpcomingOrder saveOrUpdateOrder(UpcomingOrder order, Long subscriptionId) {
-        Long[] recipeIdsArray = order.recipeIds().stream()
+    @Transactional
+    public Subscription update(Subscription subscription) {
+        dsl.update(SUBSCRIPTIONS)
+            .set(SUBSCRIPTIONS.CUSTOMER_ID, subscription.customerId().value())
+            .set(SUBSCRIPTIONS.DELIVERY_ADDRESS, subscription.deliveryAddress())
+            .set(SUBSCRIPTIONS.DELIVERY_DAY, subscription.deliveryDay().name())
+            .where(SUBSCRIPTIONS.ID.eq(subscription.id().value()))
+            .execute();
+
+        List<UUID> orderIds = subscription.upcomingOrders().stream()
+            .map(order -> order.id().value())
+            .toList();
+
+        if (!orderIds.isEmpty()) {
+            dsl.deleteFrom(ORDERS)
+                .where(ORDERS.SUBSCRIPTION_ID.eq(subscription.id().value())
+                    .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name()))
+                    .and(ORDERS.ID.notIn(orderIds)))
+                .execute();
+        } else {
+            deleteOrdersForSubscription(subscription.id().value());
+        }
+
+        subscription.upcomingOrders().stream().forEach(order -> upsertOrder(order, subscription.id().value()));
+
+        return subscription;
+    }
+
+    private void addOrder(UpcomingOrder order, UUID subscriptionId) {
+        UUID[] recipeIdsArray = order.recipeIds().stream()
             .map(Id::value)
-            .toArray(Long[]::new);
+            .toArray(UUID[]::new);
 
-        if (order.id().isAssigned()) {
-            Long orderId = order.id().value();
-            dsl.update(ORDERS)
-                .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                .set(ORDERS.STATUS, order.status().name())
-                .set(ORDERS.RECIPE_IDS, recipeIdsArray)
-                .where(ORDERS.ID.eq(orderId))
-                .execute();
-
-            return order;
-        } else {
-            var orderRecord = dsl.insertInto(ORDERS)
-                .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
-                .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
-                .set(ORDERS.STATUS, order.status().name())
-                .set(ORDERS.RECIPE_IDS, recipeIdsArray)
-                .returning(ORDERS.ID)
-                .fetchOne();
-            if (orderRecord == null) {
-                throw new IllegalStateException("Failed to insert order");
-            }
-            Long orderId = orderRecord.getId();
-
-            return switch (order) {
-                case PendingOrder pendingOrder ->
-                    new PendingOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
-                case LockedOrder lockedOrder ->
-                    new LockedOrder(Id.of(orderId), order.recipeIds(), order.deliveryDate());
-            };
-        }
+        dsl.insertInto(ORDERS)
+            .set(ORDERS.ID, order.id().value())
+            .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, order.status().name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .execute();
     }
 
-    private void deleteOrdersForSubscription(Long subscriptionId) {
+    private void upsertOrder(UpcomingOrder order, UUID subscriptionId) {
+        UUID[] recipeIdsArray = order.recipeIds().stream()
+            .map(Id::value)
+            .toArray(UUID[]::new);
+
+        dsl.insertInto(ORDERS)
+            .set(ORDERS.ID, order.id().value())
+            .set(ORDERS.SUBSCRIPTION_ID, subscriptionId)
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, order.status().name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .onConflict(ORDERS.ID)
+            .doUpdate()
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, order.status().name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .execute();
+    }
+
+    private void updateOrder(UpcomingOrder order) {
+        UUID[] recipeIdsArray = order.recipeIds().stream()
+            .map(Id::value)
+            .toArray(UUID[]::new);
+
+        dsl.update(ORDERS)
+            .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
+            .set(ORDERS.STATUS, order.status().name())
+            .set(ORDERS.RECIPE_IDS, recipeIdsArray)
+            .where(ORDERS.ID.eq(order.id().value()))
+            .execute();
+    }
+
+    private void deleteOrdersForSubscription(UUID subscriptionId) {
         dsl.deleteFrom(ORDERS)
             .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
                 .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
@@ -179,19 +163,19 @@ public class Subscriptions {
         return new Subscription(
             Id.of(record.getId()),
             Id.of(record.getCustomerId()),
-            orders,
+            UpcomingSubscriptionOrders.of(orders),
             record.getDeliveryAddress(),
             DayOfWeek.valueOf(record.getDeliveryDay())
         );
     }
 
-    private List<UpcomingOrder> fetchOrdersForSubscription(Long subscriptionId) {
+    private List<UpcomingOrder> fetchOrdersForSubscription(UUID subscriptionId) {
         return dsl.selectFrom(ORDERS)
             .where(ORDERS.SUBSCRIPTION_ID.eq(subscriptionId)
                 .and(ORDERS.STATUS.ne(OrderStatus.DELIVERED.name())))
             .fetch()
             .map(orderRecord -> {
-                Long[] recipeIdsArray = orderRecord.getRecipeIds();
+                UUID[] recipeIdsArray = orderRecord.getRecipeIds();
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
@@ -222,8 +206,8 @@ public class Subscriptions {
                 .and(ORDERS.STATUS.eq(OrderStatus.DELIVERED.name())))
             .fetch()
             .map(orderRecord -> {
-                Long orderId = orderRecord.get(ORDERS.ID);
-                Long[] recipeIdsArray = orderRecord.get(ORDERS.RECIPE_IDS);
+                UUID orderId = orderRecord.get(ORDERS.ID);
+                UUID[] recipeIdsArray = orderRecord.get(ORDERS.RECIPE_IDS);
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
@@ -241,7 +225,7 @@ public class Subscriptions {
                 .and(ORDERS.STATUS.eq(OrderStatus.LOCKED.name())))
             .fetchOptional()
             .map(orderRecord -> {
-                Long[] recipeIdsArray = orderRecord.getRecipeIds();
+                UUID[] recipeIdsArray = orderRecord.getRecipeIds();
                 List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
                     .map(Id::<Recipe>of)
                     .toList();
@@ -255,14 +239,10 @@ public class Subscriptions {
     }
 
     @Transactional
-    public void save(PendingOrder order) {
-        if (!order.id().isAssigned()) {
-            throw new IllegalArgumentException("Cannot save order without an assigned ID");
-        }
-
-        Long[] recipeIdsArray = order.recipeIds().stream()
+    public void updatePendingOrder(PendingOrder order) {
+        UUID[] recipeIdsArray = order.recipeIds().stream()
             .map(Id::value)
-            .toArray(Long[]::new);
+            .toArray(UUID[]::new);
 
         dsl.update(ORDERS)
             .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
@@ -273,14 +253,10 @@ public class Subscriptions {
     }
 
     @Transactional
-    public void save(LockedOrder order) {
-        if (!order.id().isAssigned()) {
-            throw new IllegalArgumentException("Cannot save order without an assigned ID");
-        }
-
-        Long[] recipeIdsArray = order.recipeIds().stream()
+    public void updateLockedOrder(LockedOrder order) {
+        UUID[] recipeIdsArray = order.recipeIds().stream()
             .map(Id::value)
-            .toArray(Long[]::new);
+            .toArray(UUID[]::new);
 
         dsl.update(ORDERS)
             .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
@@ -291,10 +267,10 @@ public class Subscriptions {
     }
 
     @Transactional
-    public void update(DeliveredOrder order) {
-        Long[] recipeIdsArray = order.recipeIds().stream()
+    public void updateDeliveredOrder(DeliveredOrder order) {
+        UUID[] recipeIdsArray = order.recipeIds().stream()
             .map(Id::value)
-            .toArray(Long[]::new);
+            .toArray(UUID[]::new);
 
         dsl.update(ORDERS)
             .set(ORDERS.DELIVERY_DATE, order.deliveryDate())
@@ -311,13 +287,13 @@ public class Subscriptions {
             .where(SUBSCRIPTIONS.CUSTOMER_ID.eq(customerId.value())
                 .and(ORDERS.ID.eq(orderId.value())))
             .fetchOptional();
-        
+
         if (orderRecord.isEmpty()) {
             throw new NotFound("Upcoming order not found: " + orderId.value());
         }
-        
+
         var record = orderRecord.get();
-        Long[] recipeIdsArray = record.get(ORDERS.RECIPE_IDS);
+        UUID[] recipeIdsArray = record.get(ORDERS.RECIPE_IDS);
         List<Id<Recipe>> recipeIds = Arrays.stream(recipeIdsArray)
             .map(Id::<Recipe>of)
             .toList();

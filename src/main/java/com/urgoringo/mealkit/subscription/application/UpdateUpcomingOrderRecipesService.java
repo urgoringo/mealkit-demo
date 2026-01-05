@@ -8,13 +8,11 @@ import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import com.urgoringo.mealkit.subscription.domain.PendingOrder;
 import com.urgoringo.mealkit.subscription.domain.UpcomingOrder;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class UpdateUpcomingOrderRecipesService {
@@ -25,6 +23,6 @@ public class UpdateUpcomingOrderRecipesService {
     public Subscription execute(Id<Customer> customerId, Id<UpcomingOrder> orderId, List<Id<Recipe>> recipeIds) {
         Subscription subscription = subscriptions.findByCustomerId(customerId);
         Subscription updatedSubscription = subscription.withUpdatedRecipes(orderId, recipeIds);
-        return subscriptions.save(updatedSubscription);
+        return subscriptions.update(updatedSubscription);
     }
 }

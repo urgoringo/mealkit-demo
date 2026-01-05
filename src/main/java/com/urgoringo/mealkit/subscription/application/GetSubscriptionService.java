@@ -5,13 +5,11 @@ import com.urgoringo.mealkit.domain.Id;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 
-@NullMarked
 @Service
 @RequiredArgsConstructor
 public class GetSubscriptionService {
@@ -25,7 +23,7 @@ public class GetSubscriptionService {
         Subscription updatedSubscription = subscription.withLockedUpcomingOrder(clock);
         
         if (updatedSubscription != subscription) {
-            return subscriptions.save(updatedSubscription);
+            return subscriptions.update(updatedSubscription);
         }
         
         return subscription;
