@@ -1,13 +1,17 @@
-# Mealkit
+# AI workflow with Specification by Example
+
+This project is about learning effective AI workflow combining the idea of Specification by Example with spec-driven AI development.
+
+My articles covering learnings and different iterations:
+- [Using Specification by Example to Drive AI](https://urgo.medium.com/using-specification-by-example-to-drive-ai-95c19f0bb4ec)
+- [Executable Specification + AI + Spock](https://urgo.medium.com/executable-specification-ai-spock-779840c758ab)
 
 ![Java CI with Gradle](https://github.com/urgoringo/jbehave-demo/workflows/Java%20CI%20with%20Gradle/badge.svg)
 ![Java](https://img.shields.io/badge/Java-25-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18.1-blue)
 
-A modern Spring Boot application for managing meal kit subscriptions, built with Domain-Driven Design principles and comprehensive null safety.
-
-## About
+## Mealkit Application
 
 Mealkit is a subscription-based meal kit service that enables customers to select recipes, manage deliveries, and track order history. The application provides:
 
