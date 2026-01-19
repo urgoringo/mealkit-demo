@@ -8,10 +8,10 @@ Mealkit is a Spring Boot 3.5 application for managing meal kit recipes. It uses:
 - **Java 25** (with toolchain configured in build.gradle.kts)
 - **Spring Boot 3.5.7** with Spring Data JPA and Spring Web
 - **PostgreSQL** database with Flyway migrations
+- **jOOQ 3.20.10** for type-safe SQL queries
 - **Zonky Embedded Database** for all tests with PostgreSQL 18.1
 - **Spock Framework** for BDD-style testing
 - **Lombok** for reducing boilerplate code
-- **MapStruct** for mapping between persistence and domain models
 - **JSpecify** for null safety annotations
 - **Error Prone** with **NullAway** for compile-time null safety checking
 
@@ -133,7 +133,7 @@ public record Order(Id<Order> id, List<Id<Recipe>> recipeIds) {
 
 ### Persistence and Domain Model Separation
 
-The project maintains strict separation between persistence and domain concerns:
+The project maintains separation between persistence and domain concerns:
 
 - **Persistence Models**: Classes with JPA annotations for database mapping
   - Use `@Entity`, `@Table`, `@Id`, `@Column`, etc.
@@ -148,13 +148,10 @@ The project maintains strict separation between persistence and domain concerns:
   - Pure Java objects focused on business behavior
   - Rich domain models with methods that enforce business invariants
 
-- **Mapping with MapStruct**: Use MapStruct for converting between persistence and domain models
-  - Create mapper interfaces with `@Mapper(componentModel = "spring")`
-  - MapStruct generates implementation at compile time
-  - Keeps mapping logic declarative and type-safe
-  - Mappers are Spring beans automatically injected where needed
-  - **Automatic field mapping**: Fields with matching names are automatically mapped
-  - Only create custom mapping methods for fields that need transformation (e.g., `Id<T>` wrapper)
+- **Mapping**: Manual mapping or mapper classes convert between persistence and domain models
+  - Create mapper classes as Spring components when mapping logic becomes complex
+  - Keep mapping logic focused on transformation between layers
+  - Handle special cases like `Id<T>` wrapper transformations explicitly
 
 ### Id Wrapper Type Pattern
 
@@ -200,16 +197,16 @@ public record Id<T>(Long value) {
 }
 ```
 
-**Mapping IDs in MapStruct:**
+**Mapping IDs in mapper classes:**
 ```java
-@Mapper(componentModel = "spring")
-public interface RecipeMapper {
+@Component
+public class RecipeMapper {
 
-    default Id<Recipe> mapId(@Nullable Long id) {
+    public Id<Recipe> mapId(@Nullable Long id) {
         return id == null ? Id.unassigned() : Id.of(id);
     }
 
-    default Long mapId(Id<Recipe> id) {
+    public Long mapId(Id<Recipe> id) {
         return id.value();
     }
 }
@@ -278,7 +275,7 @@ This project uses **Error Prone** for compile-time static analysis and **NullAwa
 **JSpecify Mode:** Enabled for full nullness checking on arrays, generics, and type parameters
 
 **Excluded from analysis:**
-- Generated code in `build/generated/` (Lombok and MapStruct)
+- Generated code in `build/generated/` (Lombok and jOOQ)
 - Test code (Error Prone disabled for tests)
 
 #### Using JSpecify Annotations
@@ -374,10 +371,10 @@ Spring Framework 6+ uses JSpecify annotations internally. Spring's `@NonNullApi`
 - Generated code is excluded from analysis
 - NullAway provides best-effort compatibility with Lombok
 
-**MapStruct:**
-- Generated mappers are excluded from analysis
-- MapStruct-generated code excluded via `excludedPaths`
-- Manually annotate mapper interfaces with `@Nullable` as needed
+**jOOQ:**
+- Generated database access classes are excluded from analysis
+- jOOQ-generated code excluded via `excludedPaths`
+- Generated code is in `build/generated-jooq/`
 
 **Java 25:**
 - NullAway JSpecify mode works optimally on Java 25
@@ -476,9 +473,9 @@ containing name, quantity, and unit (supports: g, piece, cup).
    - Start with database migration if schema changes needed
    - Update persistence entities (add `@Column` annotations)
    - Update domain models (add fields with `@Nullable` if optional)
+   - Update mapper classes if transformation logic needed
    - Update services to handle new parameters
    - Update API controllers and DTOs
-   - MapStruct will auto-map fields with matching names
 
 5. **Verify test passes**
    - Run tests again: `./gradlew test`
