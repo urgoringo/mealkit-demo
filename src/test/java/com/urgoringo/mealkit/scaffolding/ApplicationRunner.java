@@ -50,6 +50,7 @@ public class ApplicationRunner {
     private final Subscriptions subscriptions;
     private final TimeMachine timeMachine;
     private final BackofficeApplicationRunner backofficeRunner;
+    private final BillingSystemDouble billingSystemDouble;
     @Nullable
     @Getter
     private String currentAuthToken;
@@ -201,6 +202,7 @@ public class ApplicationRunner {
         deleteAllSubscriptions();
         backofficeRunner.reset();
         timeMachine.reset();
+        billingSystemDouble.reset();
     }
 
     public void havingRecipes(List<String> names) {
@@ -295,4 +297,8 @@ public class ApplicationRunner {
     public record UpdateSubscriptionDeliveryDayRequest(java.time.DayOfWeek deliveryDay) {}
 
     public record UpdateUpcomingOrderDeliveryDayRequest(java.time.DayOfWeek deliveryDay) {}
+
+    public BillingSystemDouble billingSystem() {
+        return billingSystemDouble;
+    }
 }

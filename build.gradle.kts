@@ -57,6 +57,7 @@ dependencies {
 	implementation("org.jspecify:jspecify:1.0.0")
 	implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 	implementation("com.github.f4b6a3:uuid-creator:6.1.1")
+	implementation("com.stripe:stripe-java:31.1.0")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 	errorprone("com.google.errorprone:error_prone_core:2.44.0")

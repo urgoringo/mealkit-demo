@@ -5,6 +5,7 @@ import com.urgoringo.mealkit.recipecatalog.domain.Recipe;
 import com.urgoringo.mealkit.recipecatalog.domain.RecipesCatalog;
 import com.urgoringo.mealkit.subscription.domain.Subscription;
 import com.urgoringo.mealkit.subscription.domain.SubscriptionProcessedEvent;
+import com.urgoringo.mealkit.subscription.domain.SubscriptionUpdateResult;
 import com.urgoringo.mealkit.subscription.domain.Subscriptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,12 +41,13 @@ public class ProcessSubscriptionOrdersService {
             .map(Recipe::id)
             .toList();
 
-        Subscription updatedSubscription = subscription
-            .withNewUpcomingOrder(selectedRecipeIds)
-            .withLockedUpcomingOrder(clock);
-
-        subscriptions.update(updatedSubscription);
-
-        applicationEventPublisher.publishEvent(new SubscriptionProcessedEvent(updatedSubscription));
+        Subscription withNewOrder = subscription.withNewUpcomingOrder(selectedRecipeIds);
+        SubscriptionUpdateResult result = withNewOrder.withLockedUpcomingOrder(clock);
+        
+        subscriptions.update(result.subscription());
+        
+        result.domainEvents().forEach(applicationEventPublisher::publishEvent);
+        
+        applicationEventPublisher.publishEvent(new SubscriptionProcessedEvent(result.subscription()));
     }
 }

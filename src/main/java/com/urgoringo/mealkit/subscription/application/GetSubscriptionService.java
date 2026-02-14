@@ -8,24 +8,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
-
 @Service
 @RequiredArgsConstructor
 public class GetSubscriptionService {
 
     private final Subscriptions subscriptions;
-    private final Clock clock;
 
     @Transactional
     public Subscription executeForAuthenticatedCustomer(Id<Customer> customerId) {
-        Subscription subscription = subscriptions.findByCustomerId(customerId);
-        Subscription updatedSubscription = subscription.withLockedUpcomingOrder(clock);
-        
-        if (updatedSubscription != subscription) {
-            return subscriptions.update(updatedSubscription);
-        }
-        
-        return subscription;
+        return subscriptions.findByCustomerId(customerId);
     }
 }

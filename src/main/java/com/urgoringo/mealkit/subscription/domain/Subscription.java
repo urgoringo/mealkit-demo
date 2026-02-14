@@ -57,21 +57,24 @@ public record Subscription(
         return new Subscription(id, customerId, updatedOrders, deliveryAddress, deliveryDay);
     }
 
-    public Subscription withLockedUpcomingOrder(Clock clock) {
+    public SubscriptionUpdateResult withLockedUpcomingOrder(Clock clock) {
         UpcomingOrder nextOrder = upcomingOrders.getFirst();
 
         return switch (nextOrder) {
             case PendingOrder pendingOrder -> {
                 if (pendingOrder.shouldBeLocked(clock)) {
-                    yield new Subscription(id,
+                    LockedOrder lockedOrder = pendingOrder.locked();
+                    Subscription updatedSubscription = new Subscription(id,
                         customerId,
-                        upcomingOrders.with(pendingOrder.locked()),
+                        upcomingOrders.with(lockedOrder),
                         deliveryAddress,
                         deliveryDay);
+                    OrderLockedEvent event = new OrderLockedEvent(customerId, lockedOrder);
+                    yield SubscriptionUpdateResult.of(updatedSubscription, event);
                 }
-                yield this;
+                yield SubscriptionUpdateResult.of(this);
             }
-            case LockedOrder _ -> this;
+            case LockedOrder _ -> SubscriptionUpdateResult.of(this);
         };
     }
 

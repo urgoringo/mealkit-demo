@@ -14,6 +14,7 @@ Mealkit is a Spring Boot 3.5 application for managing meal kit recipes. It uses:
 - **MapStruct** for mapping between persistence and domain models
 - **JSpecify** for null safety annotations
 - **Error Prone** with **NullAway** for compile-time null safety checking
+- **Stripe Java SDK 31.1.0** for payment processing
 
 ## Build Commands
 
@@ -50,13 +51,7 @@ The project uses the [monosoul jOOQ Gradle plugin](https://github.com/monosoul/j
 **Note**: All tests use Zonky embedded PostgreSQL 18.1 via `embedded-database-spring-test` library with Docker provider. This provides faster test execution compared to Testcontainers by reusing PostgreSQL containers across test runs.
 
 **Test Performance Optimizations**: PostgreSQL test instances are configured with settings that prioritize speed over durability:
-- `fsync=off`, `synchronous_commit=off`: Disable disk synchronization for faster writes
-- `shared_buffers=256MB`: Increased buffer cache for better query performance
-- `effective_io_concurrency=200`: Enable concurrent I/O operations
-- `maintenance_io_concurrency=50`: Parallel maintenance operations
-- WAL and checkpoint tuning: Reduce checkpoint frequency and overhead
-- `random_page_cost=1.1`: Optimized for SSD/memory storage
-- `tmpfs` enabled: Store database files in memory for maximum speed
+- `fsync=off`, `synchronous_commit=off`, `full_page_writes=off`: Disable disk synchronization for faster writes
 
 These settings are appropriate for test environments where data durability is not required.
 
@@ -89,6 +84,13 @@ This project follows **Domain-Driven Design (DDD)** principles:
 - **Domain Services**: Only used when business logic does not naturally fit within a single entity
   - Avoid creating domain services unless the logic spans multiple entities
   - Most business logic should reside in domain entities themselves
+
+- **Domain Events**: Published when significant domain state changes occur
+  - Domain models return `SubscriptionUpdateResult` containing updated state and events
+  - Application services publish events using Spring's `ApplicationEventPublisher`
+  - Event listeners in other modules handle cross-cutting concerns
+  - Events decouple modules (e.g., subscription module doesn't depend on payment module)
+  - Example: `OrderLockedEvent` triggers payment charging in payment module
 
 - **Domain Validation**: Domain models enforce their own invariants
   - Use factory methods (e.g., `create()`) to validate business rules
@@ -220,6 +222,130 @@ public interface RecipeMapper {
 - Migration naming: `V{version}__{description}.sql` (e.g., `V1__create_recipes_table.sql`)
 - Hibernate is configured with `ddl-auto: validate` - schema changes MUST be done via Flyway migrations
 - Database baseline is automatically created on first migration (`baseline-on-migrate: true`)
+
+### Payment Integration
+
+The project integrates with **Stripe** for payment processing using a domain-driven approach with **real Stripe integration testing via stripe-mock**:
+
+- **PaymentProcessor Interface**: Domain interface in `payment.domain` package
+  - Defines the contract for charging customers
+  - Allows for different implementations (production Stripe, test doubles)
+  
+- **StripePaymentProcessor**: Production implementation in `payment.infra` package
+  - Uses Stripe Java SDK 31.1.0
+  - Configured via `stripe.api-key` and `stripe.api-base` properties
+  - Charges are created as PaymentIntents with automatic payment methods
+  - Customer ID stored in payment metadata for tracking
+  - Publishes `CustomerChargedEvent` when payment succeeds
+
+- **Stripe Mock Testing**: Tests use real Stripe SDK against stripe-mock container
+  - `StripeMockContainer` runs Stripe's official mock server (v0.186.0) via Testcontainers
+  - `StripeTestConfiguration` configures Stripe SDK to use mock server URL
+  - Real Stripe integration code executes in tests, providing high confidence
+  - `CustomerChargedEventListener` records charges for test assertions via `BillingSystemDouble`
+
+- **Charging on Order Lock**: Payment triggered by domain events
+  - `OrderLockedEvent` is published when orders transition to locked state
+  - `OrderLockedEventListener` handles the event and charges the customer
+  - Triggered by subscription updates in:
+    - `ProcessSubscriptionOrdersService` (scheduled task)
+    - `GetSubscriptionService` (when customer views subscription)
+  - Uses `OrderPrices` domain service to calculate total
+
+**Pattern for external integrations with real integration testing:**
+```java
+// Domain interface
+public interface PaymentProcessor {
+    void chargeCustomer(Id<Customer> customerId, Money amount);
+}
+
+// Production implementation (also used in tests)
+@Component
+public class StripePaymentProcessor implements PaymentProcessor {
+    // Real Stripe SDK integration
+    // Publishes CustomerChargedEvent on success
+}
+
+// Test configuration
+@TestConfiguration
+public class StripeMockConfiguration {
+    @Bean(initMethod = "start", destroyMethod = "stop")
+    public StripeMockContainer stripeMockContainer() {
+        return new StripeMockContainer();
+    }
+}
+
+// Test event listener for assertions
+@Component
+public class CustomerChargedEventListener {
+    @EventListener
+    public void onCustomerCharged(CustomerChargedEvent event) {
+        billingSystemDouble.recordCharge(event.amount().amount());
+    }
+}
+```
+
+**Pattern for domain events with cross-module communication:**
+```java
+// Domain event (in subscription module)
+public record OrderLockedEvent(
+    Id<Customer> customerId,
+    LockedOrder lockedOrder
+) {}
+
+// Result wrapper containing state and events
+public record SubscriptionUpdateResult(
+    Subscription subscription,
+    List<Object> domainEvents
+) {
+    public static SubscriptionUpdateResult of(Subscription subscription, Object event) {
+        return new SubscriptionUpdateResult(subscription, List.of(event));
+    }
+}
+
+// Domain model returns result with events
+public record Subscription(...) {
+    public SubscriptionUpdateResult withLockedUpcomingOrderAndEvents(Clock clock) {
+        UpcomingOrder nextOrder = upcomingOrders.getFirst();
+        return switch (nextOrder) {
+            case PendingOrder pendingOrder -> {
+                if (pendingOrder.shouldBeLocked(clock)) {
+                    LockedOrder lockedOrder = pendingOrder.locked();
+                    Subscription updated = new Subscription(id, customerId, 
+                        upcomingOrders.with(lockedOrder), deliveryAddress, deliveryDay);
+                    OrderLockedEvent event = new OrderLockedEvent(customerId, lockedOrder);
+                    yield SubscriptionUpdateResult.of(updated, event);
+                }
+                yield SubscriptionUpdateResult.of(this);
+            }
+            case LockedOrder _ -> SubscriptionUpdateResult.of(this);
+        };
+    }
+}
+
+// Application service publishes events
+@Service
+public class ProcessSubscriptionOrdersService {
+    @Transactional
+    public void execute(String subscriptionId) {
+        Subscription subscription = subscriptions.findById(subscriptionId);
+        SubscriptionUpdateResult result = subscription.withLockedUpcomingOrderAndEvents(clock);
+        
+        subscriptions.update(result.subscription());
+        result.domainEvents().forEach(applicationEventPublisher::publishEvent);
+    }
+}
+
+// Event listener in payment module handles event
+@Component
+public class OrderLockedEventListener {
+    @EventListener
+    public void onOrderLocked(OrderLockedEvent event) {
+        var totalPrice = orderPrices.totalPrice(event.lockedOrder());
+        paymentProcessor.chargeCustomer(event.customerId(), totalPrice);
+    }
+}
+```
 
 ### Testing Architecture
 - All tests use Zonky Embedded PostgreSQL 18.1 via `@AutoConfigureEmbeddedDatabase` annotation
