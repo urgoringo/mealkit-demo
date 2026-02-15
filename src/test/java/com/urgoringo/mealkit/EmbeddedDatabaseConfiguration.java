@@ -79,11 +79,8 @@ public class EmbeddedDatabaseConfiguration {
     }
 
     @Bean
-    public RestClient.Builder restClientBuilder(CloseableHttpClient pooledHttpClient) {
-        HttpComponentsClientHttpRequestFactory requestFactory =
-            new HttpComponentsClientHttpRequestFactory(pooledHttpClient);
+    public RestClient.Builder restClientBuilder() {
         return RestClient.builder()
-            .requestFactory(requestFactory)
             .defaultStatusHandler(status -> true, (request, response) -> {});
     }
 
