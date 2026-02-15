@@ -20,11 +20,15 @@ public class BackofficeApplicationRunner {
     private final BackofficeUsers backofficeUsers;
 
     private RestClient restClient;
+    private int currentPort = -1;
 
     public void start(int port) {
-        this.restClient = restClientBuilder
-            .baseUrl("http://localhost:" + port)
-            .build();
+        if (restClient == null || currentPort != port) {
+            this.restClient = restClientBuilder
+                .baseUrl("http://localhost:" + port)
+                .build();
+            currentPort = port;
+        }
     }
 
     public void reset() {

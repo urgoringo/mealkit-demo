@@ -12,7 +12,7 @@ import spock.lang.Specification
 import static io.zonky.test.db.AutoConfigureEmbeddedDatabase.RefreshMode
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureEmbeddedDatabase(refresh = RefreshMode.BEFORE_CLASS)
+@AutoConfigureEmbeddedDatabase(refresh = RefreshMode.NEVER)
 @Import(EmbeddedDatabaseConfiguration)
 @ActiveProfiles("test")
 abstract class ApplicationSpecification extends Specification {

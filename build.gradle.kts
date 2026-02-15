@@ -76,7 +76,8 @@ dependencies {
     testImplementation("org.spockframework:spock-core:2.4-M7-groovy-5.0")
     testImplementation("org.spockframework:spock-spring:2.4-M7-groovy-5.0")
     testImplementation("com.athaydes:spock-reports:2.5.1-groovy-4.0")
-	testImplementation("org.awaitility:awaitility:4.3.0")
+    testImplementation("org.awaitility:awaitility:4.3.0")
+    testImplementation("org.apache.httpcomponents.client5:httpclient5")
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
     runtimeOnly("org.postgresql:postgresql")
@@ -87,7 +88,8 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 
 	// Enable parallel test execution
-	maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+//	maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+	maxParallelForks = 1
 
 	// Show test output for Spock given/when/then blocks
 	testLogging {

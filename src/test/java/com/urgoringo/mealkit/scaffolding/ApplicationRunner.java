@@ -54,6 +54,7 @@ public class ApplicationRunner {
     @Getter
     private String currentAuthToken;
     private RestClient restClient;
+    private int currentPort = -1;
 
     public RecipeResponse havingRecipe(String title) {
         return havingRecipe(aRecipe().withTitle(title));
@@ -110,10 +111,13 @@ public class ApplicationRunner {
     }
 
     public void start(int port) {
-        this.restClient = restClientBuilder
-            .baseUrl("http://localhost:" + port)
-            .build();
-        backofficeRunner.start(port);
+        if (restClient == null || currentPort != port) {
+            this.restClient = restClientBuilder
+                .baseUrl("http://localhost:" + port)
+                .build();
+            currentPort = port;
+            backofficeRunner.start(port);
+        }
         reset();
 
         if (recipesCatalog.count() == 0) {
