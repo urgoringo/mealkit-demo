@@ -1,6 +1,5 @@
 package com.urgoringo.mealkit.recipecatalog.domain;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 import static com.urgoringo.mealkit.jooq.tables.Recipes.RECIPES;
 
@@ -114,9 +112,4 @@ public class RecipesCatalog {
         return dsl.fetchCount(RECIPES);
     }
 
-    private record RecipeIngredientDto(
-            @JsonProperty("ingredient_id") String ingredientId,
-            String quantity,
-            String unit
-    ) {}
 }

@@ -10,6 +10,7 @@ plugins {
 	id("net.ltgt.errorprone") version "4.3.0"
 	id("net.ltgt.nullaway") version "2.3.0"
 	id("dev.monosoul.jooq-docker") version "8.0.9"
+	id("org.graalvm.buildtools.native") version "0.10.6"
 }
 
 group = "com.urgoringo"
@@ -19,6 +20,30 @@ description = "Mealkit"
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(25)
+		vendor = JvmVendorSpec.matching("GraalVM")
+	}
+}
+
+// GraalVM native build tools is not Gradle 9 configuration-cache compatible;
+// marking the task causes Gradle to skip config cache only for native builds
+tasks.withType<org.graalvm.buildtools.gradle.tasks.GenerateResourcesConfigFile>().configureEach {
+	notCompatibleWithConfigurationCache("GraalVM native build tools is not compatible with Gradle 9 configuration cache")
+}
+
+graalvmNative {
+	binaries {
+		named("main") {
+			imageName.set("mealkit")
+			mainClass.set("com.urgoringo.mealkit.MealkitApplication")
+			buildArgs.add("--strict-image-heap")
+			buildArgs.add("-H:+ReportExceptionStackTraces")
+			javaLauncher.set(
+				javaToolchains.launcherFor {
+					languageVersion = JavaLanguageVersion.of(25)
+					vendor = JvmVendorSpec.matching("GraalVM")
+				}
+			)
+		}
 	}
 }
 
@@ -35,11 +60,11 @@ repositories {
 	mavenCentral()
 }
 
-dependencyManagement {
-	imports {
-		mavenBom("io.zonky.test.postgres:embedded-postgres-binaries-bom:18.1.0")
-	}
-}
+//dependencyManagement {
+//	imports {
+//		mavenBom("io.zonky.test.postgres:embedded-postgres-binaries-bom:18.1.0")
+//	}
+//}
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-jooq") {
@@ -68,7 +93,6 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:2.0.2")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.2")
     testImplementation("org.testcontainers:testcontainers-postgresql:2.0.2")
-    testImplementation("io.zonky.test:embedded-database-spring-test:2.7.1")
     testImplementation("org.junit.platform:junit-platform-suite-api:1.11.4")
     testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.11.4")
     testImplementation("net.datafaker:datafaker:2.4.2")
@@ -87,7 +111,8 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 
 	// Enable parallel test execution
-	maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+//	maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+	maxParallelForks = 1
 
 	// Show test output for Spock given/when/then blocks
 	testLogging {
@@ -155,6 +180,16 @@ tasks {
 	// Make compileJava depend on jOOQ code generation
 	compileJava {
 		dependsOn(generateJooqClasses)
+	}
+
+	bootBuildImage {
+		builder.set("paketobuildpacks/builder-jammy-tiny:latest")
+		environment.set(mapOf(
+			"BP_NATIVE_IMAGE" to "true",
+			"BP_NATIVE_IMAGE_BUILD_ARGUMENTS" to "--strict-image-heap -H:+ReportExceptionStackTraces",
+			"BP_JVM_VERSION" to "25"
+		))
+		imageName.set("${project.name}:${project.version}")
 	}
 }
 
