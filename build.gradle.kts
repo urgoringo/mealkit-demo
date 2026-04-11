@@ -89,6 +89,7 @@ tasks.withType<Test> {
 
 	// Enable parallel test execution
 	maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+//	maxParallelForks = 1
 
 	// Show test output for Spock given/when/then blocks
 	testLogging {

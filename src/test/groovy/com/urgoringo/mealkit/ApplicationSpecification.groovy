@@ -12,8 +12,8 @@ import spock.lang.Specification
 import static io.zonky.test.db.AutoConfigureEmbeddedDatabase.RefreshMode
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureEmbeddedDatabase(refresh = RefreshMode.NEVER)
-@Import(EmbeddedDatabaseConfiguration)
+//@AutoConfigureEmbeddedDatabase(refresh = RefreshMode.NEVER)
+@Import(TestContainersConfiguration)
 @ActiveProfiles("test")
 abstract class ApplicationSpecification extends Specification {
 
